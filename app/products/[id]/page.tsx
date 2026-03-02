@@ -1,88 +1,7 @@
-// export async function GET(
-//   req: Request,
-//   { params }: { params: { id: string } }
-// ) {
-//   const res = await fetch(
-//     `https://altalayi-demo.btire.com/rest/V1/kleverapi/category-filter-options/${params.id}`,
-//     {
-//       headers: {
-//         Authorization: `Bearer YOUR_MAGENTO_TOKEN`,
-//       },
-//     }
-//   );
-
-//   const data = await res.json();
-//   return Response.json(data);
-// // }
-
-// "use client";
-
-// import { useEffect, useState } from "react";
-
-// interface Product {
-//   id?: number;
-//   name?: string;
-//   price?: number;
-//   [key: string]: unknown; // flexible structure for Magento response
-// }
-
-// interface ProductPageProps {
-//   params: { id: string };
-// }
-
-// export default function ProductPage({ params }: ProductPageProps) {
-//   const [data, setData] = useState<Product | null>(null);
-//   const [error, setError] = useState<string | null>(null);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     async function fetchProduct() {
-//       try {
-//         const token = localStorage.getItem("token");
-
-//         if (!token) {
-//           throw new Error("No token found in localStorage");
-//         }
-
-//         const res = await fetch(`/api/products/${params.id}`, {
-//           headers: {
-//             Authorization: `Bearer ${token}`,
-//           },
-//         });
-
-//         if (!res.ok) {
-//           throw new Error("Failed to fetch product");
-//         }
-
-//         const result: Product = await res.json();
-//         setData(result);
-//       } catch (err) {
-//         if (err instanceof Error) {
-//           setError(err.message);
-//         } else {
-//           setError("Something went wrong");
-//         }
-//       } finally {
-//         setLoading(false);
-//       }
-//     }
-
-//     fetchProduct();
-//   }, [params.id]);
-
-//   if (loading) return <div>Loading...</div>;
-//   if (error) return <div>{error}</div>;
-
-//   return (
-//     <div>
-//       <h1>Product ID: {params.id}</h1>
-//       <pre>{JSON.stringify(data, null, 2)}</pre>
-//     </div>
-//   );
-// }
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 
 interface Product {
@@ -91,54 +10,84 @@ interface Product {
   name: string;
   final_price: number;
   show_old_price: boolean;
-            "product_url": "https://altalayi-demo.btire.com/en/bridgestone-255-35-r21-t05-098y-tl-2025.html",
-            "image_url": "https://altalayi-demo.btire.com/media/catalog/product/atcl-tyres/sample-bridgestone_56.jpg",
-            "is_in_stock": false,
-            "stock_qty": 0,
-            "year": "2025",
-            "origin": "Europe",
-            "pattern": "Turanza T005",
-            "warranty_period": "5 Years Warranty",
-            "tyre_size": "255/35 R21",
-            "product_group": "Passenger Car"
-        }
+  product_url: string;
+  image_url: string;
+  is_in_stock: boolean;
+  stock_qty: number;
+  year: string;
+  origin: string;
+  pattern: string;
+  warranty_period: string;
+  tyre_size: string;
+  product_group: string;
+}
 
+export default function CategoryProductsPage() {
+  const params = useParams();
+  const categoryId = params.id as string;
 
-export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    async function loadProducts() {
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/category-products?categoryId=${categoryId}`);
+        const data = await res.json();
 
-    fetch(`/api/products?categoryId=${localStorage.getItem("categoryId")}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("API Response:", data); 
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to fetch products");
+        }
+
+        console.log("API Response:", data);
         setProducts(data.items || data.products || []);
-      console.log("Products:", data.items || data.products || []);
-      });
-  }, []);
+      } catch (err: any) {
+        console.error("Error loading products:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadProducts();
+  }, [categoryId]);
+
+  if (loading) return <div className="p-6">Loading products...</div>;
+  if (error) return <div className="p-6 text-red-500">{error}</div>;
 
   return (
-    <div>
-  <h1>Category Products</h1>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Category {categoryId} — Products</h1>
 
-  {products.length === 0}
-
-  {Array.isArray(products) &&
-    products.map((product) => (
-      <div key={product.product_id}>
-        <Link href={`/products/${product.product_id}`}>
-          <h3>{product.name}</h3>
-          <p>₹{product.final_price}</p>
-        </Link>
-      </div>
-    ))}
-</div>
+      {products.length === 0 ? (
+        <p>No products found in this category.</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {products.map((product) => (
+            <div
+              key={product.product_id}
+              className="border rounded-lg p-4 shadow-sm hover:shadow-md transition"
+            >
+              {product.image_url && (
+                <img
+                  src={product.image_url}
+                  alt={product.name}
+                  className="w-full h-40 object-contain mb-3"
+                />
+              )}
+              <h3 className="font-semibold text-lg">{product.name}</h3>
+              <p className="text-sm text-gray-500">{product.tyre_size}</p>
+              <p className="text-sm text-gray-500">{product.origin} — {product.year}</p>
+              <p className="font-bold text-xl mt-2">₹{product.final_price}</p>
+              <p className={`text-sm mt-1 ${product.is_in_stock ? "text-green-600" : "text-red-500"}`}>
+                {product.is_in_stock ? `In Stock (${product.stock_qty})` : "Out of Stock"}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

@@ -3,11 +3,27 @@ import { api } from "@/lib/api/api-client";
 import type { Product } from "../../modules/types/product";
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 
-export async function fetchProducts(): Promise<Product[]> {
+// export async function fetchProducts(): Promise<Product[]> {
+//   try {
+//     // const data = await api.get("/products");
+//     const data = await api.get("api/category-products");
+//     console.log("API RESPONSE:", data);
+//     return data.products ?? [];
+//   } catch (error) {
+//     console.error("fetchProducts error:", error);
+//     return [];
+//   }
+// }
+
+
+export async function fetchProducts(categoryId: string = "5"): Promise<Product[]> {
   try {
-    const data = await api.get("/products");
+    const data = await api.get(
+      `/category-products?categoryId=${categoryId}`
+    );
+
     console.log("API RESPONSE:", data);
-    return data.products ?? [];
+    return data.products ?? data.items ?? [];
   } catch (error) {
     console.error("fetchProducts error:", error);
     return [];

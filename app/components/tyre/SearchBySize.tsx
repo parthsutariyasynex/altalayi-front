@@ -1,219 +1,219 @@
-"use client";
+// "use client";
 
-import { useEffect, useState } from "react";
-import { getWidth, getHeight, getRim, Option } from "../../services/tyreService";
+// import { useEffect, useState } from "react";
+// import { getWidth, getHeight, getRim, Option } from "../../services/tyreService";
 
-export default function SearchBySize() {
+// export default function SearchBySize() {
 
-const [widthList, setWidthList] = useState<Option[]>([]);
-const [heightList, setHeightList] = useState<Option[]>([]);
-const [rimList, setRimList] = useState<Option[]>([]);
+//     const [widthList, setWidthList] = useState<Option[]>([]);
+//     const [heightList, setHeightList] = useState<Option[]>([]);
+//     const [rimList, setRimList] = useState<Option[]>([]);
 
-const [width, setWidth] = useState("");
-const [height, setHeight] = useState("");
-const [rim, setRim] = useState("");
+//     const [width, setWidth] = useState("");
+//     const [height, setHeight] = useState("");
+//     const [rim, setRim] = useState("");
 
 
-useEffect(() => {
+//     useEffect(() => {
 
-loadWidth();
+//         loadWidth();
 
-}, []);
+//     }, []);
 
 
-const loadWidth = async () => {
+//     const loadWidth = async () => {
 
-const data = await getWidth();
+//         const data = await getWidth();
 
-setWidthList(data);
+//         setWidthList(data);
 
-};
+//     };
 
 
-const handleWidthChange = async (value:string) => {
+//     const handleWidthChange = async (value: string) => {
 
-setWidth(value);
+//         setWidth(value);
 
-setHeight("");
-setRim("");
+//         setHeight("");
+//         setRim("");
 
-const heightData = await getHeight(value);
+//         const heightData = await getHeight(value);
 
-setHeightList(heightData);
+//         setHeightList(heightData);
 
-};
+//     };
 
 
-const handleHeightChange = async (value:string) => {
+//     const handleHeightChange = async (value: string) => {
 
-setHeight(value);
+//         setHeight(value);
 
-setRim("");
+//         setRim("");
 
-const rimData = await getRim(width,value);
+//         const rimData = await getRim(width, value);
 
-setRimList(rimData);
+//         setRimList(rimData);
 
-};
+//     };
 
 
 
-const handleSearch = () => {
+//     const handleSearch = () => {
 
-window.location.href =
-`/product-list?width=${width}&height=${height}&rim=${rim}`;
+//         window.location.href =
+//             `/product-list?width=${width}&height=${height}&rim=${rim}`;
 
-};
+//     };
 
 
 
-return (
+//     return (
 
-<div className="main-search mt-10">
+//         <div className="main-search mt-10">
 
-<div className="search-wrap search-by-size">
+//             <div className="search-wrap search-by-size">
 
-<form>
+//                 <form>
 
-<ul className="list-custom flex justify-center items-center gap-3 flex-wrap">
+//                     <ul className="list-custom flex justify-center items-center gap-3 flex-wrap">
 
-<li>
+//                         <li>
 
-<span className="bg-yellow-400 px-6 py-2 rounded font-semibold">
+//                             <span className="bg-yellow-400 px-6 py-2 rounded font-semibold">
 
-Search by Size
+//                                 Search by Size
 
-</span>
+//                             </span>
 
-</li>
+//                         </li>
 
 
 
-{/* WIDTH */}
+//                         {/* WIDTH */}
 
-<li>
+//                         <li>
 
-<select
+//                             <select
 
-className="border px-4 py-2 rounded w-[160px]"
+//                                 className="border px-4 py-2 rounded w-[160px]"
 
-value={width}
+//                                 value={width}
 
-onChange={(e)=>handleWidthChange(e.target.value)}
+//                                 onChange={(e) => handleWidthChange(e.target.value)}
 
->
+//                             >
 
-<option value="">Width</option>
+//                                 <option value="">Width</option>
 
-{widthList.map((item)=>(
+//                                 {widthList.map((item) => (
 
-<option key={item.value} value={item.value}>
+//                                     <option key={item.value} value={item.value}>
 
-{item.label}
+//                                         {item.label}
 
-</option>
+//                                     </option>
 
-))}
+//                                 ))}
 
-</select>
+//                             </select>
 
-</li>
+//                         </li>
 
 
 
-{/* HEIGHT */}
+//                         {/* HEIGHT */}
 
-<li>
+//                         <li>
 
-<select
+//                             <select
 
-className="border px-4 py-2 rounded w-[160px]"
+//                                 className="border px-4 py-2 rounded w-[160px]"
 
-value={height}
+//                                 value={height}
 
-onChange={(e)=>handleHeightChange(e.target.value)}
+//                                 onChange={(e) => handleHeightChange(e.target.value)}
 
->
+//                             >
 
-<option value="">Height</option>
+//                                 <option value="">Height</option>
 
-{heightList.map((item)=>(
+//                                 {heightList.map((item) => (
 
-<option key={item.value} value={item.value}>
+//                                     <option key={item.value} value={item.value}>
 
-{item.label}
+//                                         {item.label}
 
-</option>
+//                                     </option>
 
-))}
+//                                 ))}
 
-</select>
+//                             </select>
 
-</li>
+//                         </li>
 
 
 
-{/* RIM */}
+//                         {/* RIM */}
 
-<li>
+//                         <li>
 
-<select
+//                             <select
 
-className="border px-4 py-2 rounded w-[160px]"
+//                                 className="border px-4 py-2 rounded w-[160px]"
 
-value={rim}
+//                                 value={rim}
 
-onChange={(e)=>setRim(e.target.value)}
+//                                 onChange={(e) => setRim(e.target.value)}
 
->
+//                             >
 
-<option value="">Rim</option>
+//                                 <option value="">Rim</option>
 
-{rimList.map((item)=>(
+//                                 {rimList.map((item) => (
 
-<option key={item.value} value={item.value}>
+//                                     <option key={item.value} value={item.value}>
 
-{item.label}
+//                                         {item.label}
 
-</option>
+//                                     </option>
 
-))}
+//                                 ))}
 
-</select>
+//                             </select>
 
-</li>
+//                         </li>
 
 
 
-{/* SEARCH */}
+//                         {/* SEARCH */}
 
-<li>
+//                         <li>
 
-<button
+//                             <button
 
-type="button"
+//                                 type="button"
 
-onClick={handleSearch}
+//                                 onClick={handleSearch}
 
-className="bg-yellow-400 px-6 py-2 rounded font-semibold"
+//                                 className="bg-yellow-400 px-6 py-2 rounded font-semibold"
 
->
+//                             >
 
-Search
+//                                 Search
 
-</button>
+//                             </button>
 
-</li>
+//                         </li>
 
 
-</ul>
+//                     </ul>
 
-</form>
+//                 </form>
 
-</div>
+//             </div>
 
-</div>
+//         </div>
 
-);
+//     );
 
-}
+// }

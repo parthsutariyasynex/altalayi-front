@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
                     destination: "https://altalayi-demo.btire.com/rest/V1/kleverapi/:path*",
                 },
                 {
-                    source: "/api/:path((?!auth|login|cart).*)",
+                    source: "/api/:path((?!auth|login|cart|category-products|categories|tyre-size).*)",
                     destination: "https://altalayi-demo.btire.com/rest/V1/kleverapi/:path*",
                 },
             ],

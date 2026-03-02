@@ -7,9 +7,9 @@ import { useRouter } from "next/navigation";
 import ProductDialog from "../components/ProductDialog";
 import { fetchProducts, checkAuth } from "./api";
 import { useCart } from "@/modules/cart/hooks/useCart";
-import SearchBySize from "../components/tyre/SearchBySize";
+// import SearchBySize from "../components/tyre/SearchBySize";
 import Sidebar from "../components/Sidebar";
-import type { Product } from  "../../modules/types/product";
+import type { Product } from "../../modules/types/product";
 
 /* ✅ Product Type */
 // type ApiProduct = {
@@ -220,11 +220,10 @@ export default function ProductsPage() {
                           <td className="px-4 py-3 flex items-center gap-3">
                             <Star
                               size={18}
-                              className={`cursor-pointer ${
-                                favourites.includes(product.product_id)
-                                  ? "text-yellow-500 fill-yellow-500"
-                                  : "text-gray-400"
-                              }`}
+                              className={`cursor-pointer ${favourites.includes(product.product_id)
+                                ? "text-yellow-500 fill-yellow-500"
+                                : "text-gray-400"
+                                }`}
                               onClick={() =>
                                 handleToggleFavourite(product.product_id)
                               }
@@ -250,7 +249,7 @@ export default function ProductsPage() {
                 onClose={() => setSelectedProduct(null)}
               />
 
-              <SearchBySize />
+              {/* <SearchBySize /> */}
             </div>
           </div>
         </div>

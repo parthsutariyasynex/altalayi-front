@@ -1,15 +1,9 @@
-import SearchBySize from "./components/tyre/SearchBySize";
+// import SearchBySize from "./components/tyre/SearchBySize";
 
 export default function Home() {
-
   return (
-
     <div>
-
-      <SearchBySize />
-
+      {/* <SearchBySize /> */}
     </div>
-
   );
-
 }
