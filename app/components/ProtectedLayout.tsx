@@ -4,7 +4,7 @@ import { ReactNode, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
-import Sidebar from './Sidebar';
+
 
 interface ProtectedLayoutProps {
   children: ReactNode;
@@ -60,18 +60,11 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
   return (
     <div className="flex flex-col min-h-screen">
       <div className="flex flex-1 bg-gray-50">
-        {/* Sidebar only for protected pages */}
-        {isAuthenticated && !isPublicPage && (
-          <div className="w-64 flex-shrink-0">
-            <Sidebar />
-          </div>
-        )}
-
         {/* Main Content */}
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1">
           {/* For public pages, show children immediately. For protected, only show if authenticated */}
           {(isPublicPage || isAuthenticated) ? (
-            <main className={isAuthenticated && !isPublicPage ? "p-6 lg:p-8" : ""}>
+            <main>
               {children}
             </main>
           ) : (

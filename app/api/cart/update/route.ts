@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 
 const BASE_URL = "https://altalayi-demo.btire.com/rest/V1";
-console.log("BASE_URL", BASE_URL);
 
 /* =========================
-   ADD TO CART via kleverapi
+   UPDATE CART ITEM QTY
 ========================= */
-export async function POST(req: Request) {
+export async function PUT(req: Request) {
     try {
         const authHeader = req.headers.get("authorization");
 
@@ -15,32 +14,38 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { sku, qty } = body;
+        const { item_id, qty } = body;
 
-        if (!sku || !qty) {
+        if (!item_id || !qty) {
             return NextResponse.json(
-                { message: "SKU and quantity are required" },
+                { message: "item_id and qty are required" },
                 { status: 400 }
             );
         }
 
-        const response = await fetch(`${BASE_URL}/api/kleverapi/cart/add`, {
-            method: "POST",
+        const response = await fetch(`${BASE_URL}/carts/mine/items/${item_id}`, {
+            method: "PUT",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: authHeader,
             },
-            body: JSON.stringify({ sku, qty }),
+            body: JSON.stringify({
+                cartItem: {
+                    item_id,
+                    qty,
+                    quote_id: "mine",
+                },
+            }),
         });
 
         const data = await response.json();
-        console.log("Kleverapi add-to-cart response:", data);
+        console.log("Update cart item response:", JSON.stringify(data).slice(0, 300));
 
         return NextResponse.json(data, { status: response.status });
     } catch (error) {
-        console.error("Add to cart error:", error);
+        console.error("Update cart error:", error);
         return NextResponse.json(
-            { message: "Failed to add to cart" },
+            { message: "Failed to update cart item" },
             { status: 500 }
         );
     }

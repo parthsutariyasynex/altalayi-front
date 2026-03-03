@@ -25,3 +25,4 @@ export async function GET(req: NextRequest) {
     const data = await res.json();
     return Response.json(data);
 }
+

@@ -1,6 +1,7 @@
 "use client";
 
-import type { Product } from  "../../modules/types/product";
+import type { Product } from "../../modules/types/product";
+import { X } from "lucide-react";
 
 interface ProductDialogProps {
   product: Product | null;
@@ -8,87 +9,72 @@ interface ProductDialogProps {
 }
 
 export default function ProductDialog({ product, onClose }: ProductDialogProps) {
-
   if (!product) return null;
 
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat("en-SA", {
-      style: "currency",
-      currency: "SAR",
-      maximumFractionDigits: 0,
-    }).format(price);
-
   return (
-
     <div
-      className="fixed inset-0 bg-black/50 flex justify-center items-center z-50"
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50"
       onClick={onClose}
     >
-
       <div
-        className="bg-white w-[450px] rounded-lg shadow-lg p-6 relative"
+        className="w-[520px] bg-white rounded-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* 🔶 Yellow Header */}
+        <div className="bg-[#f4b400] px-6 py-4 flex items-center justify-center relative">
+          <h2 className="text-lg font-semibold text-black text-center">
+            {product.pattern} - {product.tyre_size}
+          </h2>
 
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-4 text-xl font-bold text-gray-400 hover:text-red-500"
-        >
-          ✕
-        </button>
-
-        {/* ✅ Magento fields */}
-        <h2 className="text-xl font-bold mb-4 border-b pb-2">
-          {product.pattern} - {product.tyre_size}
-        </h2>
-
-        {/* <img
-          src={product.image_url}
-          className="w-32 h-32 object-cover border rounded mb-4 mx-auto"
-        /> */}
-
-        <div className="space-y-2 text-sm">
-
-          <p>
-            <span className="font-semibold">Name:</span> {product.name}
-          </p>
-
-          <p>
-            <span className="font-semibold">Size:</span> {product.tyre_size}
-          </p>
-
-          <p>
-            <span className="font-semibold">Pattern:</span> {product.pattern}
-          </p>
-
-          <p>
-            <span className="font-semibold">Year:</span> {product.year}
-          </p>
-
-          <p>
-            <span className="font-semibold">Origin:</span> {product.origin}
-          </p>
-
-          <p>
-            <span className="font-semibold">Stock:</span> {product.stock_qty}
-          </p>
-
-          <p className="text-lg font-bold text-green-600">
-            {formatPrice(product.final_price)}
-          </p>
-
+          <button
+            onClick={onClose}
+            className="absolute right-4 top-1/2 -translate-y-1/2 
+                       w-8 h-8 bg-white rounded-full 
+                       flex items-center justify-center 
+                       shadow hover:bg-gray-200 transition"
+          >
+            <X size={16} />
+          </button>
         </div>
 
-        <button
-          onClick={onClose}
-          className="mt-6 w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded"
-        >
-          Close
-        </button>
+        {/* 🔘 Grey Body Section */}
+        <div className="bg-[#e5e5e5] px-6 py-2 text-sm">
 
+          {[
+            { label: "Name", value: product.name },
+            { label: "Size", value: product.tyre_size },
+            { label: "Pattern", value: product.pattern },
+            { label: "Year", value: product.year },
+            { label: "Origin", value: product.origin },
+            { label: "Stock", value: product.stock_qty },
+          ].map((row, index) => (
+            <div
+              key={index}
+              className="flex justify-between py-3 border-b border-gray-300 last:border-b-0"
+            >
+              <span className="text-gray-700">
+                {row.label}
+              </span>
+              <span className="font-semibold text-gray-900">
+                {row.value || "N/A"}
+              </span>
+            </div>
+          ))}
+
+          {/* Price Row */}
+          <div className="flex justify-between py-4">
+            <span className="text-gray-700 font-medium">Price</span>
+            <span className="text-lg font-bold text-green-600">
+              {new Intl.NumberFormat("en-SA", {
+                style: "currency",
+                currency: "SAR",
+                maximumFractionDigits: 0,
+              }).format(product.final_price)}
+            </span>
+          </div>
+
+        </div>
       </div>
-
     </div>
-
   );
 }
