@@ -2,11 +2,11 @@
 
 import { useCart } from "@/modules/cart/hooks/useCart";
 
-export default function AddToCartButton({ itemId }: { itemId: number }) {
+export default function AddToCartButton({ sku }: { sku: string }) {
   const { addToCart } = useCart();
 
   return (
-    <button onClick={() => addToCart(itemId, 1)}>
+    <button onClick={() => addToCart(sku, 1)}>
       Add To Cart
     </button>
   );
