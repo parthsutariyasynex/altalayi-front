@@ -2,26 +2,72 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/auth-options";
 import { NextRequest } from "next/server";
 
-export async function GET(req: NextRequest) {
-    const session: any = await getServerSession(authOptions);
-    const token = session?.accessToken;
+export async function GET(request: NextRequest) {
+    try {
+        // Step 1: Get token from header or session
+        let token: string | null = null;
+        const authHeader = request.headers.get("authorization");
+        if (authHeader && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7).replace(/['"]/g, "").trim();
+        }
 
-    if (!token) {
-        return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
+        if (!token) {
+            const session: any = await getServerSession(authOptions);
+            token = session?.accessToken;
+        }
 
-    const { searchParams } = new URL(req.url);
-    const categoryId = searchParams.get("categoryId") || "5";
+        if (!token || token === "null" || token === "undefined") {
+            return Response.json({ error: "Unauthorized" }, { status: 401 });
+        }
 
-    const res = await fetch(
-        `https://altalayi-demo.btire.com/rest/V1/kleverapi/category-products?categoryId=${categoryId}`,
-        {
+        // Step 2: Handle search parameters
+        const { searchParams } = new URL(request.url);
+        const categoryId = searchParams.get("categoryId") || "5";
+        const page = searchParams.get("page") || "1";
+        const pageSize = searchParams.get("pageSize") || "20";
+
+        // Step 3: Construct Magento URL
+        // Example: /rest/V1/kleverapi/category-products?categoryId=5&searchCriteria[currentPage]=1&searchCriteria[pageSize]=20&brand=29
+        const magentoUrl = new URL(
+            "https://altalayi-demo.btire.com/rest/V1/kleverapi/category-products"
+        );
+
+        magentoUrl.searchParams.set("categoryId", categoryId);
+        magentoUrl.searchParams.set("searchCriteria[currentPage]", page);
+        magentoUrl.searchParams.set("searchCriteria[pageSize]", pageSize);
+
+        // Forward dynamic filters as top-level params (as per customer KleverAPI pattern)
+        searchParams.forEach((value, key) => {
+            if (!["categoryId", "page", "pageSize"].includes(key)) {
+                magentoUrl.searchParams.set(key, value);
+            }
+        });
+
+        const res = await fetch(magentoUrl.toString(), {
             headers: {
                 Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
             },
-        }
-    );
+            cache: "no-store",
+        });
 
-    const data = await res.json();
-    return Response.json(data);
+        if (!res.ok) {
+            const errBody = await res.text();
+            console.error("Magento category-products error:", res.status, errBody);
+            return Response.json(
+                { error: "Magento API error", details: errBody },
+                { status: res.status }
+            );
+        }
+
+        const data = await res.json();
+        return Response.json(data);
+
+    } catch (error: any) {
+        console.error("category-products route error:", error.message);
+        return Response.json(
+            { error: "Failed to fetch products", message: error.message },
+            { status: 500 }
+        );
+    }
 }

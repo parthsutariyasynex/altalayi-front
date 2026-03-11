@@ -9,21 +9,29 @@ export async function GET(req: Request) {
     try {
         const authHeader = req.headers.get("authorization");
 
-        if (!authHeader) {
-            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return NextResponse.json({ message: "Unauthorized: Missing customer token" }, { status: 401 });
         }
 
-        const response = await fetch(`${BASE_URL}/kleverapi/cart`, {
+        const response = await fetch(`${BASE_URL}/carts/mine`, {
             method: "GET",
             headers: {
                 Authorization: authHeader,
+                "Content-Type": "application/json",
             },
         });
 
-        const data = await response.json();
-        console.log("Kleverapi GET cart:", JSON.stringify(data).slice(0, 400));
+        if (!response.ok) {
+            const errBody = await response.text();
+            console.error("Magento cart API error:", response.status, errBody);
+            return NextResponse.json(
+                { message: "Magento cart API error", details: errBody },
+                { status: response.status }
+            );
+        }
 
-        return NextResponse.json(data, { status: response.status });
+        const data = await response.json();
+        return NextResponse.json(data);
     } catch (error) {
         console.error("Fetch cart error:", error);
         return NextResponse.json(
@@ -40,8 +48,8 @@ export async function POST(req: Request) {
     try {
         const authHeader = req.headers.get("authorization");
 
-        if (!authHeader) {
-            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return NextResponse.json({ message: "Unauthorized: Missing customer token" }, { status: 401 });
         }
 
         const body = await req.json();
@@ -54,19 +62,32 @@ export async function POST(req: Request) {
             );
         }
 
-        const response = await fetch(`${BASE_URL}/kleverapi/cart/add`, {
+        const response = await fetch(`${BASE_URL}/carts/mine/items`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: authHeader,
             },
-            body: JSON.stringify({ sku, qty }),
+            body: JSON.stringify({
+                cartItem: {
+                    sku,
+                    qty,
+                    quote_id: "mine"
+                }
+            }),
         });
 
-        const data = await response.json();
-        console.log("Kleverapi add-to-cart:", JSON.stringify(data).slice(0, 400));
+        if (!response.ok) {
+            const errBody = await response.text();
+            console.error("Magento cart API POST error:", response.status, errBody);
+            return NextResponse.json(
+                { message: "Failed to add to cart", details: errBody },
+                { status: response.status }
+            );
+        }
 
-        return NextResponse.json(data, { status: response.status });
+        const data = await response.json();
+        return NextResponse.json(data);
     } catch (error) {
         console.error("Add to cart error:", error);
         return NextResponse.json(

@@ -13,7 +13,7 @@ export default function Navbar() {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full sticky top-0 z-50">
       {/* Navbar */}
       <div className="bg-yellow-400 text-black flex justify-center text-sm font-semibold shadow overflow-x-auto">
         <Link

@@ -16,11 +16,15 @@ import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.
 // }
 
 
-export async function fetchProducts(categoryId: string = "5"): Promise<Product[]> {
+export async function fetchProducts(searchParams?: URLSearchParams | string): Promise<Product[]> {
   try {
-    const data = await api.get(
-      `/category-products?categoryId=${categoryId}`
-    );
+    let url = "/category-products?categoryId=5"; // Default fallback structure
+
+    if (searchParams instanceof URLSearchParams) {
+      url = `/products?${searchParams.toString()}`;
+    }
+
+    const data = await api.get(url);
 
     console.log("API RESPONSE:", data);
     return data.products ?? data.items ?? [];
