@@ -164,7 +164,7 @@ export default function ProductsPage() {
 
   /* ── Sorting (Client-side on the current page results) ── */
   const sortedProducts = useMemo(() => {
-    let result = [...products];
+    const result = [...products];
     if (sortBy === "price-asc") return result.sort((a, b) => a.final_price - b.final_price);
     if (sortBy === "price-desc") return result.sort((a, b) => b.final_price - a.final_price);
     return result;
