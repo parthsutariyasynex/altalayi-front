@@ -31,7 +31,7 @@ export default function ProductDialog({ product, onClose }: ProductDialogProps) 
             className="absolute right-4 top-1/2 -translate-y-1/2 
                        w-8 h-8 bg-white rounded-full 
                        flex items-center justify-center 
-                       shadow hover:bg-gray-200 transition"
+                       shadow hover:bg-gray-200 transition cursor-pointer"
           >
             <X size={16} />
           </button>

@@ -1,7 +1,14 @@
-@import "tailwindcss";
+/* @import "tailwindcss"; */
 
 /* optional custom */
 
-body {
+/* body {
   font-family: Arial, Helvetica, sans-serif;
+} */
+
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
+@import "tailwindcss";
+
+body {
+  font-family: 'Open Sans', Arial, Helvetica, sans-serif;
 }

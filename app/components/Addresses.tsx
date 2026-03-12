@@ -243,7 +243,7 @@ export default function Addresses() {
             <input
               type="text"
               placeholder="Search addresses..."
-              className="w-full border border-gray-300 px-4 py-2.5 rounded-[1px] text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all placeholder:text-gray-400 shadow-inner"
+              className="w-full border border-gray-300 px-4 py-2.5 rounded-[1px] text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all placeholder:text-gray-400 shadow-inner cursor-text"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />

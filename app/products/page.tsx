@@ -24,7 +24,7 @@ export default function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [sortBy, setSortBy] = useState<string>("none");
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string[]>>({});
-  const [selectedFilterLabels, setSelectedFilterLabels] = useState<Record<string, string[]>>({});
+  const [selectedFilterLabels, setSelectedFilterLabels] = useState<Record<string, { value: string; label: string }[]>>({});
 
   // Image Modal State
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
@@ -54,9 +54,9 @@ export default function ProductsPage() {
 
         // Add selected filters to parameters
         Object.entries(selectedFilters).forEach(([code, values]) => {
-          if (values.length > 0) {
-            params.append(code, values.join(","));
-          }
+          values.forEach((value) => {
+            params.append(code, value);
+          });
         });
 
         const url = `/api/category-products?${params.toString()}`;
@@ -91,7 +91,7 @@ export default function ProductsPage() {
   }, [router, currentPage, selectedFilters]);
 
   // Handle filter change from sidebar
-  const handleFilterChange = (filters: Record<string, string[]>, labels: Record<string, string[]>) => {
+  const handleFilterChange = (filters: Record<string, string[]>, labels: Record<string, { value: string; label: string }[]>) => {
     setSelectedFilters(filters);
     setSelectedFilterLabels(labels);
     setCurrentPage(1); // Reset to first page when filters change
@@ -101,6 +101,12 @@ export default function ProductsPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchParams]);
+
+  const clearAllFilters = () => {
+    setSelectedFilters({});
+    setSelectedFilterLabels({});
+    setCurrentPage(1);
+  };
 
   /* ── Add To Cart ── */
   const handleAddToCart = async (sku: string) => {
@@ -181,30 +187,84 @@ export default function ProductsPage() {
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        <SidebarFilter onFilterChange={handleFilterChange} />
+        <SidebarFilter
+          onFilterChange={handleFilterChange}
+          selectedFilters={selectedFilters}
+        />
 
         <div className="flex-1 flex flex-col p-4 md:p-7 overflow-hidden">
           <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 w-full flex flex-col h-full overflow-hidden border border-gray-200">
 
             {/* Top Section */}
-            <div className="flex-shrink-0 flex justify-between mb-4">
-              <button
-                onClick={() => router.push("/favourites")}
-                className="flex items-center gap-2 bg-gray-300 hover:bg-gray-500 px-4 py-2 rounded-md border shadow"
-              >
-                <Star size={18} fill="black" />
-                Favourite Products
-              </button>
+            <div className="flex-shrink-0 flex flex-col gap-4 mb-4">
+              <div className="flex justify-between items-center">
+                <button
+                  onClick={() => router.push("/favourites")}
+                  className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 px-4 py-2 rounded-md border border-gray-300 shadow-sm transition-all duration-200 text-sm font-bold text-gray-700 cursor-pointer"
+                >
+                  <Star size={18} className="text-yellow-500 fill-yellow-500" />
+                  Favourite Products
+                </button>
 
-              <select
-                className="bg-gray-300 px-4 py-2 rounded-md border shadow"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-              >
-                <option value="none">Sort By</option>
-                <option value="price-asc">Price Low - High</option>
-                <option value="price-desc">Price High - Low</option>
-              </select>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Sort By:</span>
+                  <select
+                    className="bg-white px-4 py-2 rounded-md border border-gray-300 shadow-sm text-sm font-medium focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all cursor-pointer"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                  >
+                    <option value="none">Default</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Active Filters Chips */}
+              {Object.keys(selectedFilters).length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300 animate-in fade-in slide-in-from-top-1 duration-300">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest mr-1">Active:</span>
+                  {Object.entries(selectedFilterLabels).map(([groupCode, items]) => (
+                    items.map((item, idx) => (
+                      <div
+                        key={`${groupCode}-${item.value}`}
+                        className="flex items-center gap-1 bg-white border border-yellow-400 px-2 py-1 rounded-md shadow-sm group hover:border-red-400 transition-colors cursor-default"
+                      >
+                        <span className="text-[11px] font-bold text-gray-700">{item.label}</span>
+                        <button
+                          onClick={() => {
+                            const newFilters = { ...selectedFilters };
+                            const newLabels = { ...selectedFilterLabels };
+
+                            // Remove specific value
+                            newFilters[groupCode] = newFilters[groupCode].filter(v => v !== item.value);
+                            newLabels[groupCode] = newLabels[groupCode].filter(i => i.value !== item.value);
+
+                            if (newFilters[groupCode].length === 0) {
+                              delete newFilters[groupCode];
+                              delete newLabels[groupCode];
+                            }
+
+                            setSelectedFilters(newFilters);
+                            setSelectedFilterLabels(newLabels);
+                          }}
+                          className="hover:text-red-500 text-gray-400 transition-colors cursor-pointer"
+                          title={`Remove ${item.label}`}
+                        >
+                          <X size={14} strokeWidth={3} />
+                        </button>
+                      </div>
+                    ))
+                  ))}
+                  <button
+                    onClick={clearAllFilters}
+                    className="text-[11px] font-bold text-red-500 hover:text-red-700 transition-colors uppercase tracking-wider ml-auto flex items-center gap-1 cursor-pointer"
+                  >
+                    <X size={12} strokeWidth={3} />
+                    Clear All
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Table */}
@@ -305,21 +365,21 @@ export default function ProductsPage() {
 
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-center gap-2">
-                            <button type="button" className="w-10 h-10 border border-gray-400 rounded-md text-sm font-medium">1</button>
+                            <button type="button" className="w-10 h-10 border border-gray-400 rounded-md text-sm font-medium cursor-default">1</button>
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.preventDefault();
                                 handleAddToCart(product?.sku);
                               }}
-                              className="w-10 h-10 flex items-center justify-center bg-yellow-400 rounded-md hover:bg-yellow-500 transition"
+                              className="w-10 h-10 flex items-center justify-center bg-yellow-400 rounded-md hover:bg-yellow-500 transition cursor-pointer"
                             >
                               <ShoppingCart size={18} />
                             </button>
                             <button
                               type="button"
                               onClick={(e) => e.preventDefault()}
-                              className="w-10 h-10 flex items-center justify-center bg-yellow-400 rounded-md hover:bg-yellow-500 transition"
+                              className="w-10 h-10 flex items-center justify-center bg-yellow-400 rounded-md hover:bg-yellow-500 transition cursor-pointer"
                             >
                               <Star size={18} />
                             </button>
@@ -367,7 +427,7 @@ export default function ProductsPage() {
                       setCurrentPage((p) => Math.max(1, p - 1));
                     }}
                     disabled={currentPage === 1}
-                    className="flex items-center gap-1 h-9 px-3 text-sm font-semibold rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    className="flex items-center gap-1 h-9 px-3 text-sm font-semibold rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                   >
                     <ChevronLeft size={15} /> Prev
                   </button>
@@ -391,7 +451,7 @@ export default function ProductsPage() {
                             e.preventDefault();
                             setCurrentPage(item as number);
                           }}
-                          className={`w-9 h-9 text-sm font-semibold rounded-md border transition-all ${currentPage === item
+                          className={`w-9 h-9 text-sm font-semibold rounded-md border transition-all cursor-pointer ${currentPage === item
                             ? "bg-yellow-400 border-yellow-400 text-black shadow-sm"
                             : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                             }`}
@@ -409,7 +469,7 @@ export default function ProductsPage() {
                       setCurrentPage((p) => Math.min(totalPages, p + 1));
                     }}
                     disabled={currentPage >= totalPages}
-                    className="flex items-center gap-1 h-9 px-3 text-sm font-semibold rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    className="flex items-center gap-1 h-9 px-3 text-sm font-semibold rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                   >
                     Next <ChevronRight size={15} />
                   </button>
@@ -433,7 +493,7 @@ export default function ProductsPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              className="absolute -top-10 -right-2 text-white hover:text-gray-300 transition-colors p-2 bg-black/50 rounded-full"
+              className="absolute -top-10 -right-2 text-white hover:text-gray-300 transition-colors p-2 bg-black/50 rounded-full cursor-pointer"
               onClick={() => setIsImageModalOpen(false)}
             >
               <X size={24} />

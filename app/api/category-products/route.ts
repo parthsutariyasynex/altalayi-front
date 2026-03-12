@@ -37,9 +37,14 @@ export async function GET(request: NextRequest) {
         magentoUrl.searchParams.set("searchCriteria[pageSize]", pageSize);
 
         // Forward dynamic filters as top-level params (as per customer KleverAPI pattern)
-        searchParams.forEach((value, key) => {
+        // Correctly handle multiple values for the same key (OR logic for groups)
+        const uniqueKeys = Array.from(new Set(Array.from(searchParams.keys())));
+        uniqueKeys.forEach((key) => {
             if (!["categoryId", "page", "pageSize"].includes(key)) {
-                magentoUrl.searchParams.set(key, value);
+                const values = searchParams.getAll(key);
+                if (values.length > 0) {
+                    magentoUrl.searchParams.set(key, values.join(","));
+                }
             }
         });
 

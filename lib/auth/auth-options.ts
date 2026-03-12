@@ -10,36 +10,60 @@ export const authOptions: NextAuthOptions = {
                 password: { label: "Password", type: "password" },
             },
             async authorize(credentials) {
-                if (!credentials?.email || !credentials?.password) return null;
+                if (!credentials) return null;
+
+                const isOtp = !!(credentials as any).otp;
+                let url = "";
+                let body = {};
+
+                if (isOtp) {
+                    url = `${process.env.NEXT_PUBLIC_BASE_URL}/login/otp`;
+                    body = {
+                        mobile: (credentials as any).mobile,
+                        otp: (credentials as any).otp,
+                        countryCode: (credentials as any).countryCode
+                    };
+                    console.log("Calling Magento OTP Auth:", url);
+                } else {
+                    url = process.env.MAGENTO_AUTH_TOKEN_URL || "";
+                    body = {
+                        username: (credentials as any).email,
+                        password: (credentials as any).password,
+                    };
+                    console.log("Calling Magento Password Auth:", url);
+                }
+
+                if (!url) {
+                    console.error("Auth URL is not defined");
+                    return null;
+                }
 
                 try {
-                    // Call Magento direct token endpoint from env
-                    const magentoUrl = process.env.MAGENTO_AUTH_TOKEN_URL;
-                    if (!magentoUrl) {
-                        console.error("MAGENTO_AUTH_TOKEN_URL is not defined in .env");
-                        return null;
-                    }
-
-                    console.log("Calling Magento Auth:", magentoUrl);
-                    const res = await fetch(magentoUrl, {
+                    const res = await fetch(url, {
                         method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            username: credentials.email,
-                            password: credentials.password,
-                        }),
+                        headers: {
+                            "Content-Type": "application/json",
+                            "platform": "web"
+                        },
+                        body: JSON.stringify(body),
                     });
 
-                    // Magento returns the token as a JSON string (e.g., "abcdef...")
                     const data = await res.json();
-                    console.log("Magento Response:", data);
+                    console.log("Magento Auth Response:", data);
 
                     if (res.ok && data) {
+                        const token = isOtp ? (data.token || (data.customer && data.customer.token)) : data;
+
+                        if (!token) {
+                            console.error("No token found in successful response");
+                            return null;
+                        }
+
                         return {
-                            id: credentials.email,
-                            email: credentials.email,
-                            name: credentials.email,
-                            token: data,
+                            id: (credentials as any).email || (credentials as any).mobile,
+                            email: (credentials as any).email || "",
+                            name: (credentials as any).email || (credentials as any).mobile,
+                            token: token,
                         };
                     }
                     return null;

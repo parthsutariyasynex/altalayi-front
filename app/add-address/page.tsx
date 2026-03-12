@@ -112,7 +112,7 @@ export default function AddAddressPage() {
                                 required
                                 value={formData.firstname}
                                 onChange={handleChange}
-                                className="w-full border border-gray-300 px-3 py-2.5 rounded-[1px] text-sm focus:outline-none focus:ring-1 focus:ring-black"
+                                className="w-full border border-gray-300 px-3 py-2.5 rounded-[1px] text-sm focus:outline-none focus:ring-1 focus:ring-black cursor-text"
                             />
                         </div>
                         <div className="md:col-span-1">
@@ -123,7 +123,7 @@ export default function AddAddressPage() {
                                 required
                                 value={formData.lastname}
                                 onChange={handleChange}
-                                className="w-full border border-gray-300 px-3 py-2.5 rounded-[1px] text-sm focus:outline-none focus:ring-1 focus:ring-black"
+                                className="w-full border border-gray-300 px-3 py-2.5 rounded-[1px] text-sm focus:outline-none focus:ring-1 focus:ring-black cursor-text"
                             />
                         </div>
                         <div className="md:col-span-2">
@@ -134,7 +134,7 @@ export default function AddAddressPage() {
                                 required
                                 value={formData.street[0]}
                                 onChange={handleChange}
-                                className="w-full border border-gray-300 px-3 py-2.5 rounded-[1px] text-sm focus:outline-none focus:ring-1 focus:ring-black"
+                                className="w-full border border-gray-300 px-3 py-2.5 rounded-[1px] text-sm focus:outline-none focus:ring-1 focus:ring-black cursor-text"
                             />
                         </div>
                         <div className="md:col-span-1">
@@ -145,7 +145,7 @@ export default function AddAddressPage() {
                                 required
                                 value={formData.city}
                                 onChange={handleChange}
-                                className="w-full border border-gray-300 px-3 py-2.5 rounded-[1px] text-sm focus:outline-none focus:ring-1 focus:ring-black"
+                                className="w-full border border-gray-300 px-3 py-2.5 rounded-[1px] text-sm focus:outline-none focus:ring-1 focus:ring-black cursor-text"
                             />
                         </div>
                         <div className="md:col-span-1">
@@ -156,7 +156,7 @@ export default function AddAddressPage() {
                                 required
                                 value={formData.postcode}
                                 onChange={handleChange}
-                                className="w-full border border-gray-300 px-3 py-2.5 rounded-[1px] text-sm focus:outline-none focus:ring-1 focus:ring-black"
+                                className="w-full border border-gray-300 px-3 py-2.5 rounded-[1px] text-sm focus:outline-none focus:ring-1 focus:ring-black cursor-text"
                             />
                         </div>
                         <div className="md:col-span-1">
@@ -167,7 +167,7 @@ export default function AddAddressPage() {
                                 required
                                 value={formData.telephone}
                                 onChange={handleChange}
-                                className="w-full border border-gray-300 px-3 py-2.5 rounded-[1px] text-sm focus:outline-none focus:ring-1 focus:ring-black"
+                                className="w-full border border-gray-300 px-3 py-2.5 rounded-[1px] text-sm focus:outline-none focus:ring-1 focus:ring-black cursor-text"
                             />
                         </div>
                         <div className="md:col-span-2 space-y-4 pt-4 border-t border-gray-100">

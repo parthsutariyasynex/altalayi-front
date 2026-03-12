@@ -60,7 +60,7 @@ export default function FavouritesPage() {
 
           <button
             onClick={() => router.push("/products")}
-            className="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded"
+            className="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded cursor-pointer"
           >
             Back
           </button>
@@ -77,7 +77,7 @@ export default function FavouritesPage() {
                 key={product.product_id}
                 className="bg-white p-4 rounded shadow hover:shadow-lg transition"
               >
-                
+
 
                 <h2 className="font-semibold">{product.name}</h2>
 

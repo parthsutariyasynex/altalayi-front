@@ -80,7 +80,7 @@ export default function CartPage() {
             )}
             <Link
               href="/products"
-              className="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-6 py-3 rounded-lg transition"
+              className="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-6 py-3 rounded-lg transition cursor-pointer"
             >
               <ArrowLeft size={18} />
               Continue Shopping
@@ -109,7 +109,7 @@ export default function CartPage() {
             </div>
             <Link
               href="/products"
-              className="hidden sm:inline-flex items-center gap-2 text-sm text-gray-600 hover:text-black transition"
+              className="hidden sm:inline-flex items-center gap-2 text-sm text-gray-600 hover:text-black transition cursor-pointer"
             >
               <ArrowLeft size={16} />
               Continue Shopping
@@ -163,7 +163,7 @@ export default function CartPage() {
                             <div className="flex items-center justify-center gap-0 border border-gray-300 rounded-lg overflow-hidden w-fit mx-auto">
                               <button
                                 onClick={() => handleQuantityChange(item.item_id, item.qty - 1)}
-                                className="w-9 h-9 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-lg font-bold text-gray-600 transition"
+                                className="w-9 h-9 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-lg font-bold text-gray-600 transition cursor-pointer"
                                 aria-label="Decrease quantity"
                               >
                                 −
@@ -173,7 +173,7 @@ export default function CartPage() {
                               </div>
                               <button
                                 onClick={() => handleQuantityChange(item.item_id, item.qty + 1)}
-                                className="w-9 h-9 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-lg font-bold text-gray-600 transition"
+                                className="w-9 h-9 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-lg font-bold text-gray-600 transition cursor-pointer"
                                 aria-label="Increase quantity"
                               >
                                 +
@@ -190,7 +190,7 @@ export default function CartPage() {
                           <td className="px-4 py-4 text-center">
                             <button
                               onClick={() => handleRemoveItem(item.item_id)}
-                              className="inline-flex items-center justify-center w-9 h-9 rounded-lg text-red-500 hover:bg-red-50 hover:text-red-700 transition"
+                              className="inline-flex items-center justify-center w-9 h-9 rounded-lg text-red-500 hover:bg-red-50 hover:text-red-700 transition cursor-pointer"
                               aria-label="Remove item"
                             >
                               <Trash2 size={16} />
@@ -227,13 +227,13 @@ export default function CartPage() {
                 </div>
               </div>
 
-              <button className="mt-6 w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-6 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md">
+              <button className="mt-6 w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-6 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer">
                 Proceed to Checkout
               </button>
 
               <Link
                 href="/products"
-                className="mt-3 w-full inline-flex items-center justify-center gap-2 border border-gray-200 hover:border-gray-300 text-gray-600 font-medium py-3 px-6 rounded-lg transition text-sm"
+                className="mt-3 w-full inline-flex items-center justify-center gap-2 border border-gray-200 hover:border-gray-300 text-gray-600 font-medium py-3 px-6 rounded-lg transition text-sm cursor-pointer"
               >
                 <ArrowLeft size={16} />
                 Continue Shopping

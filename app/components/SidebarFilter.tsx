@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { ChevronDown, ChevronRight, Filter, Search } from "lucide-react";
+import { ChevronDown, ChevronRight, Filter, Search, X } from "lucide-react";
 
 export interface FilterOption {
     value: string;
@@ -18,17 +18,24 @@ export interface FilterGroupData {
 
 export default function SidebarFilter({
     categoryId = "5",
-    onFilterChange
+    onFilterChange,
+    selectedFilters: externalSelectedFilters = {}
 }: {
     categoryId?: string;
-    onFilterChange?: (filters: Record<string, string[]>, filterLabels: Record<string, string[]>) => void;
+    onFilterChange?: (filters: Record<string, string[]>, filterLabels: Record<string, { value: string; label: string }[]>) => void;
+    selectedFilters?: Record<string, string[]>;
 }) {
     const [filterGroups, setFilterGroups] = useState<FilterGroupData[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Selected state
-    const [selectedFilters, setSelectedFilters] = useState<Record<string, string[]>>({});
+    // Selected state - sync with prop
+    const [selectedFilters, setSelectedFilters] = useState<Record<string, string[]>>(externalSelectedFilters);
+
+    // Sync internal state with external prop changes
+    useEffect(() => {
+        setSelectedFilters(externalSelectedFilters);
+    }, [externalSelectedFilters]);
 
     // Accordion state - expand 'brand' and 'item_code' by default for better UX, or let them all collapse
     const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
@@ -107,13 +114,13 @@ export default function SidebarFilter({
 
         setSelectedFilters(nextState);
         if (onFilterChange) {
-            const nextLabels: Record<string, string[]> = {};
+            const nextLabels: Record<string, { value: string; label: string }[]> = {};
             Object.entries(nextState).forEach(([c, vals]) => {
                 const group = filterGroups.find((g) => g.code === c);
                 if (group) {
                     nextLabels[c] = vals.map(v => {
                         const opt = group.options.find(o => o.value === v);
-                        return opt ? opt.label : v;
+                        return { value: v, label: opt ? opt.label : v };
                     });
                 }
             });
@@ -141,7 +148,7 @@ export default function SidebarFilter({
                         Filters
                     </h2>
                     {activeFilterCount > 0 && (
-                        <span className="bg-yellow-400 text-black text-[10px] font-bold px-2 py-0.5 rounded-full ml-1">
+                        <span className="bg-yellow-400 text-black text-[10px] font-bold px-2 py-0.5 rounded-full ml-1 animate-in zoom-in duration-300">
                             {activeFilterCount}
                         </span>
                     )}
@@ -150,9 +157,10 @@ export default function SidebarFilter({
                 {activeFilterCount > 0 && (
                     <button
                         onClick={clearFilters}
-                        className="text-[11px] font-bold text-gray-500 hover:text-red-600 transition-colors uppercase tracking-wider"
+                        className="text-[11px] font-bold text-red-500 hover:text-red-700 transition-colors uppercase tracking-wider flex items-center gap-1 group cursor-pointer"
                     >
-                        Reset
+                        <X className="w-3 h-3 group-hover:scale-110 transition-transform" />
+                        Clear All
                     </button>
                 )}
             </div>
@@ -187,7 +195,7 @@ export default function SidebarFilter({
                                 {/* Accordion Toggle Button */}
                                 <button
                                     onClick={() => toggleGroup(group.code)}
-                                    className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors focus:outline-none focus:bg-gray-50 group-btn"
+                                    className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors focus:outline-none focus:bg-gray-50 group-btn cursor-pointer"
                                     aria-expanded={isExpanded}
                                 >
                                     <div className="flex items-center gap-2">

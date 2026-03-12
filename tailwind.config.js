@@ -4,7 +4,14 @@ export default {
     "./components/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ["var(--font-montserrat)", "sans-serif"],
+      },
+      colors: {
+        brandYellow: "#F5B21B",
+      },
+    },
   },
   plugins: [],
 };

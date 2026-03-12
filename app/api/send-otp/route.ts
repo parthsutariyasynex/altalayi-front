@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
     try {
-        const body = await req.json();
-        const magentoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/login/otp`;
+        const body = await request.json();
+        const magentoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/send-otp`;
 
-        console.log(`Proxying Login OTP request to: ${magentoUrl}`);
+        console.log(`>>> PROXY HIT: Sending OTP to Magento: ${magentoUrl}`);
 
         const response = await fetch(magentoUrl, {
             method: 'POST',
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json(data, { status: response.status });
     } catch (error: any) {
-        console.error('Login OTP Proxy Error:', error);
+        console.error('Send OTP Proxy Error:', error);
         return NextResponse.json(
             { message: error.message || 'Internal Server Error' },
             { status: 500 }
