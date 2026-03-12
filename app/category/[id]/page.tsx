@@ -1,9 +1,9 @@
-import Sidebar from "../../components/Sidebar";
+// import Sidebar from "../../components/Sidebar";
 
-export default function Page() {
-  return (
-    <div className="flex">
-      <Sidebar  />
-    </div>
-  );
-}
+// export default function Page() {
+//   return (
+//     <div className="flex">
+//       <Sidebar  />
+//     </div>
+//   );
+// }
