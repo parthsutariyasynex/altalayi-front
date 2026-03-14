@@ -189,7 +189,7 @@ export default function MyAccountPage() {
                                             <div className="p-5 text-sm space-y-2 text-gray-600">
                                                 <p><span className="font-semibold text-gray-800">Sales Targets:</span> N/A</p>
                                                 <p><span className="font-semibold text-gray-800">Achievements:</span> N/A</p>
-                                                <p><span className="font-semibold text-gray-800">Incentive:</span> SAR 0.00</p>
+                                                <p><span className="font-semibold text-gray-800">Incentive:</span> ﷼ 0.00</p>
                                             </div>
                                         </div>
 

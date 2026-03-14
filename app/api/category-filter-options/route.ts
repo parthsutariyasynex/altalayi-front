@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
         const categoryId = searchParams.get("categoryId") || "5"; // Adjust if categoryId isn't needed
 
         const res = await fetch(
-            `https://altalayi-demo.btire.com/rest/V1/kleverapi/category-filter-options?categoryId=${categoryId}`,
+            `${process.env.NEXT_PUBLIC_BASE_URL}/category-filter-options?categoryId=${categoryId}`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,

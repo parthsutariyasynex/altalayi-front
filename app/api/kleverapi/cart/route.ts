@@ -1,31 +1,34 @@
 import { NextResponse } from "next/server";
 
-const BASE_URL = "https://altalayi-demo.btire.com/rest/V1";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 /* =========================
-   GET CART
+   GET CART (KleverAPI)
 ========================= */
 export async function GET(req: Request) {
     try {
         const authHeader = req.headers.get("authorization");
 
+        // Note: Removing the strict 401 requirement if you want to support guest carts,
+        // but keeping it as you manually added it.
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
             return NextResponse.json({ message: "Unauthorized: Missing customer token" }, { status: 401 });
         }
 
-        const response = await fetch(`${BASE_URL}/carts/mine`, {
+        const response = await fetch(`${BASE_URL}/cart`, {
             method: "GET",
             headers: {
                 Authorization: authHeader,
                 "Content-Type": "application/json",
             },
+            cache: "no-store",
         });
 
         if (!response.ok) {
             const errBody = await response.text();
-            console.error("Magento cart API error:", response.status, errBody);
+            console.error("Cart API error:", response.status, errBody);
             return NextResponse.json(
-                { message: "Magento cart API error", details: errBody },
+                { message: "Failed to fetch from KleverAPI", details: errBody },
                 { status: response.status }
             );
         }
@@ -33,66 +36,46 @@ export async function GET(req: Request) {
         const data = await response.json();
         return NextResponse.json(data);
     } catch (error) {
-        console.error("Fetch cart error:", error);
-        return NextResponse.json(
-            { message: "Failed to fetch cart" },
-            { status: 500 }
-        );
+        console.error("Proxy GET Error:", error);
+        return NextResponse.json({ message: "Internal server error" }, { status: 500 });
     }
 }
 
 /* =========================
-   ADD TO CART
+   ADD TO CART (Standard Magento fallback or custom)
 ========================= */
 export async function POST(req: Request) {
     try {
         const authHeader = req.headers.get("authorization");
-
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return NextResponse.json({ message: "Unauthorized: Missing customer token" }, { status: 401 });
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
         const body = await req.json();
         const { sku, qty } = body;
 
-        if (!sku || !qty) {
-            return NextResponse.json(
-                { message: "SKU and quantity are required" },
-                { status: 400 }
-            );
-        }
-
-        const response = await fetch(`${BASE_URL}/carts/mine/items`, {
+        const response = await fetch(`${BASE_URL}/cart/add`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: authHeader,
             },
             body: JSON.stringify({
-                cartItem: {
-                    sku,
-                    qty,
-                    quote_id: "mine"
-                }
+                sku,
+                qty
             }),
         });
 
         if (!response.ok) {
             const errBody = await response.text();
-            console.error("Magento cart API POST error:", response.status, errBody);
-            return NextResponse.json(
-                { message: "Failed to add to cart", details: errBody },
-                { status: response.status }
-            );
+            console.error("Add to Cart Proxy Error:", response.status, errBody);
+            return NextResponse.json({ message: "Failed to add", details: errBody }, { status: response.status });
         }
 
         const data = await response.json();
+        console.log("Add to Cart Proxy Response:", data);
         return NextResponse.json(data);
     } catch (error) {
-        console.error("Add to cart error:", error);
-        return NextResponse.json(
-            { message: "Failed to add to cart" },
-            { status: 500 }
-        );
+        return NextResponse.json({ message: "Internal server error" }, { status: 500 });
     }
 }

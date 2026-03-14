@@ -13,7 +13,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
 
     // Base Magento Products API
-    const magentoUrl = new URL("https://altalayi-demo.btire.com/rest/V1/products");
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
+    const magentoUrl = new URL(baseUrl.split("/kleverapi")[0] + "/products");
 
     let filterGroupIndex = 0;
 

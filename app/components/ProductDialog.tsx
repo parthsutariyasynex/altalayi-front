@@ -41,7 +41,8 @@ export default function ProductDialog({ product, onClose }: ProductDialogProps) 
         <div className="bg-[#e5e5e5] px-6 py-2 text-sm">
 
           {[
-            { label: "Name", value: product.name },
+            { label: "Item Code", value: product.item_code },
+            { label: "Name", value: product.name ? product.name.split(' ')[0] : "N/A" },
             { label: "Size", value: product.tyre_size },
             { label: "Pattern", value: product.pattern },
             { label: "Year", value: product.year },
@@ -65,9 +66,8 @@ export default function ProductDialog({ product, onClose }: ProductDialogProps) 
           <div className="flex justify-between py-4">
             <span className="text-gray-700 font-medium">Price</span>
             <span className="text-lg font-bold text-green-600">
-              {new Intl.NumberFormat("en-SA", {
-                style: "currency",
-                currency: "SAR",
+              ﷼ {new Intl.NumberFormat("en-SA", {
+                minimumFractionDigits: 0,
                 maximumFractionDigits: 0,
               }).format(product.final_price)}
             </span>

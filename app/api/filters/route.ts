@@ -33,7 +33,7 @@ export async function GET(request: Request) {
         const categoryId = searchParams.get("categoryId") || "5";
 
         // Step 5: Fetch from Magento with the correct URL and user's token
-        const magentoUrl = `https://altalayi-demo.btire.com/rest/V1/kleverapi/category-filter-options/${categoryId}`;
+        const magentoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/category-filter-options/${categoryId}`;
 
         const res = await fetch(magentoUrl, {
             method: "GET",

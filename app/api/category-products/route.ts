@@ -71,6 +71,13 @@ export async function GET(request: NextRequest) {
         }
 
         const data = await res.json();
+        // DEBUG: Log first product's full structure to identify stock fields
+        const items = data.products || data.items || [];
+        if (items.length > 0) {
+            console.log("=== FIRST PRODUCT ALL FIELDS ===");
+            console.log(JSON.stringify(items[0], null, 2));
+            console.log("=== FIELD NAMES ===", Object.keys(items[0]));
+        }
         return Response.json(data);
 
     } catch (error: any) {

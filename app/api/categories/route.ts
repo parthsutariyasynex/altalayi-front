@@ -10,7 +10,7 @@ export async function GET() {
     }
 
     const res = await fetch(
-        "https://altalayi-demo.btire.com/rest/V1/kleverapi/category-products",
+        `${process.env.NEXT_PUBLIC_BASE_URL}/category-products`,
         {
             headers: {
                 Authorization: `Bearer ${token}`,

@@ -86,7 +86,7 @@ export default function FavouritesPage() {
                 </p>
 
                 <p className="font-bold text-green-600 mt-1">
-                  SAR {product.final_price}
+                  ﷼ {product.final_price}
                 </p>
 
                 <Star

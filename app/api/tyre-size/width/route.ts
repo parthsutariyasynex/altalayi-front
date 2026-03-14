@@ -10,7 +10,7 @@ export async function GET() {
     }
 
     const res = await fetch(
-        "https://altalayi-demo.btire.com/rest/V1/kleverapi/tyre-size/width",
+        `${process.env.NEXT_PUBLIC_BASE_URL}/tyre-size/width`,
         {
             headers: {
                 Authorization: `Bearer ${token}`,

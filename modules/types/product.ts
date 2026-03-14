@@ -10,6 +10,7 @@ export type Product = {
   final_price: number;
 
   sku?: string;
+  item_code?: string;
   stock_status?: string;
   product_url?: string;
 };

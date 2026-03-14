@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     const height = searchParams.get("height");
 
     const res = await fetch(
-        `https://altalayi-demo.btire.com/rest/V1/kleverapi/tyre-size/rim?width=${width}&height=${height}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/tyre-size/rim?width=${width}&height=${height}`,
         {
             headers: {
                 Authorization: `Bearer ${token}`,
