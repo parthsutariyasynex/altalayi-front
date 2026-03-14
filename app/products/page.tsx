@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import Navbar from "../components/Navbar";
 import { ShoppingCart, X, Star, ChevronLeft, ChevronRight, AlertTriangle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -33,9 +33,11 @@ export default function ProductsPage() {
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => { setIsMounted(true); }, []);
 
-  /* ── Load Products ── */
+  /* ── Load Products ── (no client-side filtering; display API response as-is) */
   useEffect(() => {
     if (!checkAuth(router)) return;
+
+    const abortController = new AbortController();
 
     const loadProducts = async () => {
       try {
@@ -46,21 +48,46 @@ export default function ProductsPage() {
         const headers: HeadersInit = { "Content-Type": "application/json" };
         if (token) headers["Authorization"] = `Bearer ${token}`;
 
-        // Construct query parameters including filters
+        // const params = new URLSearchParams();
+        // params.append("categoryId", "5");
+        // params.append("page", String(currentPage));
+        // params.append("pageSize", String(PAGE_SIZE));
+
+        // // Multiple values for same filter: comma-separated (OR). Do not filter by these on the client.
+        // Object.entries(selectedFilters).forEach(([code, values]) => {
+        //   if (values.length > 0) {
+        //     params.append(code, values.join(","));
+        //   }
+        // });
+
         const params = new URLSearchParams();
         params.append("categoryId", "5");
         params.append("page", String(currentPage));
         params.append("pageSize", String(PAGE_SIZE));
 
-        // Add selected filters to parameters
+        // Merge all selected filter values into single itemCode param
+        // const allValues: string[] = [];
+
+        // Object.values(selectedFilters).forEach(values => {
+        //   allValues.push(...values);
+        // });
+
+        // if (allValues.length > 0) {
+        //   params.append("itemCode", allValues.join(","));
+        // }
+
         Object.entries(selectedFilters).forEach(([code, values]) => {
-          values.forEach((value) => {
-            params.append(code, value);
-          });
+          if (values.length > 0) {
+            params.append(code, values.join(","));
+          }
         });
 
         const url = `/api/category-products?${params.toString()}`;
-        const res = await fetch(url, { headers });
+
+        console.log("Selected Filters:", selectedFilters);
+        console.log("API URL:", url);
+
+        const res = await fetch(url, { headers, signal: abortController.signal });
 
         if (!res.ok) {
           if (res.status === 401) {
@@ -68,39 +95,41 @@ export default function ProductsPage() {
             router.replace("/login");
             return;
           }
+          const errBody = await res.json().catch(() => ({}));
           throw new Error(`API Error: ${res.status}`);
         }
 
         const data = await res.json();
-        console.log("API Response:", data);
+        // Use API response as-is; no client-side filtering by selectedFilters
+        const productArray = Array.isArray(data.products) ? data.products : (Array.isArray(data.items) ? data.items : []);
+        const total = typeof data.total_count === "number" ? data.total_count : productArray.length;
 
-        const productArray = data.products ?? data.items ?? [];
-        const total = data.total_count ?? productArray.length;
-
+        if (abortController.signal.aborted) return;
         setProducts(productArray);
         setTotalCount(total);
       } catch (err: unknown) {
+        if (err instanceof Error && err.name === "AbortError") return;
         setError("Unable to load products. Please try again.");
         console.error(err);
       } finally {
-        setLoading(false);
+        if (!abortController.signal.aborted) setLoading(false);
       }
     };
 
     loadProducts();
+    return () => abortController.abort();
   }, [router, currentPage, selectedFilters]);
 
-  // Handle filter change from sidebar
-  const handleFilterChange = (filters: Record<string, string[]>, labels: Record<string, { value: string; label: string }[]>) => {
-    setSelectedFilters(filters);
-    setSelectedFilterLabels(labels);
-    setCurrentPage(1); // Reset to first page when filters change
-  };
-
-  // Reset to page 1 when filters/searchParams change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchParams]);
+  // Handle filter change from sidebar — memoised so SidebarFilter's
+  // useCallback dependency on onFilterChange stays stable across renders.
+  const handleFilterChange = useCallback(
+    (filters: Record<string, string[]>, labels: Record<string, { value: string; label: string }[]>) => {
+      setSelectedFilters(filters);
+      setSelectedFilterLabels(labels);
+      setCurrentPage(1);
+    },
+    [],
+  );
 
   const clearAllFilters = () => {
     setSelectedFilters({});
@@ -168,11 +197,11 @@ export default function ProductsPage() {
     }).format(numericPrice);
   };
 
-  /* ── Sorting (Client-side on the current page results) ── */
+  /* ── Sorting only (no filtering); display products exactly as returned by API ── */
   const sortedProducts = useMemo(() => {
     const result = [...products];
-    if (sortBy === "price-asc") return result.sort((a, b) => a.final_price - b.final_price);
-    if (sortBy === "price-desc") return result.sort((a, b) => b.final_price - a.final_price);
+    if (sortBy === "price-asc") return result.sort((a, b) => (a.final_price ?? 0) - (b.final_price ?? 0));
+    if (sortBy === "price-desc") return result.sort((a, b) => (b.final_price ?? 0) - (a.final_price ?? 0));
     return result;
   }, [products, sortBy]);
 
@@ -236,7 +265,7 @@ export default function ProductsPage() {
                             const newFilters = { ...selectedFilters };
                             const newLabels = { ...selectedFilterLabels };
 
-                            // Remove specific value
+                            // Remove specific value from the array
                             newFilters[groupCode] = newFilters[groupCode].filter(v => v !== item.value);
                             newLabels[groupCode] = newLabels[groupCode].filter(i => i.value !== item.value);
 
@@ -247,6 +276,7 @@ export default function ProductsPage() {
 
                             setSelectedFilters(newFilters);
                             setSelectedFilterLabels(newLabels);
+                            setCurrentPage(1);
                           }}
                           className="hover:text-red-500 text-gray-400 transition-colors cursor-pointer"
                           title={`Remove ${item.label}`}
@@ -304,7 +334,7 @@ export default function ProductsPage() {
                     </tr>
                   ) : (
                     sortedProducts.map((product, index) => (
-                      <tr key={product?.product_id || product?.id || index} className="hover:bg-gray-50">
+                      <tr key={`product-${index}-${product?.product_id ?? product?.id ?? product?.sku ?? ''}`} className="hover:bg-gray-50">
                         <td className="px-4 py-3 text-sm">{product?.name || "N/A"}</td>
 
                         <td className="px-4 py-3">

@@ -31,6 +31,8 @@ export const authOptions: NextAuthOptions = {
                         password: (credentials as any).password,
                     };
                     console.log("Calling Magento Password Auth:", url);
+                    console.log("Credentials keys:", Object.keys(credentials as any));
+                    console.log("Attempting login for username:", (body as any).username);
                 }
 
                 if (!url) {
@@ -39,12 +41,16 @@ export const authOptions: NextAuthOptions = {
                 }
 
                 try {
+                    const headers: any = {
+                        "Content-Type": "application/json"
+                    };
+                    if (isOtp) {
+                        headers["platform"] = "web";
+                    }
+
                     const res = await fetch(url, {
                         method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "platform": "web"
-                        },
+                        headers: headers,
                         body: JSON.stringify(body),
                     });
 

@@ -26,6 +26,15 @@ const nextConfig: NextConfig = {
             ],
         };
     },
+    async redirects() {
+        return [
+            {
+                source: "/my-account",
+                destination: "/customer/account",
+                permanent: true,
+            },
+        ];
+    },
 };
 
 export default nextConfig;

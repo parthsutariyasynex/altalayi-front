@@ -26,29 +26,34 @@ export async function GET(request: NextRequest) {
         const page = searchParams.get("page") || "1";
         const pageSize = searchParams.get("pageSize") || "20";
 
-        // Step 3: Construct Magento URL
-        // Example: /rest/V1/kleverapi/category-products?categoryId=5&searchCriteria[currentPage]=1&searchCriteria[pageSize]=20&brand=29
-        const magentoUrl = new URL(
-            "https://altalayi-demo.btire.com/rest/V1/kleverapi/category-products"
-        );
+        // Step 3: Construct Magento URL manually (not via URLSearchParams)
+        // so that commas in multi-value filters stay unencoded.
+        const queryParts: string[] = [
+            `categoryId=${encodeURIComponent(categoryId)}`,
+            `searchCriteria[currentPage]=${encodeURIComponent(page)}`,
+            `searchCriteria[pageSize]=${encodeURIComponent(pageSize)}`,
+        ];
 
-        magentoUrl.searchParams.set("categoryId", categoryId);
-        magentoUrl.searchParams.set("searchCriteria[currentPage]", page);
-        magentoUrl.searchParams.set("searchCriteria[pageSize]", pageSize);
-
-        // Forward dynamic filters as top-level params (as per customer KleverAPI pattern)
-        // Correctly handle multiple values for the same key (OR logic for groups)
+        // Same filter = OR (repeated params); different filters = AND.
+        // Magento/KleverAPI expects repeated params for OR: itemCode=2709&itemCode=2602
+        const reservedKeys = new Set(["categoryId", "page", "pageSize"]);
         const uniqueKeys = Array.from(new Set(Array.from(searchParams.keys())));
+
         uniqueKeys.forEach((key) => {
-            if (!["categoryId", "page", "pageSize"].includes(key)) {
-                const values = searchParams.getAll(key);
-                if (values.length > 0) {
-                    magentoUrl.searchParams.set(key, values.join(","));
-                }
-            }
+            if (reservedKeys.has(key)) return;
+            const rawValues = searchParams.getAll(key);
+            const values = rawValues
+                .flatMap((v) => v.split(",").map((s) => s.trim()).filter(Boolean))
+                .filter((v, i, arr) => arr.indexOf(v) === i);
+            values.forEach((value) => {
+                queryParts.push(`${encodeURIComponent(key)}=${encodeURIComponent(value)}`);
+            });
         });
 
-        const res = await fetch(magentoUrl.toString(), {
+        const magentoUrlStr = `${process.env.NEXT_PUBLIC_BASE_URL}/category-products?${queryParts.join("&")}`;
+        console.log("Magento request URL:", magentoUrlStr);
+
+        const res = await fetch(magentoUrlStr, {
             headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",

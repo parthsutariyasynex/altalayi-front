@@ -29,7 +29,7 @@ export default function ChangePasswordPage() {
     dispatch(changePassword({ currentPassword, newPassword }, (err: any) => {
       if (!err) {
         toast.success("Password changed successfully");
-        router.push("/my-account");
+        router.push("/customer/account");
       } else {
         toast.error(err || "Failed to change password");
       }

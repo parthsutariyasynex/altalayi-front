@@ -31,7 +31,7 @@ export default function LoginPage() {
   // Auto-redirect if already logged in
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace("/my-account");
+      router.replace("/customer/account");
     }
   }, [status, router]);
 
@@ -104,7 +104,7 @@ export default function LoginPage() {
 
         if (res?.ok) {
           toast.success("Login Successful");
-          router.replace("/my-account");
+          router.replace("/customer/account");
         } else {
           toast.error("Login failed. Please check your credentials.");
         }
@@ -125,7 +125,7 @@ export default function LoginPage() {
 
         if (res?.ok) {
           toast.success("Login Successful");
-          router.replace("/my-account");
+          router.replace("/customer/account");
         } else {
           toast.error(res?.error || "Login Failed. Invalid OTP.");
         }

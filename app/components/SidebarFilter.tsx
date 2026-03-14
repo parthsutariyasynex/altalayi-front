@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { ChevronDown, ChevronRight, Filter, Search, X } from "lucide-react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { ChevronDown, Filter, X } from "lucide-react";
 
 export interface FilterOption {
     value: string;
@@ -18,24 +17,21 @@ export interface FilterGroupData {
 
 export default function SidebarFilter({
     categoryId = "5",
-    onFilterChange,
-    selectedFilters: externalSelectedFilters = {}
+    selectedFilters = {},
+    onFilterChange
 }: {
     categoryId?: string;
-    onFilterChange?: (filters: Record<string, string[]>, filterLabels: Record<string, { value: string; label: string }[]>) => void;
     selectedFilters?: Record<string, string[]>;
+    onFilterChange?: (filters: Record<string, string[]>, filterLabels: Record<string, { value: string; label: string }[]>) => void;
 }) {
     const [filterGroups, setFilterGroups] = useState<FilterGroupData[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Selected state - sync with prop
-    const [selectedFilters, setSelectedFilters] = useState<Record<string, string[]>>(externalSelectedFilters);
-
-    // Sync internal state with external prop changes
-    useEffect(() => {
-        setSelectedFilters(externalSelectedFilters);
-    }, [externalSelectedFilters]);
+    // Ref keeps the latest selectedFilters accessible inside callbacks
+    // without recreating the callback on every prop change.
+    const filtersRef = useRef(selectedFilters);
+    filtersRef.current = selectedFilters;
 
     // Accordion state - expand 'brand' and 'item_code' by default for better UX, or let them all collapse
     const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
@@ -98,41 +94,44 @@ export default function SidebarFilter({
     // Remove applyFiltersToUrl in favor of callback
 
     const handleCheckboxChange = useCallback((code: string, value: string, checked: boolean) => {
-        const currentValues = selectedFilters[code] || [];
-        let newValues;
+        // Read from ref so we always see the latest filters, even if
+        // two clicks land before React re-renders (stale-closure guard).
+        const prev = filtersRef.current;
+        const currentValues = prev[code] || [];
+        let newValues: string[];
 
         if (checked) {
-            newValues = [...currentValues, value];
+            newValues = currentValues.includes(value)
+                ? currentValues
+                : [...currentValues, value];
         } else {
             newValues = currentValues.filter((v) => v !== value);
         }
 
-        const nextState = { ...selectedFilters, [code]: newValues };
+        const nextState = { ...prev, [code]: newValues };
         if (newValues.length === 0) {
             delete nextState[code];
         }
 
-        setSelectedFilters(nextState);
-        if (onFilterChange) {
-            const nextLabels: Record<string, { value: string; label: string }[]> = {};
-            Object.entries(nextState).forEach(([c, vals]) => {
-                const group = filterGroups.find((g) => g.code === c);
-                if (group) {
-                    nextLabels[c] = vals.map(v => {
-                        const opt = group.options.find(o => o.value === v);
-                        return { value: v, label: opt ? opt.label : v };
-                    });
-                }
-            });
-            onFilterChange(nextState, nextLabels);
-        }
-    }, [selectedFilters, onFilterChange, filterGroups]);
+        // Build labels for active-filter chips
+        const nextLabels: Record<string, { value: string; label: string }[]> = {};
+        Object.entries(nextState).forEach(([c, vals]) => {
+            const group = filterGroups.find((g) => g.code === c);
+            if (group) {
+                nextLabels[c] = vals.map(v => {
+                    const opt = group.options.find(o => o.value === v);
+                    return { value: v, label: opt ? opt.label : v };
+                });
+            }
+        });
+
+        // Notify parent — parent owns the state, so this is the single
+        // source of truth update.  No internal setState needed.
+        onFilterChange?.(nextState, nextLabels);
+    }, [onFilterChange, filterGroups]);
 
     const clearFilters = () => {
-        setSelectedFilters({});
-        if (onFilterChange) {
-            onFilterChange({}, {});
-        }
+        onFilterChange?.({}, {});
     };
 
     const activeFilterCount = Object.values(selectedFilters).reduce((acc, curr) => acc + curr.length, 0);
