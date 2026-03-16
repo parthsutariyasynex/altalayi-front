@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import CartItem from "./CartItem";
 import CartSummary from "./CartSummary";
 import CartActions from "./CartActions";
@@ -9,8 +9,6 @@ import Link from "next/link";
 import { ArrowRight, ShoppingBag } from "lucide-react";
 import { useCart } from "@/modules/cart/hooks/useCart";
 import toast from "react-hot-toast";
-
-import { getSession } from "next-auth/react";
 
 const CartPage: React.FC = () => {
     const { cart, isLoading, error, removeFromCart, updateCartItem, clearCart, refetchCart } = useCart();
@@ -32,8 +30,13 @@ const CartPage: React.FC = () => {
         }
     };
 
-    const handleUpdateCart = () => {
-        refetchCart();
+    const handleUpdateCart = async () => {
+        try {
+            await refetchCart();
+            toast.success("Cart updated");
+        } catch (err) {
+            toast.error("Failed to update cart");
+        }
     };
 
     const handleClearCart = async () => {
@@ -96,21 +99,21 @@ const CartPage: React.FC = () => {
                     </h1>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
                     {/* Left Side: Cart Items */}
                     <div className="lg:col-span-3">
                         {/* Table Header */}
-                        <div className="hidden md:flex bg-[#f5f5f5] border border-gray-200 border-b-0 items-center py-4 px-4">
-                            <div className="w-1/6 text-xs font-bold text-gray-800">Item</div>
+                        <div className="hidden md:flex bg-[#f2f2f2] border-b border-gray-200 items-center py-5 px-6">
+                            <div className="w-1/6 text-[11px] font-black text-black uppercase tracking-[0.2em]">Item</div>
                             <div className="w-2/6"></div>
-                            <div className="w-1/6 text-xs font-bold text-gray-800 text-center">Price</div>
-                            <div className="w-1/6 text-xs font-bold text-gray-800 text-center">Qty</div>
-                            <div className="w-1/6 text-xs font-bold text-gray-800 text-center">Item(s) Total:</div>
+                            <div className="w-1/6 text-[11px] font-black text-black uppercase tracking-[0.2em] text-center ml-4">Price</div>
+                            <div className="w-1/6 text-[11px] font-black text-black uppercase tracking-[0.2em] text-center -ml-2">Qty</div>
+                            <div className="w-1/6 text-[11px] font-black text-black uppercase tracking-[0.2em] text-center -mr-4">Item(s) Total:</div>
                         </div>
 
                         {/* Cart Rows */}
                         <div className="flex flex-col">
-                            {cart.items.map((item: any) => (
+                            {cart.items.map((item) => (
                                 <CartItem
                                     key={item.item_id}
                                     item={item}
@@ -129,11 +132,11 @@ const CartPage: React.FC = () => {
                         />
 
                         {/* Multiple Address Section Bar */}
-                        <div className="mt-10 flex flex-col md:flex-row items-center justify-between border border-gray-200 bg-white shadow-sm">
-                            <div className="py-4 px-6 text-[11px] font-bold text-gray-700 uppercase tracking-tight">
+                        <div className="mt-12 flex flex-col md:flex-row items-center justify-between border-2 border-[#f4b400]/20 bg-[#f4b400]/5 overflow-hidden group">
+                            <div className="py-6 px-8 text-[12px] font-black text-black uppercase tracking-tight">
                                 Do you want to ship the order to Multiple Addresses?
                             </div>
-                            <button className="bg-[#f4b400] text-black font-bold py-4 px-10 uppercase tracking-widest text-[11px] hover:bg-[#e0a500] transition-colors whitespace-nowrap">
+                            <button className="bg-[#f4b400] text-black font-black py-6 px-12 uppercase tracking-[0.15em] text-[12px] hover:bg-black hover:text-white transition-all duration-300 whitespace-nowrap cursor-pointer">
                                 Multiple Location Delivery
                             </button>
                         </div>

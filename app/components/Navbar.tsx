@@ -31,7 +31,7 @@ export default function Navbar() {
   const [notificationCount, setNotificationCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const cartCount = cart?.items?.length || 0;
+  const cartCount = cart?.items_count || 0;
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: "/login" });

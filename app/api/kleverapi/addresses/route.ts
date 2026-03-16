@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 
-
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 export async function GET(request: Request) {
     try {
-        // 1. Get the customer token from the incoming request headers
         const authHeader = request.headers.get('Authorization');
 
         if (!authHeader) {
@@ -14,12 +13,10 @@ export async function GET(request: Request) {
             );
         }
 
-        // 2. Define the Backend Magento URL
-        const magentoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/my-account`;
+        const magentoUrl = `${BASE_URL}/addresses`;
 
-        console.log(`[API ROUTE] Fetching Customer Info from: ${magentoUrl}`);
+        console.log(`[API ROUTE] Fetching Customer Addresses from: ${magentoUrl}`);
 
-        // 3. Forward the request to the Magento REST API
         const response = await fetch(magentoUrl, {
             method: 'GET',
             headers: {
@@ -27,7 +24,6 @@ export async function GET(request: Request) {
                 'Authorization': authHeader,
                 'platform': 'web',
             },
-            // Disable caching for real-time account data
             cache: 'no-store',
         });
 
@@ -37,21 +33,17 @@ export async function GET(request: Request) {
             console.error(`[API ROUTE ERROR] Magento returned ${response.status}:`, data);
         }
 
-        // 4. Return the data back to the frontend (Redux)
         return NextResponse.json(data, { status: response.status });
 
     } catch (error: any) {
-        console.error('[API ROUTE ERROR] My Account GET Catch:', error);
+        console.error('[API ROUTE ERROR] Addresses GET Catch:', error);
         return NextResponse.json(
-            { message: error.message || 'Server-side error fetching account details.' },
+            { message: error.message || 'Server-side error fetching addresses.' },
             { status: 500 }
         );
     }
 }
 
-/**
- * Optional: Handle POST requests for updating profile data
- */
 export async function POST(request: Request) {
     try {
         const authHeader = request.headers.get('Authorization');
@@ -61,8 +53,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ message: 'Authorization required' }, { status: 401 });
         }
 
-        const magentoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/my-account`;
-        console.log(`[API ROUTE] Updating Customer Info at: ${magentoUrl}`);
+        const magentoUrl = `${BASE_URL}/addresses`;
+        console.log(`[API ROUTE] Adding Customer Address at: ${magentoUrl}`);
 
         const response = await fetch(magentoUrl, {
             method: 'POST',
@@ -78,9 +70,9 @@ export async function POST(request: Request) {
         return NextResponse.json(data, { status: response.status });
 
     } catch (error: any) {
-        console.error('[API ROUTE ERROR] My Account POST:', error);
+        console.error('[API ROUTE ERROR] Addresses POST Catch:', error);
         return NextResponse.json(
-            { message: 'Server-side error updating account details.' },
+            { message: 'Server-side error adding address.' },
             { status: 500 }
         );
     }

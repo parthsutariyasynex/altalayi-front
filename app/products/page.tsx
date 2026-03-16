@@ -193,10 +193,23 @@ export default function ProductsPage() {
       result = result.filter(p => favIds.includes(p.product_id));
     }
 
+    // Requirement: If "Promotions and Offers" filter is active, only show products with offers
+    // We check for filter keys that likely correspond to Promotions/Offers
+    const hasOfferFilter = Object.keys(selectedFilters).some(key =>
+      key.toLowerCase().includes('offer') || key.toLowerCase().includes('promotion') || key.toLowerCase().includes('pormotion')
+    );
+
+    if (hasOfferFilter) {
+      result = result.filter(p => p.offer && p.offer !== "");
+    }
+
     if (sortBy === "price-asc") return result.sort((a, b) => (a.final_price ?? 0) - (b.final_price ?? 0));
     if (sortBy === "price-desc") return result.sort((a, b) => (b.final_price ?? 0) - (a.final_price ?? 0));
     return result;
-  }, [products, sortBy, isFavorite, favIds]);
+  }, [products, sortBy, isFavorite, favIds, selectedFilters]);
+
+  const showActionColumn = useMemo(() => products.some(p => p.is_action === "Yes"), [products]);
+  const totalColumns = 10 + (showActionColumn ? 1 : 0);
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
@@ -268,7 +281,9 @@ export default function ProductsPage() {
                     <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center border-b border-gray-100">Offer</th>
                     <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center border-b border-gray-100">Stock</th>
                     <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center border-b border-gray-100">Price</th>
-                    <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center border-b border-gray-100">Action</th>
+                    {showActionColumn && (
+                      <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center border-b border-gray-100">Action</th>
+                    )}
                   </tr>
                 </thead>
 
@@ -276,14 +291,14 @@ export default function ProductsPage() {
                   {loading ? (
                     Array.from({ length: 10 }).map((_, i) => (
                       <tr key={`shimmer-${i}`} className="animate-pulse">
-                        {Array.from({ length: 11 }).map((_, j) => (
+                        {Array.from({ length: totalColumns }).map((_, j) => (
                           <td key={`cell-${j}`} className="px-5 py-6"><div className="h-3 bg-gray-100 rounded w-full"></div></td>
                         ))}
                       </tr>
                     ))
                   ) : products.length === 0 ? (
                     <tr>
-                      <td colSpan={11} className="py-24 text-center">
+                      <td colSpan={totalColumns} className="py-24 text-center">
                         <p className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">No products matched your search</p>
                       </td>
                     </tr>
@@ -296,7 +311,7 @@ export default function ProductsPage() {
                         <tr key={index} className="hover:bg-gray-50/50 transition-colors group">
                           <td className="px-5 py-5 text-sm font-black text-gray-900 text-center">{brandName}</td>
                           <td className="px-5 py-5 text-center">
-                            <div className="flex items-center justify-center gap-1.5 translate-x-3">
+                            <div className="flex items-center justify-end gap-1.5">
                               <span className="text-sm font-black text-gray-800 tracking-tight">{product?.tyre_size}</span>
                               <div
                                 onClick={() => setSelectedProduct(product)}
@@ -307,7 +322,7 @@ export default function ProductsPage() {
                             </div>
                           </td>
                           <td className="px-5 py-5 text-center">
-                            <div className="flex items-center justify-center gap-1.5 translate-x-3">
+                            <div className="flex items-center justify-end gap-1.5 translate-x-3">
                               <span className="text-sm font-black text-gray-800 tracking-tight">{product?.item_code || "—"}</span>
                             </div>
                           </td>
@@ -334,9 +349,9 @@ export default function ProductsPage() {
                             )}
                           </td>
                           <td className="px-5 py-5 text-center">
-                            {product.regular_price > product.final_price ? (
-                              <span className="bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded shadow-sm">
-                                {Math.round(((product.regular_price - product.final_price) / product.regular_price) * 100)}% OFF
+                            {product.offer ? (
+                              <span className="text-red-600 font-bold text-[10px] leading-tight uppercase tracking-tight block max-w-[150px] mx-auto">
+                                {product.offer}
                               </span>
                             ) : (
                               <span className="text-gray-200">—</span>
@@ -356,50 +371,55 @@ export default function ProductsPage() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-5 py-5">
-                            <div className="flex items-center justify-center gap-1.5">
-                              {isOutOfStock ? (
-                                <>
-                                  <button
-                                    onClick={() => { setInquiryProduct(product); setIsInquiryModalOpen(true); }}
-                                    className="w-9 h-9 bg-yellow-400 text-black rounded-lg flex items-center justify-center shadow-md hover:bg-yellow-500 hover:-translate-y-0.5 transition-all"
-                                    title="Make Inquiry"
-                                  >
-                                    <Info size={16} strokeWidth={2.5} />
-                                  </button>
-                                </>
-                              ) : (
-                                <>
-                                  {/* Quantity Box */}
-                                  <div className="w-9 h-9 border-2 border-gray-100 rounded-lg flex items-center justify-center text-xs font-black text-gray-900 bg-white shadow-sm">
-                                    1
-                                  </div>
-                                  <button
-                                    onClick={() => handleAddToCart(product.sku)}
-                                    disabled={addingToCart === product.sku}
-                                    className={`w-9 h-9 rounded-lg flex items-center justify-center shadow-md hover:-translate-y-0.5 transition-all ${justAdded === product.sku ? "bg-green-500 text-white" : "bg-yellow-400 text-black hover:bg-yellow-500"}`}
-                                    title={justAdded === product.sku ? "Added!" : "Add to Cart"}
-                                  >
-                                    {addingToCart === product.sku ? (
-                                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                                    ) : justAdded === product.sku ? (
-                                      <Check size={16} strokeWidth={3} />
-                                    ) : (
-                                      <ShoppingCart size={16} strokeWidth={2.5} />
-                                    )}
-                                  </button>
-                                </>
-                              )}
+                          {showActionColumn && (
+                            <td className="px-5 py-5 text-center">
+                              <div className="flex flex-col items-center gap-2">
+                                {/* Action Row: [Qty/Spacer] [Add to Cart/Inquiry] [Favourite] */}
+                                <div className="grid grid-cols-3 gap-1.5">
+                                  {!isOutOfStock ? (
+                                    <div className="w-9 h-9 border-2 border-gray-100 rounded-lg flex items-center justify-center text-xs font-black text-gray-900 bg-white shadow-sm">
+                                      1
+                                    </div>
+                                  ) : (
+                                    <div className="w-9 h-9" />
+                                  )}
 
-                              <button
-                                onClick={() => toggleFavorite(product.product_id)}
-                                className={`w-9 h-9 rounded-lg flex items-center justify-center shadow-md hover:-translate-y-0.5 transition-all ${favIds.includes(product.product_id) ? "bg-black text-yellow-400" : "bg-yellow-400 text-black hover:bg-yellow-500"}`}
-                                title={favIds.includes(product.product_id) ? "Remove from Favourites" : "Add to Favourites"}
-                              >
-                                <Star size={16} strokeWidth={2.5} fill={favIds.includes(product.product_id) ? "currentColor" : "none"} />
-                              </button>
-                            </div>
-                          </td>
+                                  {!isOutOfStock ? (
+                                    <button
+                                      onClick={() => handleAddToCart(product.sku)}
+                                      disabled={addingToCart === product.sku}
+                                      className={`w-9 h-9 rounded-lg flex items-center justify-center shadow-md hover:-translate-y-0.5 transition-all ${justAdded === product.sku ? "bg-green-500 text-white" : "bg-yellow-400 text-black hover:bg-yellow-500"}`}
+                                      title={justAdded === product.sku ? "Added!" : "Add to Cart"}
+                                    >
+                                      {addingToCart === product.sku ? (
+                                        <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                                      ) : justAdded === product.sku ? (
+                                        <Check size={16} strokeWidth={3} />
+                                      ) : (
+                                        <ShoppingCart size={16} strokeWidth={2.5} />
+                                      )}
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => { setInquiryProduct(product); setIsInquiryModalOpen(true); }}
+                                      className="w-9 h-9 bg-yellow-400 text-black rounded-lg flex items-center justify-center shadow-md hover:bg-yellow-500 hover:-translate-y-0.5 transition-all"
+                                      title="Make Inquiry"
+                                    >
+                                      <Info size={16} strokeWidth={2.5} />
+                                    </button>
+                                  )}
+
+                                  <button
+                                    onClick={() => toggleFavorite(product.product_id)}
+                                    className={`w-9 h-9 rounded-lg flex items-center justify-center shadow-md hover:-translate-y-0.5 transition-all ${favIds.includes(product.product_id) ? "bg-black text-yellow-400" : "bg-yellow-400 text-black hover:bg-yellow-500"}`}
+                                    title={favIds.includes(product.product_id) ? "Remove from Favourites" : "Add to Favourites"}
+                                  >
+                                    <Star size={16} strokeWidth={2.5} fill={favIds.includes(product.product_id) ? "currentColor" : "none"} />
+                                  </button>
+                                </div>
+                              </div>
+                            </td>
+                          )}
                         </tr>
                       );
                     })

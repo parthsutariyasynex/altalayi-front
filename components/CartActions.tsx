@@ -11,33 +11,38 @@ interface CartActionsProps {
 
 const CartActions: React.FC<CartActionsProps> = ({ itemsCount, onClearCart, onUpdateCart }) => {
     return (
-        <div className="flex flex-col md:flex-row justify-between items-center bg-white border border-gray-200 border-t-0 p-4 shadow-sm">
-            <div className="flex flex-wrap justify-center md:justify-start gap-2">
+        <div className="flex flex-col md:flex-row justify-between items-center bg-[#f2f2f2] border-x border-b border-gray-200 px-6 py-6 shadow-sm gap-4">
+            <div className="flex flex-wrap items-center gap-3">
                 <Link
                     href="/products"
-                    className="px-8 py-2.5 bg-black text-white text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-gray-800 transition-colors"
+                    className="px-6 py-3.5 bg-black text-white text-[11px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all duration-300 border border-black cursor-pointer"
                 >
                     Continue Shopping
                 </Link>
                 <button
                     onClick={onClearCart}
-                    className="px-8 py-2.5 bg-[#eeeeee] text-black text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-gray-200 transition-colors border border-gray-300"
+                    className="px-6 py-3.5 bg-white text-black text-[11px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all duration-300 border border-gray-300 cursor-pointer"
                 >
                     Clear Cart
                 </button>
                 <button
                     onClick={onUpdateCart}
-                    className="px-8 py-2.5 bg-[#f4b400] text-black text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-[#e0a500] transition-colors shadow-sm"
+                    className="px-6 py-3.5 bg-[#f4b400] text-black text-[11px] font-black uppercase tracking-widest hover:bg-[#e0a500] transition-all duration-300 cursor-pointer"
                 >
                     Update Shopping Cart
                 </button>
             </div>
 
-            <div className="mt-4 md:mt-0 flex items-center gap-2">
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em]">
-                    Total Qty
-                </span>
-                <span className="text-sm font-black text-gray-900">
+            <div className="flex items-center gap-4 ml-auto">
+                <div className="flex flex-col items-end">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">
+                        Cart Item
+                    </span>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">
+                        Quantity
+                    </span>
+                </div>
+                <span className="text-3xl font-black text-black leading-none">
                     {itemsCount}
                 </span>
             </div>

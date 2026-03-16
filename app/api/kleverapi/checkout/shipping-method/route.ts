@@ -2,40 +2,36 @@ import { NextResponse } from "next/server";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
-/* =========================
-   GET CART (KleverAPI)
-========================= */
-export async function GET(req: Request) {
+export async function POST(req: Request) {
     try {
         const authHeader = req.headers.get("authorization");
-
-        // Note: Removing the strict 401 requirement if you want to support guest carts,
-        // but keeping it as you manually added it.
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return NextResponse.json({ message: "Unauthorized: Missing customer token" }, { status: 401 });
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        const response = await fetch(`${BASE_URL}/cart`, {
-            method: "GET",
+        const body = await req.json();
+        console.log(">>> Set Shipping Method (Singular) REQUEST:", body);
+
+        const response = await fetch(`${BASE_URL}/checkout/shipping-method`, {
+            method: "POST",
             headers: {
                 Authorization: authHeader,
                 "Content-Type": "application/json",
                 platform: "web",
             },
-            cache: "no-store",
+            body: JSON.stringify(body),
         });
 
         const data = await response.json();
+        console.log("<<< Set Shipping Method (Singular) RESPONSE:", response.status);
 
         if (!response.ok) {
-            console.error("Cart API error:", response.status, data);
             return NextResponse.json(data, { status: response.status });
         }
 
         return NextResponse.json(data);
     } catch (error) {
-        console.error("Proxy GET Error:", error);
+        console.error("Proxy Set Shipping Method (Singular) Error:", error);
         return NextResponse.json({ message: "Internal server error" }, { status: 500 });
     }
 }
-

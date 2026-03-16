@@ -13,4 +13,6 @@ export type Product = {
   item_code?: string;
   stock_status?: string;
   product_url?: string;
+  is_action?: string;
+  action?: string;
 };

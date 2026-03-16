@@ -62,7 +62,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     <div className="flex justify-between items-end mt-2">
                         <div>
                             <h2 className="text-[17px] font-bold text-gray-900">
-                                {cart?.items?.length || 0} Items in Cart
+                                {cart?.items_count || 0} Items in Cart
                             </h2>
                         </div>
                         <div className="text-right">
@@ -96,11 +96,11 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                     {/* Left: Product Image */}
                                     <div className="w-20 h-20 bg-white border border-gray-100 rounded-lg flex-shrink-0 p-1 flex items-center justify-center group-hover:border-[#f5b21a]/30 transition-colors">
                                         <img
-                                            src="/images/tyre-sample.png"
+                                            src={item.image_url || "/images/tyre-sample.png"}
                                             alt={item.name}
                                             className="max-w-full max-h-full object-contain"
                                             onError={(e) => {
-                                                (e.target as HTMLImageElement).src = "https://placehold.co/100x100?text=Tyre";
+                                                (e.target as HTMLImageElement).src = "/images/tyre-sample.png";
                                             }}
                                         />
                                     </div>
