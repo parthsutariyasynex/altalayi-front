@@ -58,10 +58,12 @@ export const authOptions: NextAuthOptions = {
                     console.log("Magento Auth Response:", data);
 
                     if (res.ok && data) {
-                        const token = isOtp ? (data.token || (data.customer && data.customer.token)) : data;
+                        const token = isOtp
+                            ? (data.token || (data.customer && data.customer.token))
+                            : (typeof data === 'string' ? data : data.token);
 
                         if (!token) {
-                            console.error("No token found in successful response");
+                            console.error("No token found in successful response. Data:", data);
                             return null;
                         }
 

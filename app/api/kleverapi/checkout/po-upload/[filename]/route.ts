@@ -15,7 +15,7 @@ export async function DELETE(
 
         console.log(">>> PO Delete REQUEST:", filename);
 
-        const response = await fetch(`${BASE_URL}/checkout/po-upload/${filename}`, {
+        const response = await fetch(`${BASE_URL}/checkout/po-upload/${encodeURIComponent(filename)}`, {
             method: "DELETE",
             headers: {
                 Authorization: authHeader,
@@ -23,8 +23,17 @@ export async function DELETE(
             },
         });
 
-        const data = await response.json();
-        console.log("<<< PO Delete RESPONSE:", response.status);
+        const contentType = response.headers.get("content-type");
+        let data;
+
+        if (contentType && contentType.includes("application/json")) {
+            data = await response.json();
+        } else {
+            const text = await response.text();
+            data = { message: text || "Non-JSON response from server" };
+        }
+
+        console.log("<<< PO Delete RESPONSE Status:", response.status, data);
 
         if (!response.ok) {
             return NextResponse.json(data, { status: response.status });
@@ -33,6 +42,9 @@ export async function DELETE(
         return NextResponse.json(data);
     } catch (error) {
         console.error("Proxy PO Delete Error:", error);
-        return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+        return NextResponse.json(
+            { message: error instanceof Error ? error.message : "Internal server error" },
+            { status: 500 }
+        );
     }
 }

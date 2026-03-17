@@ -58,7 +58,44 @@ async function getAuthToken(): Promise<string | null> {
     return session?.accessToken ?? null;
 }
 
-export function useCheckout() {
+/**
+ * Formats Magento error messages that contain placeholders like %1, %2
+ */
+function formatMagentoError(data: any): string {
+    if (!data) return "An unknown error occurred";
+
+    let message = data.message || "An unknown error occurred";
+
+    // Magento positional placeholders (%1, %2)
+    if (data.parameters) {
+        if (Array.isArray(data.parameters)) {
+            data.parameters.forEach((param: any, index: number) => {
+                message = message.replace(`%${index + 1}`, String(param));
+            });
+        } else if (typeof data.parameters === 'object') {
+            // Sometimes it's key-value
+            Object.keys(data.parameters).forEach(key => {
+                message = message.replace(`%${key}`, String(data.parameters[key]));
+            });
+        }
+    }
+
+    // Append child errors
+    if (data.errors && Array.isArray(data.errors)) {
+        const details = data.errors
+            .map((e: any) => e.message || JSON.stringify(e))
+            .join(". ");
+        if (details) message = `${message}. Details: ${details}`;
+    }
+
+    return message;
+}
+
+export interface UseCheckoutOptions {
+    skipInitialFetch?: boolean;
+}
+
+export function useCheckout(options: UseCheckoutOptions = {}) {
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
     const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
@@ -154,9 +191,15 @@ export function useCheckout() {
                     currency: m.base_currency_code || m.currency || "SAR",
                 }));
                 if (mapped.length > 0) {
+                    console.log("DEBUG: Shipping Methods Loaded:", mapped);
                     setShippingMethods(mapped);
                     return;
                 }
+                console.warn("DEBUG: No shipping methods found in API response");
+            } else {
+                const data = await res.json();
+                const errorMsg = formatMagentoError(data);
+                throw new Error(errorMsg);
             }
             // Fallback if API returns nothing or fails
             setShippingMethods([
@@ -164,7 +207,14 @@ export function useCheckout() {
                 { code: "free_free", carrierCode: "free", methodCode: "free", title: "Free Shipping", description: "Orders over 500 SAR", price: 0, currency: "SAR" },
             ]);
         } catch (err) {
-            console.error("Fetch Shipping Methods Error:", err);
+            // Silently handle "empty cart" or generic retrieval errors during background fetch
+            const msg = err instanceof Error ? err.message.toLowerCase() : "";
+            if (msg.includes("empty cart") || msg.includes("retrieving shipping methods")) {
+                console.warn("Background fetch shipping methods skipped: cart not ready or empty");
+            } else {
+                console.error("Fetch Shipping Methods Error:", err);
+            }
+            // Fallback if API returns nothing or fails
             setShippingMethods([
                 { code: "flatrate_flatrate", carrierCode: "flatrate", methodCode: "flatrate", title: "Flat Rate", description: "Standard Delivery", price: 15.00, currency: "SAR" },
                 { code: "free_free", carrierCode: "free", methodCode: "free", title: "Free Shipping", description: "Orders over 500 SAR", price: 0, currency: "SAR" },
@@ -176,7 +226,10 @@ export function useCheckout() {
     const fetchPaymentMethods = useCallback(async () => {
         try {
             const token = await getAuthToken();
-            if (!token) return;
+            if (!token) {
+                console.warn("No token available for fetchPaymentMethods");
+                return;
+            }
 
             const res = await fetch("/api/kleverapi/checkout/payment-methods", {
                 headers: { Authorization: `Bearer ${token}` },
@@ -185,10 +238,12 @@ export function useCheckout() {
             if (res.ok) {
                 const data = await res.json();
                 const methods = Array.isArray(data) ? data : (data.methods || data.payment_methods || []);
-                const mapped: PaymentMethod[] = methods.map((m: any) => ({
-                    code: m.code || m.method_code || "",
-                    title: m.title || m.method_title || "",
-                }));
+                const mapped: PaymentMethod[] = methods
+                    .filter((m: any) => m.is_available !== false) // Only show available methods
+                    .map((m: any) => ({
+                        code: m.code || m.method_code || "",
+                        title: m.title || m.method_title || "",
+                    }));
                 if (mapped.length > 0) {
                     setPaymentMethods(mapped);
                     return;
@@ -200,7 +255,12 @@ export function useCheckout() {
                 { code: "online_payment", title: "Online Payment" },
             ]);
         } catch (err) {
-            console.error("Fetch Payment Methods Error:", err);
+            // Silently handle "empty cart" errors during background fetch
+            if (err instanceof Error && err.message.toLowerCase().includes("empty cart")) {
+                console.warn("Background fetch payment methods skipped: cart is empty");
+            } else {
+                console.error("Fetch Payment Methods Error:", err);
+            }
             setPaymentMethods([
                 { code: "cashondelivery", title: "Cash on Delivery" },
                 { code: "online_payment", title: "Online Payment" },
@@ -248,14 +308,40 @@ export function useCheckout() {
             if (res.ok) {
                 const data = await res.json();
                 // Normalize response: Expecting array of { time, label, enabled }
-                const slots = Array.isArray(data) ? data : (data.slots || data.time_slots || []);
-                return slots.map((s: any) => ({
-                    time: s.time || "",
-                    label: s.label || s.time || "",
-                    enabled: typeof s.enabled === 'boolean' ? s.enabled : true
-                }));
+                let slots = Array.isArray(data) ? data : (data.slots || data.time_slots || []);
+
+                // If API returns strings instead of objects, convert them
+                slots = slots.map((s: any) => {
+                    if (typeof s === 'string') {
+                        return { time: s, label: s, enabled: true };
+                    }
+                    return {
+                        time: s.time || s.value || "",
+                        label: s.label || s.time || s.value || "",
+                        enabled: typeof s.enabled === 'boolean' ? s.enabled : true
+                    };
+                });
+
+                if (slots.length > 0) return slots;
             }
-            return [];
+
+            // Fallback generated slots if API fails or returns empty
+            const generatedSlots = [];
+            for (let h = 9; h <= 21; h++) { // 9 AM to 9 PM
+                for (let m = 0; m < 60; m += 30) {
+                    const hh = h % 12 || 12;
+                    const ampm = h < 12 ? 'am' : 'pm';
+                    const mm = m === 0 ? '00' : '30';
+                    const h24 = String(h).padStart(2, '0');
+                    const m24 = String(m).padStart(2, '0');
+                    generatedSlots.push({
+                        time: `${h24}:${m24}`,
+                        label: `${hh}:${mm} ${ampm.toUpperCase()}`,
+                        enabled: true
+                    });
+                }
+            }
+            return generatedSlots;
         } catch (err) {
             console.error("Fetch Pickup Time Slots Error:", err);
             return [];
@@ -263,7 +349,7 @@ export function useCheckout() {
     }, []);
 
     // ─── Set Shipping Address (also refreshes totals + methods) ───
-    const setShippingAddress = async (addressId: string) => {
+    const setShippingAddress = useCallback(async (addressId: string) => {
         try {
             setIsTotalsLoading(true);
             const token = await getAuthToken();
@@ -280,7 +366,8 @@ export function useCheckout() {
 
             if (!res.ok) {
                 const data = await res.json();
-                throw new Error(data.message || "Failed to set shipping address");
+                const errorMsg = formatMagentoError(data);
+                throw new Error(errorMsg);
             }
 
             const data = await res.json();
@@ -307,18 +394,19 @@ export function useCheckout() {
                 if (mapped.length > 0) setPaymentMethods(mapped);
             }
 
-            // Refresh totals after address change
+            // Refresh totals and shipping methods after address change
             await fetchTotals();
+            await fetchShippingMethods();
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to set shipping address");
             throw err;
         } finally {
             setIsTotalsLoading(false);
         }
-    };
+    }, [fetchTotals, fetchShippingMethods]);
 
     // ─── Add New Address ───
-    const addAddress = async (addressData: Partial<Address>) => {
+    const addAddress = useCallback(async (addressData: Partial<Address>) => {
         try {
             setIsLoading(true);
             const token = await getAuthToken();
@@ -333,7 +421,10 @@ export function useCheckout() {
                 body: JSON.stringify({ address: addressData }),
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to add address");
+            if (!res.ok) {
+                const errorMsg = formatMagentoError(data);
+                throw new Error(errorMsg);
+            }
             await fetchAddresses();
             return data;
         } catch (err) {
@@ -342,10 +433,10 @@ export function useCheckout() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [fetchAddresses]);
 
     // ─── Save PO Number ───
-    const savePoNumber = async (poNumber: string) => {
+    const savePoNumber = useCallback(async (poNumber: string) => {
         try {
             const token = await getAuthToken();
             if (!token) throw new Error("Not authenticated");
@@ -359,16 +450,19 @@ export function useCheckout() {
                 body: JSON.stringify({ poNumber }),
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to save PO number");
+            if (!res.ok) {
+                const errorMsg = formatMagentoError(data);
+                throw new Error(errorMsg);
+            }
             return data;
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to save PO number");
             throw err;
         }
-    };
+    }, []);
 
     // ─── Upload PO File ───
-    const uploadPoFile = async (fileData: { fileName: string; fileContent: string; type: string }) => {
+    const uploadPoFile = useCallback(async (formData: FormData) => {
         try {
             const token = await getAuthToken();
             if (!token) throw new Error("Not authenticated");
@@ -376,22 +470,24 @@ export function useCheckout() {
             const res = await fetch("/api/kleverapi/checkout/po-upload", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify(fileData),
+                body: formData,
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to upload PO file");
+            if (!res.ok) {
+                const errorMsg = formatMagentoError(data);
+                throw new Error(errorMsg);
+            }
             return data;
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to upload PO file");
             throw err;
         }
-    };
+    }, []);
 
     // ─── Get PO Upload ───
-    const getPoUpload = async () => {
+    const getPoUpload = useCallback(async () => {
         try {
             const token = await getAuthToken();
             if (!token) throw new Error("Not authenticated");
@@ -409,35 +505,40 @@ export function useCheckout() {
             setError(err instanceof Error ? err.message : "Failed to get PO upload");
             throw err;
         }
-    };
+    }, []);
 
     // ─── Delete PO File ───
-    const deletePoFile = async (filename: string) => {
+    const deletePoFile = useCallback(async (filename: string) => {
         try {
             const token = await getAuthToken();
             if (!token) throw new Error("Not authenticated");
 
-            const res = await fetch(`/api/kleverapi/checkout/po-upload/${filename}`, {
+            const res = await fetch(`/api/kleverapi/checkout/po-upload/${encodeURIComponent(filename)}`, {
                 method: "DELETE",
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to delete PO file");
+            if (!res.ok) {
+                const errorMsg = formatMagentoError(data);
+                throw new Error(errorMsg);
+            }
             return data;
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to delete PO file");
             throw err;
         }
-    };
+    }, []);
 
     // ─── Set Shipping Method ───
-    const setShippingMethod = async (carrierCode: string, methodCode: string) => {
+    const setShippingMethod = useCallback(async (carrierCode: string, methodCode: string) => {
         try {
             setIsTotalsLoading(true);
             const token = await getAuthToken();
             if (!token) throw new Error("Not authenticated");
+
+            console.log(">>> Set Shipping Method Payload:", { carrier_code: carrierCode, method_code: methodCode });
 
             const res = await fetch("/api/kleverapi/checkout/shipping-method", {
                 method: "POST",
@@ -445,14 +546,22 @@ export function useCheckout() {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ carrierCode, methodCode }),
+                body: JSON.stringify({
+                    carrier_code: carrierCode,
+                    method_code: methodCode
+                }),
             });
 
             const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to set shipping method");
+            console.log("<<< Set Shipping Method Response Status:", res.status, data);
+            if (!res.ok) {
+                const errorMsg = formatMagentoError(data);
+                throw new Error(errorMsg);
+            }
 
-            // Refresh totals after selection
+            // Refresh totals and payment methods after selection
             await fetchTotals();
+            await fetchPaymentMethods();
             return data;
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to set shipping method");
@@ -460,13 +569,48 @@ export function useCheckout() {
         } finally {
             setIsTotalsLoading(false);
         }
-    };
+    }, [fetchTotals, fetchPaymentMethods]);
+
+    // ─── Set Shipping Extras (Pickup details) ───
+    const setShippingExtras = useCallback(async (extras: {
+        pickupStore: string;
+        pickupDate: string;
+        pickupTime: string;
+        pickupPersonName: string;
+        pickupPersonId: string;
+        pickupMobileNumber: string;
+    }) => {
+        try {
+            const token = await getAuthToken();
+            if (!token) throw new Error("Not authenticated");
+
+            const res = await fetch("/api/kleverapi/checkout/shipping-extras", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(extras),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                const errorMsg = formatMagentoError(data);
+                throw new Error(errorMsg);
+            }
+            return data;
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to set shipping extras");
+            throw err;
+        }
+    }, []);
 
     // ─── Place Order ───
-    const placeOrder = async (orderData: {
+    const placeOrder = useCallback(async (orderData: {
         address_id: number;
         shipping_method: string;
         payment_method: string;
+        cart_id?: number | string | null;
+        po_number?: string;
     }) => {
         try {
             setIsLoading(true);
@@ -482,7 +626,10 @@ export function useCheckout() {
                 body: JSON.stringify(orderData),
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to place order");
+            if (!res.ok) {
+                const errorMsg = formatMagentoError(data);
+                throw new Error(errorMsg);
+            }
             return data;
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to place order");
@@ -490,15 +637,38 @@ export function useCheckout() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, []);
+
+    // ─── Fetch Checkout Success ───
+    const fetchCheckoutSuccess = useCallback(async (orderId: string) => {
+        try {
+            const token = await getAuthToken();
+            if (!token) throw new Error("Not authenticated");
+
+            const res = await fetch(`/api/kleverapi/checkout/success/${orderId}`, {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || "Failed to get order success data");
+            return data;
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to get order success data");
+            throw err;
+        }
+    }, []);
 
     // ─── Initial Load ───
     useEffect(() => {
+        if (options.skipInitialFetch) return;
+
         fetchAddresses();
         fetchTotals();
         fetchShippingMethods();
         fetchPaymentMethods();
-    }, [fetchAddresses, fetchTotals, fetchShippingMethods, fetchPaymentMethods]);
+    }, [fetchAddresses, fetchTotals, fetchShippingMethods, fetchPaymentMethods, options.skipInitialFetch]);
 
     return {
         addresses,
@@ -512,6 +682,7 @@ export function useCheckout() {
         refetchAddresses: fetchAddresses,
         refetchTotals: fetchTotals,
         refetchShippingMethods: fetchShippingMethods,
+        refetchPaymentMethods: fetchPaymentMethods,
         refetchPickupStores: fetchPickupStores,
         fetchPickupTimeSlots,
         setShippingAddress,
@@ -522,5 +693,7 @@ export function useCheckout() {
         getPoUpload,
         deletePoFile,
         setShippingMethod,
+        setShippingExtras,
+        fetchCheckoutSuccess,
     };
 }

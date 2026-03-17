@@ -115,7 +115,7 @@ export default function ProductEnquiryModal({
             >
                 {/* HEADER */}
                 <div className="bg-[#FFB82B] py-3.5 flex items-center justify-center relative flex-shrink-0">
-                    <h2 className="text-[18px] font-bold text-black uppercase tracking-tight">Make an Inquiry</h2>
+                    <h2 className="text-[18px] font-bold text-black uppercase tracking-tight">Product Enquiry</h2>
                     <button
                         onClick={onClose}
                         className="absolute right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white text-black hover:bg-gray-100 transition-colors shadow-sm"

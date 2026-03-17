@@ -12,9 +12,9 @@ export async function GET(
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        const { storeId, date } = params;
+        const { storeId, date } = await params;
 
-        const response = await fetch(`${BASE_URL}/kleverapi/checkout/pickup-time-slots/${storeId}/${date}`, {
+        const response = await fetch(`${BASE_URL}/checkout/pickup-time-slots/${storeId}/${date}`, {
             method: "GET",
             headers: {
                 Authorization: authHeader,

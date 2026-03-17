@@ -8,6 +8,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchCustomerInfo } from "@/store/actions/customerActions";
 import { RootState } from "@/store/store";
 import Link from "next/link";
+import { Bell } from "lucide-react";
+import { useNotifications } from "@/modules/notifications/hooks/useNotifications";
 
 type CustomAttribute = {
     attribute_code: string;
@@ -20,6 +22,7 @@ export default function MyAccountPage() {
     const { data: session, status } = useSession();
     const { data: customer, loading } = useSelector((state: RootState) => state.customer);
     const token = useSelector((state: RootState) => state.auth.token);
+    const { unreadCount } = useNotifications();
 
     useEffect(() => {
         if (status === "unauthenticated") {
@@ -202,6 +205,29 @@ export default function MyAccountPage() {
                                                 <p><span className="font-semibold text-gray-800">Credit Period:</span> {getAttr("credit_period")}</p>
                                                 <p><span className="font-semibold text-gray-800">Total Credit Limit:</span> {getAttr("total_credit_limit")}</p>
                                                 <p><span className="font-semibold text-gray-800">Used Credit Limit:</span> {getAttr("used_credit_limit")}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                {/* NOTIFICATIONS SECTION */}
+                                <section>
+                                    <div className={cardBase}>
+                                        <div className={sectionHeader + " flex justify-between items-center"}>
+                                            <span>Notifications</span>
+                                            <Link href="/customer/notifications" className={buttonYellow}>See All</Link>
+                                        </div>
+                                        <div className="p-5 flex items-center gap-4">
+                                            <div className="bg-yellow-50 p-3 rounded-full">
+                                                <Bell className="text-yellow-600" size={24} />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-900">
+                                                    {unreadCount > 0 ? `You have ${unreadCount} unread notifications` : "No new notifications"}
+                                                </p>
+                                                <p className="text-xs text-gray-500 mt-0.5">
+                                                    Check your latest alerts and account updates.
+                                                </p>
                                             </div>
                                         </div>
                                     </div>

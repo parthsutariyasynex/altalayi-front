@@ -5,8 +5,9 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 export async function GET(req: Request) {
     try {
         const authHeader = req.headers.get("authorization");
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        if (!authHeader || !authHeader.startsWith("Bearer ") || authHeader.includes("null") || authHeader.includes("undefined")) {
+            console.error("PO Upload Proxy: Missing or invalid token header:", authHeader);
+            return NextResponse.json({ message: "Unauthorized: Invalid token format" }, { status: 401 });
         }
 
         console.log(">>> PO Upload GET REQUEST");
@@ -36,21 +37,22 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
     try {
         const authHeader = req.headers.get("authorization");
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        if (!authHeader || !authHeader.startsWith("Bearer ") || authHeader.includes("null") || authHeader.includes("undefined")) {
+            console.error("PO Upload Proxy: Missing or invalid token header:", authHeader);
+            return NextResponse.json({ message: "Unauthorized: Invalid token format" }, { status: 401 });
         }
 
-        const body = await req.json();
-        console.log(">>> PO Upload REQUEST:", body.fileName);
+        const formData = await req.formData();
+        console.log(">>> PO Upload REQUEST: Multipart Data");
 
         const response = await fetch(`${BASE_URL}/checkout/po-upload`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
                 Authorization: authHeader,
                 platform: "web",
+                // Do not set Content-Type here, it will be set automatically with boundary for FormData
             },
-            body: JSON.stringify(body),
+            body: formData,
         });
 
         const data = await response.json();

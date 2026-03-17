@@ -9,7 +9,7 @@ export async function GET(req: Request) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        const response = await fetch(`${BASE_URL}/kleverapi/checkout/pickup-stores`, {
+        const response = await fetch(`${BASE_URL}/checkout/pickup-stores`, {
             method: "GET",
             headers: {
                 Authorization: authHeader,

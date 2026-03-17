@@ -14,7 +14,9 @@ import {
   X
 } from "lucide-react";
 import CartDrawer from "./CartDrawer";
+import NotificationDrawer from "./NotificationDrawer";
 import { useCart } from "@/modules/cart/hooks/useCart";
+import { useNotifications } from "@/modules/notifications/hooks/useNotifications";
 
 export default function Navbar() {
   const { data: session, status } = useSession();
@@ -28,7 +30,8 @@ export default function Navbar() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(0);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const { unreadCount, fetchNotifications: pullNotifications } = useNotifications();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const cartCount = cart?.items_count || 0;
@@ -39,27 +42,17 @@ export default function Navbar() {
 
   // Fetch Notifications
   useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const token = (session as any)?.accessToken;
-        const headers: HeadersInit = {};
-        if (token) {
-          headers["Authorization"] = `Bearer ${token}`;
-        }
-        const res = await fetch("/api/notifications", { headers });
-        if (res.ok) {
-          const data = await res.json();
-          setNotificationCount(Array.isArray(data) ? data.length : 0);
-        }
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
-      }
-    };
-
     if (isAuthenticated) {
-      fetchNotifications();
+      pullNotifications();
     }
-  }, [isAuthenticated, session]);
+  }, [isAuthenticated, pullNotifications]);
+
+  // Listen for notification updates
+  useEffect(() => {
+    const handleNotificationUpdate = () => pullNotifications();
+    window.addEventListener("notifications-updated", handleNotificationUpdate);
+    return () => window.removeEventListener("notifications-updated", handleNotificationUpdate);
+  }, [pullNotifications]);
 
   // Listen for cart updates from other components
   useEffect(() => {
@@ -109,15 +102,16 @@ export default function Navbar() {
           <div className="flex items-center gap-6">
 
             {/* Notification Bell */}
-            <div className="relative cursor-pointer">
+            <div
+              className="relative cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => setIsNotificationOpen(true)}
+            >
               <div className="text-black">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22ZM18 16V11C18 7.93 16.37 5.36 13.5 4.68V4C13.5 3.17 12.83 2.5 12 2.5C11.17 2.5 10.5 3.17 10.5 4V4.68C7.63 5.36 6 7.92 6 11V16L4 18V19H20V18L18 16Z" />
-                </svg>
+                <Bell size={26} fill="black" strokeWidth={1} />
               </div>
-              {notificationCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-[#f4b21b] text-black text-[11px] font-bold w-5 h-5 flex items-center justify-center rounded-full">
-                  {notificationCount}
+              {unreadCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-[#f5af02] text-black text-[10px] font-black w-[18px] h-[18px] flex items-center justify-center rounded-full border border-white">
+                  {unreadCount}
                 </span>
               )}
             </div>
@@ -211,6 +205,9 @@ export default function Navbar() {
 
       {/* Cart Drawer */}
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+
+      {/* Notification Drawer */}
+      <NotificationDrawer isOpen={isNotificationOpen} onClose={() => setIsNotificationOpen(false)} />
 
       {/* Secondary Navigation Section */}
       <nav className="bg-[#f5b21a] border-b border-yellow-600/10 w-full relative h-[60px] flex items-center">

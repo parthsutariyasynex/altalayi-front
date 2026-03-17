@@ -21,6 +21,8 @@ import {
     Loader2,
     ArrowLeft,
     Trash2,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
 import SelectedAddressCard from "./SelectedAddressCard";
@@ -66,6 +68,7 @@ const CheckoutPageUI: React.FC = () => {
         getPoUpload,
         deletePoFile,
         setShippingMethod,
+        setShippingExtras,
         stores,
         refetchPickupStores,
         fetchPickupTimeSlots,
@@ -79,15 +82,17 @@ const CheckoutPageUI: React.FC = () => {
     const [selectedWarehouse, setSelectedWarehouse] = useState("");
     const [selectedWarehouseId, setSelectedWarehouseId] = useState("");
     const [selectedShippingMethodCode, setSelectedShippingMethodCode] = useState("");
-    const [paymentMethod, setPaymentMethod] = useState("credit_account");
+    const [paymentMethod, setPaymentMethod] = useState("checkmo");
     const [comment, setComment] = useState("");
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
     const [isPoUploadOpen, setIsPoUploadOpen] = useState(false);
-    const [uploadedPO, setUploadedPO] = useState<{ fileName: string } | null>(null);
+    const [uploadedPOs, setUploadedPOs] = useState<{ fileName: string }[]>([]);
     const [isUploading, setIsUploading] = useState(false);
+    const [dragActive, setDragActive] = useState(false);
     const [isPaymentCommitmentOpen, setIsPaymentCommitmentOpen] = useState(false);
     const [isItemsListOpen, setIsItemsListOpen] = useState(true);
     const [isWarehouseModalOpen, setIsWarehouseModalOpen] = useState(false);
+    const [paymentCommitmentFile, setPaymentCommitmentFile] = useState<File | null>(null);
     const [tempSelectedWarehouse, setTempSelectedWarehouse] = useState<{ id: string; name: string } | null>(null);
 
     // Pickup Form States
@@ -120,10 +125,10 @@ const CheckoutPageUI: React.FC = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // Generate next 14 days
+    // Generate next 45 days to allow picking dates in the next month
     useEffect(() => {
         const dates = [];
-        for (let i = 0; i < 14; i++) {
+        for (let i = 0; i < 45; i++) {
             const date = new Date();
             date.setDate(date.getDate() + i);
             dates.push(date);
@@ -134,7 +139,7 @@ const CheckoutPageUI: React.FC = () => {
         if (!pickupDate && dates.length > 0) {
             setPickupDate(dates[0]);
         }
-    }, []);
+    }, [pickupDate]);
     // Fetch stores if pickup is selected
     useEffect(() => {
         if (shippingType === "pickup" && stores.length === 0) {
@@ -204,6 +209,14 @@ const CheckoutPageUI: React.FC = () => {
         }
     }, [status, router]);
 
+    // Redirect if cart is empty
+    useEffect(() => {
+        if (!isCartLoading && cart && cart.items.length === 0) {
+            toast.error("Your cart is empty. Please add items before checking out.");
+            router.push("/cart");
+        }
+    }, [cart, isCartLoading, router]);
+
     // Defaults
     useEffect(() => {
         if (addresses.length > 0 && !selectedAddressId) {
@@ -213,14 +226,88 @@ const CheckoutPageUI: React.FC = () => {
         }
     }, [addresses]);
 
+    // Auto-select first available payment method if current one is invalid
+    useEffect(() => {
+        if (paymentMethods.length > 0) {
+            const isValid = paymentMethods.some(m => m.code === paymentMethod);
+            if (!isValid) {
+                const creditMethod = paymentMethods.find(m => m.code === 'checkmo');
+                setPaymentMethod(creditMethod ? creditMethod.code : paymentMethods[0].code);
+            }
+        }
+    }, [paymentMethods, paymentMethod]);
+
+    const handlePaymentCommitmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setPaymentCommitmentFile(e.target.files[0]);
+            toast.success("File selected successfully!");
+        }
+    };
+
+    const removePaymentCommitment = () => {
+        setPaymentCommitmentFile(null);
+        if (paymentCommitmentRef.current) {
+            paymentCommitmentRef.current.value = "";
+        }
+        toast.success("File removed");
+    };
+
+    // Auto-select shipping method when they become available or when type changes
+    useEffect(() => {
+        if (shippingMethods.length > 0) {
+            const method = shippingMethods.find(m =>
+                shippingType === "pickup" ? m.code.includes("pickup") : !m.code.includes("pickup")
+            );
+
+            // Validate current selection
+            const currentSelectedMethod = shippingMethods.find(m => m.code === selectedShippingMethodCode);
+            const isCorrectType = currentSelectedMethod ?
+                (shippingType === "pickup" ? currentSelectedMethod.code.includes("pickup") : !currentSelectedMethod.code.includes("pickup")) :
+                false;
+
+            if (method && (!selectedShippingMethodCode || !isCorrectType)) {
+                // Only sync if we have a valid cart with items and an address selected
+                if (selectedAddressId && !isTotalsLoading && cart && cart.items.length > 0) {
+                    console.log("DEBUG: Auto-selecting shipping method:", method.code, "for type:", shippingType);
+                    // Set the code locally
+                    setSelectedShippingMethodCode(method.code);
+
+                    // Sync with backend
+                    setShippingMethod(method.carrierCode, method.methodCode).catch(err => {
+                        console.error("Auto-sync shipping method failed:", err);
+                    });
+                }
+            }
+        }
+    }, [shippingMethods, shippingType, selectedShippingMethodCode, setShippingMethod]);
+
     // Fetch existing PO Upload
     useEffect(() => {
         const fetchPoUpload = async () => {
             try {
                 const data = await getPoUpload();
-                if (data && data.fileName) {
-                    setUploadedPO({ fileName: data.fileName });
+                console.log("DEBUG: PO Upload Data:", data);
+
+                // Handle common response formats
+                let filesArray = [];
+                if (Array.isArray(data)) {
+                    filesArray = data;
+                } else if (data && Array.isArray(data.files)) {
+                    filesArray = data.files;
+                } else if (data && Array.isArray(data.data)) {
+                    filesArray = data.data;
+                } else if (data && (data.fileName || data.filename || data.file)) {
+                    filesArray = [data];
                 }
+
+                const normalized = filesArray.map((item: any) => {
+                    if (typeof item === 'string') return { fileName: item };
+                    return {
+                        fileName: item.fileName || item.filename || item.file_name || item.name || item.file || "Unknown File"
+                    };
+                });
+
+                setUploadedPOs(normalized);
             } catch (err) {
                 console.error("Failed to fetch PO upload:", err);
             }
@@ -251,27 +338,92 @@ const CheckoutPageUI: React.FC = () => {
     };
 
     const handlePlaceOrder = async () => {
+        // 0. Cart Validation
+        if (!cart || cart.items.length === 0) {
+            toast.error("Your cart is empty. Please add items before placing an order.");
+            router.push("/cart");
+            return;
+        }
+
+        // 1. Validations
         if (!selectedAddressId) {
             toast.error("Please select a shipping address");
+            const element = document.getElementById('step-1');
+            element?.scrollIntoView({ behavior: 'smooth' });
+            return;
+        }
+
+        if (!selectedShippingMethodCode) {
+            toast.error("Please select a shipping method");
+            const element = document.getElementById('step-3');
+            element?.scrollIntoView({ behavior: 'smooth' });
+            return;
+        }
+
+        if (shippingType === "pickup") {
+            if (!selectedWarehouseId) {
+                toast.error("Please select a warehouse");
+                return;
+            }
+            if (!pickupName || !pickupId || !pickupMobile || !pickupDate || !pickupTime) {
+                toast.error("Please fill all pickup details");
+                setIsPickupFormOpen(true);
+                return;
+            }
+        }
+
+        if (uploadedPOs.length > 0 && !poNumber) {
+            toast.error("Please enter a PO Number as you have uploaded a file.");
+            const element = document.getElementById('step-2');
+            element?.scrollIntoView({ behavior: 'smooth' });
             return;
         }
 
         setIsPlacingOrder(true);
         try {
-            if (!selectedShippingMethodCode) {
-                toast.error("Please select a shipping method");
-                setIsPlacingOrder(false);
-                return;
+            // 2. Call Shipping Extras if Pickup
+            if (shippingType === "pickup") {
+                const year = pickupDate!.getFullYear();
+                const month = String(pickupDate!.getMonth() + 1).padStart(2, '0');
+                const day = String(pickupDate!.getDate()).padStart(2, '0');
+                const formattedDate = `${year}-${month}-${day}`;
+
+                await setShippingExtras({
+                    pickupPersonName: pickupName,
+                    pickupPersonId: pickupId,
+                    pickupMobileNumber: pickupMobile,
+                    pickupDate: formattedDate,
+                    pickupTime: pickupTime,
+                    pickupStore: selectedWarehouseId
+                });
             }
 
-            await placeOrder({
+            // 3. Call Place Order
+            const result = await placeOrder({
                 address_id: Number(selectedAddressId),
                 shipping_method: selectedShippingMethodCode,
                 payment_method: paymentMethod,
+                cart_id: cart?.cart_id,
+                po_number: poNumber
             });
+
+            // 4. Handle Success
             toast.success("Order placed successfully!");
-            router.push("/checkout/success");
+
+            // Store technical order details for success page
+            const orderSummary = {
+                order_id: result.order_id,
+                order_increment_id: result.order_increment_id,
+                grand_total: result.grand_total,
+                currency_code: result.currency_code,
+                status: result.status
+            };
+
+            localStorage.setItem('last_order_summary', JSON.stringify(orderSummary));
+
+            router.push(`/checkout/success?order_id=${result.order_id}`);
         } catch (error: any) {
+            console.error("Place Order Error:", error);
             toast.error(error.message || "Failed to place order. Please try again.");
         } finally {
             setIsPlacingOrder(false);
@@ -288,51 +440,90 @@ const CheckoutPageUI: React.FC = () => {
         }
     };
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+    const ALLOWED_TYPES = [
+        "image/jpeg", "image/png", "application/zip", "application/x-rar-compressed",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/msword", "application/pdf", "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "text/csv", "application/vnd.ms-outlook"
+    ];
 
-        setIsUploading(true);
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = async () => {
-            const base64Content = reader.result?.toString().split(",")[1];
-            if (!base64Content) {
-                toast.error("Failed to read file");
-                setIsUploading(false);
-                return;
-            }
+    const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".zip", ".rar", ".docx", ".doc", ".pdf", ".xls", ".xlsx", ".csv", ".msg"];
 
-            try {
-                await uploadPoFile({
-                    fileName: file.name,
-                    fileContent: base64Content,
-                    type: "po",
-                });
-                setUploadedPO({ fileName: file.name });
-                toast.success("PO File uploaded successfully");
-            } catch (error: any) {
-                toast.error(error.message || "Failed to upload file");
-            } finally {
-                setIsUploading(false);
-            }
-        };
-        reader.onerror = () => {
-            toast.error("File reading error");
-            setIsUploading(false);
-        };
+    const validateFile = (file: File) => {
+        const extension = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
+        if (!ALLOWED_EXTENSIONS.includes(extension)) {
+            toast.error(`Invalid file type: ${file.name}. Allowed: ${ALLOWED_EXTENSIONS.join(", ")}`);
+            return false;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error(`File too large: ${file.name}. Max size 5MB.`);
+            return false;
+        }
+        return true;
     };
 
-    const handleDeletePo = async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (!uploadedPO) return;
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
+        let files: File[] = [];
+        if ("files" in e.target && e.target.files) {
+            files = Array.from(e.target.files);
+        } else if ("dataTransfer" in e && e.dataTransfer.files) {
+            files = Array.from(e.dataTransfer.files);
+        }
 
+        if (files.length === 0) return;
+
+        const validFiles = files.filter(validateFile);
+        if (validFiles.length === 0) return;
+
+        setIsUploading(true);
+        try {
+            for (const file of validFiles) {
+                // Check for duplicates in UI
+                if (uploadedPOs.some(p => p.fileName === file.name)) {
+                    toast.error(`File already uploaded: ${file.name}`);
+                    continue;
+                }
+
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("type", "po");
+
+                await uploadPoFile(formData);
+                setUploadedPOs(prev => [...prev, { fileName: file.name }]);
+                toast.success(`Uploaded: ${file.name}`);
+            }
+        } catch (error: any) {
+            toast.error(error.message || "Failed to upload file(s)");
+        } finally {
+            setIsUploading(false);
+            if (poUploadRef.current) poUploadRef.current.value = "";
+        }
+    };
+
+    const handleDrag = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.type === "dragenter" || e.type === "dragover") {
+            setDragActive(true);
+        } else if (e.type === "dragleave") {
+            setDragActive(false);
+        }
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActive(false);
+        handleFileUpload(e);
+    };
+
+    const handleDeletePo = async (fileName: string) => {
         try {
             setIsUploading(true);
-            await deletePoFile(uploadedPO.fileName);
-            setUploadedPO(null);
-            toast.success("PO File removed successfully");
-            if (poUploadRef.current) poUploadRef.current.value = "";
+            await deletePoFile(fileName);
+            setUploadedPOs(prev => prev.filter(p => p.fileName !== fileName));
+            toast.success("File removed successfully");
         } catch (error: any) {
             toast.error(error.message || "Failed to remove file");
         } finally {
@@ -362,6 +553,15 @@ const CheckoutPageUI: React.FC = () => {
         );
     }
 
+    if (isCartLoading) {
+        return (
+            <div className="min-h-screen bg-white flex flex-col items-center justify-center">
+                <Loader2 size={48} className="text-[#F5B21B] animate-spin mb-4" />
+                <p className="text-[12px] font-black uppercase tracking-widest text-gray-500">Loading your cart...</p>
+            </div>
+        );
+    }
+
     if (!cart || cart.items.length === 0) {
         return (
             <div className="min-h-screen bg-white">
@@ -369,6 +569,7 @@ const CheckoutPageUI: React.FC = () => {
                 <div className="max-w-7xl mx-auto py-24 px-6 text-center">
                     <ShoppingBag size={64} className="mx-auto text-gray-200 mb-6" />
                     <h1 className="text-2xl font-black text-black uppercase tracking-widest mb-4">Your cart is empty</h1>
+                    <p className="text-gray-500 mb-8 max-w-md mx-auto">Redirecting you to products...</p>
                     <Link href="/products" className="inline-flex items-center gap-2 bg-[#F5B21B] text-black font-black px-8 py-4 text-[12px] uppercase tracking-widest hover:bg-black hover:text-white transition-all">
                         Browse Products
                     </Link>
@@ -504,68 +705,75 @@ const CheckoutPageUI: React.FC = () => {
                                         onBlur={handlePoNumberBlur}
                                         placeholder="Enter your Purchase Order number"
                                     />
+                                    {uploadedPOs.length > 0 && (
+                                        <div className="mt-3 flex flex-wrap gap-2">
+                                            {/* We will hide these as they are now shown in the Upload PO section as per image */}
+                                        </div>
+                                    )}
                                 </div>
 
-                                <div className="border border-gray-100 rounded-sm">
+                                <div className="border border-gray-200 rounded-sm mx-6 mb-6 overflow-hidden">
                                     <div
-                                        className="bg-gray-50 px-5 py-3 flex items-center justify-between border-b border-gray-100 cursor-pointer group hover:bg-white transition-colors"
+                                        className="bg-gray-50 px-5 py-3 flex items-center justify-between border-b border-gray-200 cursor-pointer hover:bg-white transition-colors"
                                         onClick={() => setIsPoUploadOpen(!isPoUploadOpen)}
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-[12px] font-black text-black uppercase tracking-widest">Upload PO Document</span>
-                                            {uploadedPO && (
-                                                <div className="flex items-center gap-2 px-2 py-1 bg-green-50 border border-green-100 rounded-sm">
-                                                    <span className="text-[10px] text-green-700 flex items-center gap-1 font-bold truncate max-w-[150px]">
-                                                        {uploadedPO.fileName} <Check size={12} />
-                                                    </span>
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleDeletePo(e);
-                                                        }}
-                                                        disabled={isUploading}
-                                                        className="p-1 hover:bg-green-100 rounded-full transition-colors"
-                                                        title="Remove file"
-                                                    >
-                                                        <Trash2 size={12} className="text-green-600 hover:text-red-500" />
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
+                                        <span className="text-[14px] font-bold text-black capitalize">Upload PO</span>
                                         <ChevronDown
                                             size={18}
                                             className={`text-gray-400 transition-transform duration-300 ${isPoUploadOpen ? "rotate-180" : ""}`}
                                         />
                                     </div>
                                     {isPoUploadOpen && (
-                                        <div className="p-6 bg-white animate-in slide-in-from-top-2 duration-300">
+                                        <div className="p-4 bg-white space-y-4">
+                                            {/* Drop Area */}
                                             <div
-                                                className={`w-full py-12 border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all duration-300 rounded-sm ${isUploading
+                                                className={`w-full py-8 border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all duration-300 ${isUploading
                                                     ? "border-gray-100 opacity-50 cursor-wait"
-                                                    : "border-gray-200 bg-gray-50/50 hover:border-black hover:bg-white"
+                                                    : dragActive
+                                                        ? "border-black bg-gray-50"
+                                                        : "border-gray-400 bg-white"
                                                     }`}
                                                 onClick={() => !isUploading && poUploadRef.current?.click()}
+                                                onDragEnter={handleDrag}
+                                                onDragLeave={handleDrag}
+                                                onDragOver={handleDrag}
+                                                onDrop={handleDrop}
                                             >
-                                                {isUploading ? (
-                                                    <div className="flex flex-col items-center gap-3">
-                                                        <Loader2 size={24} className="animate-spin text-black" />
-                                                        <span className="text-[11px] text-gray-400 font-black uppercase tracking-widest">Uploading...</span>
-                                                    </div>
-                                                ) : (
-                                                    <div className="text-center px-6">
-                                                        <p className="text-[14px] text-black font-bold mb-1">Click or drag file to upload</p>
-                                                        <p className="text-[10px] text-gray-400 font-medium max-w-[280px] mx-auto">
-                                                            Accepted formats: JPG, PNG, PDF, DOCX, XLS, CSV. Max size 5MB.
-                                                        </p>
-                                                    </div>
-                                                )}
+                                                <p className="text-[18px] text-black font-medium mb-4">Drop files here</p>
+                                                <p className="text-[14px] text-black">
+                                                    Allowed file types : <span className="text-gray-800">jpg,jpeg,png,zip,rar,docx,doc,pdf,xls,xlsx,csv,msg</span>
+                                                </p>
                                                 <input
                                                     type="file"
                                                     className="hidden"
                                                     ref={poUploadRef}
                                                     onChange={handleFileUpload}
                                                     accept=".jpg,.jpeg,.png,.zip,.rar,.docx,.doc,.pdf,.xls,.xlsx,.csv,.msg"
+                                                    multiple
                                                 />
+                                            </div>
+
+                                            {/* Files List - Image Style */}
+                                            <div className="flex flex-wrap gap-x-4 gap-y-3">
+                                                {uploadedPOs.map((file, idx) => (
+                                                    <div key={idx} className="flex items-stretch border border-dashed border-black rounded-sm overflow-hidden">
+                                                        <div className="px-3 py-2 text-[14px] text-black font-medium flex items-center">
+                                                            {file?.fileName && file.fileName.length > 30
+                                                                ? file.fileName.substring(0, 20) + '...'
+                                                                : file?.fileName || "Unknown File"}
+                                                        </div>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDeletePo(file.fileName);
+                                                            }}
+                                                            disabled={isUploading}
+                                                            className="bg-[#D12E3D] text-white px-3 py-2 text-[14px] font-bold hover:bg-black transition-colors"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
                                     )}
@@ -585,11 +793,7 @@ const CheckoutPageUI: React.FC = () => {
                                     {/* Delivery Option */}
                                     <div
                                         className="flex items-center gap-4 cursor-pointer group"
-                                        onClick={() => {
-                                            setShippingType("delivery");
-                                            const deliveryMethod = shippingMethods.find(m => !m.code.includes("pickup"));
-                                            if (deliveryMethod) handleShippingMethodSelect(deliveryMethod.code);
-                                        }}
+                                        onClick={() => setShippingType("delivery")}
                                     >
                                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${shippingType === "delivery" ? "border-black" : "border-gray-400 group-hover:border-gray-600"}`}>
                                             {shippingType === "delivery" && (
@@ -607,11 +811,7 @@ const CheckoutPageUI: React.FC = () => {
                                     <div className="space-y-5">
                                         <div
                                             className="flex items-center gap-4 cursor-pointer group"
-                                            onClick={() => {
-                                                setShippingType("pickup");
-                                                const pickupMethod = shippingMethods.find(m => m.code.includes("pickup"));
-                                                if (pickupMethod) handleShippingMethodSelect(pickupMethod.code);
-                                            }}
+                                            onClick={() => setShippingType("pickup")}
                                         >
                                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${shippingType === "pickup" ? "border-black" : "border-gray-400 group-hover:border-gray-600"}`}>
                                                 {shippingType === "pickup" && (
@@ -705,91 +905,80 @@ const CheckoutPageUI: React.FC = () => {
 
                                                         {/* Row 3: Date & Time */}
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                            {/* Custom Date Picker - Dropdown List Type */}
-                                                            <div className="flex items-center gap-3 relative" ref={dateRef}>
+                                                            {/* Calendar Date Picker */}
+                                                            <div className="flex items-center gap-3">
                                                                 <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap min-w-[110px]">Pick Up Date *</label>
-                                                                <div className="relative flex-1">
-                                                                    <div
-                                                                        className="w-full h-10 px-4 py-2 bg-white border border-gray-300 outline-none text-[14px] font-medium transition-all cursor-pointer flex justify-between items-center hover:border-gray-400"
-                                                                        onClick={() => setIsDateDropdownOpen(!isDateDropdownOpen)}
-                                                                    >
-                                                                        <span className={pickupDate ? "text-black" : "text-gray-400"}>
-                                                                            {pickupDate ? pickupDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : "Select Date"}
-                                                                        </span>
-                                                                        <ChevronDown size={14} className={`transition-transform ${isDateDropdownOpen ? 'rotate-180' : ''}`} />
-                                                                    </div>
-
-                                                                    {isDateDropdownOpen && (
-                                                                        <div className="absolute z-[110] left-0 right-0 mt-1 bg-white border border-gray-300 shadow-md max-h-[220px] overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-200">
-                                                                            {availableDates.map((date) => {
-                                                                                const dateStr = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                                                                                const isSelected = pickupDate?.toDateString() === date.toDateString();
-                                                                                return (
-                                                                                    <div
-                                                                                        key={dateStr}
-                                                                                        className={`px-3 py-1.5 text-[14px] cursor-pointer hover:bg-blue-600 hover:text-white transition-colors ${isSelected ? 'bg-gray-100 font-bold text-black' : 'text-[#444]'}`}
-                                                                                        style={{ fontFamily: 'Arial, sans-serif' }}
-                                                                                        onClick={() => {
-                                                                                            setPickupDate(date);
-                                                                                            setIsDateDropdownOpen(false);
-                                                                                        }}
-                                                                                    >
-                                                                                        {date.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' })}
-                                                                                    </div>
-                                                                                );
-                                                                            })}
-                                                                        </div>
-                                                                    )}
+                                                                <div className="relative flex-1 pickup-datepicker">
+                                                                    <DatePicker
+                                                                        ref={datePickerRef}
+                                                                        selected={pickupDate}
+                                                                        onChange={(date: Date | null) => {
+                                                                            if (date) setPickupDate(date);
+                                                                        }}
+                                                                        minDate={new Date()}
+                                                                        dateFormat="MM/dd/yyyy"
+                                                                        placeholderText="Select Date"
+                                                                        className="w-full h-10 px-4 py-2 bg-white border border-gray-300 outline-none text-[14px] font-medium transition-all cursor-pointer hover:border-gray-400 focus:border-black"
+                                                                        calendarClassName="retro-datepicker"
+                                                                        showPopperArrow={false}
+                                                                        popperPlacement="bottom-start"
+                                                                        renderCustomHeader={({
+                                                                            date,
+                                                                            decreaseMonth,
+                                                                            increaseMonth,
+                                                                            prevMonthButtonDisabled,
+                                                                            nextMonthButtonDisabled,
+                                                                        }) => (
+                                                                            <div className="flex items-center justify-between px-3 py-2 bg-white border-b border-gray-100">
+                                                                                <button
+                                                                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); decreaseMonth(); }}
+                                                                                    disabled={prevMonthButtonDisabled}
+                                                                                    type="button"
+                                                                                    className={`p-1.5 rounded-full hover:bg-gray-100 transition-colors ${prevMonthButtonDisabled ? "opacity-30 cursor-not-allowed" : "text-black"}`}
+                                                                                >
+                                                                                    <ChevronLeft size={18} />
+                                                                                </button>
+                                                                                <span className="text-[13px] font-black uppercase tracking-widest text-black">
+                                                                                    {date.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                                                                                </span>
+                                                                                <button
+                                                                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); increaseMonth(); }}
+                                                                                    disabled={nextMonthButtonDisabled}
+                                                                                    type="button"
+                                                                                    className={`p-1.5 rounded-full hover:bg-gray-100 transition-colors ${nextMonthButtonDisabled ? "opacity-30 cursor-not-allowed" : "text-black"}`}
+                                                                                >
+                                                                                    <ChevronRight size={18} />
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                    />
                                                                 </div>
                                                             </div>
 
-                                                            {/* Custom Time Picker */}
-                                                            <div className="flex items-center gap-3 relative" ref={timeRef}>
+                                                            {/* Scrollable Time Picker */}
+                                                            <div className="flex items-center gap-3">
                                                                 <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap min-w-[90px] md:min-w-[80px]">Pick Up Time *</label>
                                                                 <div className="relative flex-1">
-                                                                    <div
-                                                                        className="w-full h-10 px-4 py-2 bg-white border border-gray-300 outline-none text-[14px] font-medium transition-all cursor-pointer flex justify-between items-center hover:border-gray-400"
-                                                                        onClick={() => setIsTimeDropdownOpen(!isTimeDropdownOpen)}
-                                                                    >
-                                                                        <span className={pickupTime ? "text-black" : "text-gray-400"}>
-                                                                            {pickupTime ? (availableTimeSlots.find((s: { time: string; label: string }) => s.time === pickupTime)?.label || pickupTime) : "Select Time"}
-                                                                        </span>
-                                                                        <ChevronDown size={14} className={`transition-transform ${isTimeDropdownOpen ? 'rotate-180' : ''}`} />
-                                                                    </div>
-
-                                                                    {isTimeDropdownOpen && (
-                                                                        <div className="absolute z-[110] left-0 right-0 mt-1 bg-white border border-gray-300 shadow-md max-h-[220px] overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-200">
-                                                                            {isLoadingTimeSlots ? (
-                                                                                <div className="px-4 py-6 text-center">
-                                                                                    <Loader2 size={16} className="animate-spin mx-auto text-gray-400 mb-2" />
-                                                                                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Loading slots...</span>
-                                                                                </div>
-                                                                            ) : (availableTimeSlots.length > 0 ? (
-                                                                                availableTimeSlots.map((slot: any) => (
-                                                                                    <div
-                                                                                        key={slot.time}
-                                                                                        className={`px-3 py-1.5 text-[14px] transition-colors cursor-pointer hover:bg-blue-600 hover:text-white text-[#444]
-                                                                                            ${pickupTime === slot.time ? 'bg-gray-100 font-bold text-black' : ''}`}
-                                                                                        style={{ fontFamily: 'Arial, sans-serif' }}
-                                                                                        onClick={() => {
-                                                                                            setPickupTime(slot.time);
-                                                                                            setIsTimeDropdownOpen(false);
-                                                                                        }}
-                                                                                    >
-                                                                                        {slot.label}
-                                                                                    </div>
-                                                                                ))
-                                                                            ) : (
-                                                                                <div className="px-4 py-8 text-center border-t border-gray-50">
-                                                                                    <span className="text-[11px] text-gray-400 font-bold uppercase tracking-widest block mb-1">
-                                                                                        {!pickupDate ? "Please select a date first" : "No slots available"}
-                                                                                    </span>
-                                                                                    {pickupDate && (
-                                                                                        <span className="text-[9px] text-gray-300 uppercase font-medium">Try another date or contact the warehouse</span>
-                                                                                    )}
-                                                                                </div>
-                                                                            ))}
+                                                                    {isLoadingTimeSlots ? (
+                                                                        <div className="w-full h-10 px-4 py-2 bg-white border border-gray-300 flex items-center gap-2">
+                                                                            <Loader2 size={14} className="animate-spin text-gray-400" />
+                                                                            <span className="text-[12px] text-gray-400">Loading...</span>
                                                                         </div>
+                                                                    ) : (
+                                                                        <select
+                                                                            value={pickupTime}
+                                                                            onChange={(e) => setPickupTime(e.target.value)}
+                                                                            className="w-full h-10 px-4 py-2 bg-white border border-gray-300 outline-none text-[13px] font-medium transition-all cursor-pointer hover:border-gray-400 focus:border-black appearance-none"
+                                                                            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
+                                                                            size={1}
+                                                                        >
+                                                                            <option value="">Select Time</option>
+                                                                            {availableTimeSlots.map((slot: any) => (
+                                                                                <option key={slot.time} value={slot.time} disabled={!slot.enabled}>
+                                                                                    {slot.label}
+                                                                                </option>
+                                                                            ))}
+                                                                        </select>
                                                                     )}
                                                                 </div>
                                                             </div>
@@ -806,52 +995,80 @@ const CheckoutPageUI: React.FC = () => {
 
                         {/* 4. Payment Method */}
                         <div className="bg-white border border-gray-200 shadow-sm rounded-sm overflow-hidden">
-                            <SectionHeader title="Payment Method" step={4} />
-                            <div className="p-6 space-y-6">
-                                <div
-                                    className="flex items-center gap-5 p-5 border-2 border-black bg-white shadow-md rounded-sm cursor-pointer"
-                                    onClick={() => setPaymentMethod("credit_account")}
-                                >
-                                    <div className="w-6 h-6 rounded-full border-2 border-black flex items-center justify-center">
-                                        <div className="w-3 h-3 bg-black rounded-full" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="text-[14px] font-black text-black uppercase tracking-widest">Credit Account</p>
-                                        <p className="text-[11px] text-gray-400 font-medium">Pay using your available credit limit</p>
-                                    </div>
-                                    <div className="px-3 py-1 bg-black text-white text-[9px] font-black uppercase tracking-widest rounded-full">
-                                        Default
-                                    </div>
-                                </div>
+                            {/* Header exactly as per image */}
+                            <div className="bg-[#f2f2f2] px-6 py-4 border-b border-gray-200">
+                                <h3 className="text-[14px] font-black text-black uppercase tracking-wider">
+                                    PAYMENT METHOD
+                                </h3>
+                            </div>
 
-                                <div className="border border-gray-100 rounded-sm">
+                            <div className="p-6">
+                                <p className="text-[16px] font-bold text-black mb-6">Credit Account</p>
+
+                                <div className="border border-gray-100 rounded-sm overflow-hidden">
+                                    {/* Collapsible Header */}
                                     <div
-                                        className="bg-gray-50 px-5 py-3 flex items-center justify-between border-b border-gray-100 cursor-pointer group hover:bg-white transition-colors"
+                                        className="bg-[#f8f8f8] px-5 py-4 flex items-center justify-between border-b border-gray-100 cursor-pointer group hover:bg-[#f2f2f2] transition-colors"
                                         onClick={() => setIsPaymentCommitmentOpen(!isPaymentCommitmentOpen)}
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-[12px] font-black text-black uppercase tracking-widest">Payment Commitment Upload</span>
-                                            {/* Similar to PO upload indicator if needed */}
-                                        </div>
+                                        <span className="text-[14px] font-bold text-black">Payment Commitment Upload</span>
                                         <ChevronDown
-                                            size={18}
-                                            className={`text-gray-400 transition-transform duration-300 ${isPaymentCommitmentOpen ? "rotate-180" : ""}`}
+                                            size={20}
+                                            className={`text-gray-500 transition-transform duration-300 ${isPaymentCommitmentOpen ? "rotate-180" : ""}`}
                                         />
                                     </div>
+
+                                    {/* Collapsible Content */}
                                     {isPaymentCommitmentOpen && (
                                         <div className="p-6 bg-white animate-in slide-in-from-top-2 duration-300">
+                                            {/* Dropzone with border and info as per image */}
                                             <div
-                                                className="w-full py-12 border-2 border-dashed border-gray-200 bg-gray-50/50 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 hover:border-black hover:bg-white rounded-sm"
+                                                className={`w-full py-10 border-2 border-dashed border-gray-300 bg-gray-50/50 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 hover:border-black hover:bg-white rounded-sm mb-6 ${dragActive ? "border-black bg-white" : ""}`}
                                                 onClick={() => paymentCommitmentRef.current?.click()}
+                                                onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                                                onDragLeave={() => setDragActive(false)}
+                                                onDrop={(e) => {
+                                                    e.preventDefault();
+                                                    setDragActive(false);
+                                                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                                                        setPaymentCommitmentFile(e.dataTransfer.files[0]);
+                                                        toast.success("File dropped successfully!");
+                                                    }
+                                                }}
                                             >
                                                 <div className="text-center px-6">
-                                                    <p className="text-[14px] text-black font-bold mb-1">Click or drag file to upload</p>
-                                                    <p className="text-[10px] text-gray-400 font-medium max-w-[280px] mx-auto">
-                                                        Accepted formats: JPG, PNG, PDF. Max size 2MB.
+                                                    <p className="text-[20px] text-black font-bold mb-3 tracking-tight">Drop files here</p>
+                                                    <p className="text-[14px] text-black/80 font-medium">
+                                                        Allowed file types : jpg,jpeg,png,zip,rar,docx,doc,pdf,xls,xlsx,csv,msg
                                                     </p>
                                                 </div>
-                                                <input type="file" className="hidden" ref={paymentCommitmentRef} />
+                                                <input
+                                                    type="file"
+                                                    className="hidden"
+                                                    ref={paymentCommitmentRef}
+                                                    onChange={handlePaymentCommitmentChange}
+                                                    accept=".jpg,.jpeg,.png,.zip,.rar,.docx,.doc,.pdf,.xls,.xlsx,.csv,.msg"
+                                                />
                                             </div>
+
+                                            {/* File List */}
+                                            {paymentCommitmentFile && (
+                                                <div className="flex items-center">
+                                                    <div className="flex border border-dashed border-black rounded-sm overflow-hidden group shadow-sm">
+                                                        <div className="px-4 py-2 bg-white flex items-center min-w-[300px]">
+                                                            <span className="text-[13px] font-bold text-black truncate max-w-[280px]">
+                                                                {paymentCommitmentFile.name}
+                                                            </span>
+                                                        </div>
+                                                        <button
+                                                            onClick={removePaymentCommitment}
+                                                            className="bg-[#d93a40] text-white px-5 py-2 text-[12px] font-bold uppercase transition-colors hover:bg-black"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>

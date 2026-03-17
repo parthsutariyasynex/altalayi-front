@@ -31,6 +31,7 @@ export interface Cart {
   grand_total: number;
   currency_code: string;
   items_count: number;
+  cart_id: number | string | null;
 }
 
 interface CartContextType {
@@ -123,8 +124,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       // Calculate total units instead of unique SKUs for navbar count
       const items_count = items.reduce((sum: number, i: CartItem) => sum + i.qty, 0);
+      const cart_id = data.cart_id ?? data.cart?.cart_id ?? null;
 
-      setCart({ items, subtotal, tax_amount, tax_label, grand_total, currency_code, items_count });
+      setCart({ items, subtotal, tax_amount, tax_label, grand_total, currency_code, items_count, cart_id });
     } catch (err) {
       console.error("Fetch Cart Error:", err);
       setError(err instanceof Error ? err.message : "Something went wrong");
