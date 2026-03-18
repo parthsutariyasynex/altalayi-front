@@ -14,7 +14,7 @@ export async function POST(
             return NextResponse.json({ message: "Unauthorized: Missing customer token" }, { status: 401 });
         }
 
-        const url = `${BASE_URL}/notifications/${id}/remove`;
+        const url = `${BASE_URL}/notifications/${id}`;
         console.log("[Notification Remove] Calling:", url);
 
         // Try DELETE first, then PUT, then POST — Magento APIs vary

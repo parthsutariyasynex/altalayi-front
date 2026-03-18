@@ -8,30 +8,31 @@ export async function GET(req: Request) {
         const pageSize = searchParams.get("pageSize") || "15";
         const currentPage = searchParams.get("currentPage") || "1";
 
-        const authHeader = req.headers.get("authorization");
+        const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
 
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return NextResponse.json({ message: "Unauthorized: Missing customer token" }, { status: 401 });
+        if (!authHeader || !authHeader.startsWith("Bearer ") || authHeader.includes("null") || authHeader.includes("undefined")) {
+            console.error("[Notifications Proxy] Missing or invalid token format:", authHeader);
+            return NextResponse.json({ message: "Unauthorized: Missing or invalid customer token" }, { status: 401 });
         }
 
         const url = `${BASE_URL}/notifications?pageSize=${pageSize}&currentPage=${currentPage}`;
-        console.log("[Notifications] Fetching:", url);
+        console.log("[Notifications Proxy] Fetching from Magento:", url);
 
         const response = await fetch(url, {
             method: "GET",
             headers: {
-                Authorization: authHeader,
+                "Authorization": authHeader,
                 "Content-Type": "application/json",
-                platform: "web",
+                "platform": "web",
             },
+            cache: "no-store",
         });
 
         const data = await response.json();
-        console.log("[Notifications] Status:", response.status);
-        console.log("[Notifications] Response keys:", Object.keys(data));
-        console.log("[Notifications] Response preview:", JSON.stringify(data).substring(0, 1000));
+        console.log("[Notifications Proxy] Magento Response Status:", response.status);
 
         if (!response.ok) {
+            console.error("[Notifications Proxy] Magento error:", response.status, JSON.stringify(data).substring(0, 500));
             return NextResponse.json(data, { status: response.status });
         }
 

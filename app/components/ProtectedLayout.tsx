@@ -48,10 +48,9 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600"></div>
-          <p className="text-gray-600">Loading...</p>
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-[#f5a623]"></div>
         </div>
       </div>
     );
@@ -59,18 +58,15 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <div className="flex flex-1 bg-gray-50">
-        {/* Main Content */}
+      <div className="flex flex-1">
         <div className="flex-1">
-          {/* For public pages, show children immediately. For protected, only show if authenticated */}
           {(isPublicPage || isAuthenticated) ? (
             <main>
               {children}
             </main>
           ) : (
-            // This case handles the split second before the router.replace kicks in
-            <div className="flex-1 flex items-center justify-center">
-              <p>Redirecting...</p>
+            <div className="flex-1 flex items-center justify-center min-h-screen">
+              <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-[#f5a623]"></div>
             </div>
           )}
         </div>

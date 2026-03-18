@@ -16,6 +16,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
         notifications,
         unreadCount,
         isLoading,
+        deletingIds,
         fetchNotifications,
         markAsRead,
         removeNotification
@@ -78,12 +79,14 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                             {notifications.map((item, index) => (
                                 <div
                                     key={`${item.notification_id || index}-${index}`}
-                                    className="p-4 flex flex-col gap-0.5 hover:bg-gray-50/50 transition-colors relative group"
+                                    className={`p-4 flex flex-col gap-0.5 transition-colors relative ${!item.is_read ? "bg-[#fcf8ec]" : "bg-white"
+                                        }`}
                                     onClick={() => handleNotificationClick(item)}
                                 >
                                     {/* Header Row: Title & Remove */}
                                     <div className="flex justify-between items-start gap-4">
-                                        <h3 className="text-[14px] font-extrabold text-black leading-snug pr-4">
+                                        <h3 className={`text-[14px] leading-snug pr-4 transition-colors hover:text-[#f5b21a] ${!item.is_read ? "font-extrabold text-black" : "font-semibold text-gray-700"
+                                            }`}>
                                             {item.title}
                                         </h3>
                                         <button
@@ -91,22 +94,42 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                                                 e.stopPropagation(); // Prevent parent handleNotificationClick from triggering
                                                 removeNotification(item.notification_id, item.is_read);
                                             }}
-                                            className="w-5 h-5 flex items-center justify-center bg-[#f1f1f1] hover:bg-[#e8e8e8] text-gray-500 rounded-full transition-colors cursor-pointer flex-shrink-0"
+                                            disabled={deletingIds.includes(item.notification_id)}
+                                            className="w-5 h-5 flex items-center justify-center bg-[#f1f1f1] hover:bg-[#f5b21a] hover:text-white text-gray-500 rounded-full transition-colors cursor-pointer flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                                             aria-label="Remove notification"
                                         >
-                                            <X size={10} strokeWidth={3} />
+                                            {deletingIds.includes(item.notification_id) ? (
+                                                <div className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                                            ) : (
+                                                <X size={10} strokeWidth={3} />
+                                            )}
                                         </button>
                                     </div>
 
                                     {/* Message */}
-                                    <p className="text-[13px] text-gray-600 leading-normal">
+                                    <p className={`text-[13px] leading-normal ${!item.is_read ? "text-black font-medium" : "text-gray-500"
+                                        }`}>
                                         {item.description}
                                     </p>
 
-                                    {/* Date */}
-                                    <p className="text-[11px] text-gray-400 font-medium">
-                                        {item.date_added_formatted}
-                                    </p>
+                                    {/* Footer: Date & Mark as Read */}
+                                    <div className="flex justify-between items-center mt-1">
+                                        <p className="text-[11px] text-gray-400 font-medium tracking-tight">
+                                            {item.date_added_formatted}
+                                        </p>
+
+                                        {!item.is_read && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    markAsRead(item.notification_id);
+                                                }}
+                                                className="text-[11px] text-gray-400 hover:text-[#f5b21a] font-bold py-1 px-2 -mr-2 bg-transparent cursor-pointer transition-all"
+                                            >
+                                                Mark as Read
+                                            </button>
+                                        )}
+                                    </div>
 
                                     {/* Unread Indicator Dot */}
                                     {!item.is_read && (

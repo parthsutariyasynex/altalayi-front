@@ -6,12 +6,17 @@ import CartSummary from "./CartSummary";
 import CartActions from "./CartActions";
 import Navbar from "@/app/components/Navbar";
 import Link from "next/link";
-import { ArrowRight, ShoppingBag } from "lucide-react";
+import { ArrowRight, ShoppingBag, Loader2 } from "lucide-react";
 import { useCart } from "@/modules/cart/hooks/useCart";
+import { useCheckout } from "@/modules/checkout/hooks/useCheckout";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
 const CartPage: React.FC = () => {
+    const router = useRouter();
     const { cart, isLoading, error, removeFromCart, updateCartItem, clearCart, refetchCart } = useCart();
+    const { startMultiShipping } = useCheckout({ skipInitialFetch: true });
+    const [isStartingMultiShipping, setIsStartingMultiShipping] = React.useState(false);
 
     const handleUpdateQty = async (id: number, qty: number) => {
         try {
@@ -47,6 +52,20 @@ const CartPage: React.FC = () => {
             } catch (err) {
                 toast.error("Failed to clear cart");
             }
+        }
+    };
+
+    const handleStartMultiShipping = async () => {
+        try {
+            setIsStartingMultiShipping(true);
+            await startMultiShipping();
+            toast.success("Starting multi-location delivery...");
+            router.push("/multi-location-delivery");
+        } catch (err: any) {
+            console.error("Multi-shipping start error:", err);
+            toast.error(err.message || "Failed to start multi-shipping flow");
+        } finally {
+            setIsStartingMultiShipping(false);
         }
     };
 
@@ -136,8 +155,19 @@ const CartPage: React.FC = () => {
                             <div className="py-6 px-8 text-[12px] font-black text-black uppercase tracking-tight">
                                 Do you want to ship the order to Multiple Addresses?
                             </div>
-                            <button className="bg-[#f4b400] text-black font-black py-6 px-12 uppercase tracking-[0.15em] text-[12px] hover:bg-black hover:text-white transition-all duration-300 whitespace-nowrap cursor-pointer">
-                                Multiple Location Delivery
+                            <button
+                                onClick={handleStartMultiShipping}
+                                disabled={isStartingMultiShipping}
+                                className="bg-[#f4b400] text-black font-black py-6 px-12 uppercase tracking-[0.15em] text-[12px] hover:bg-black hover:text-white transition-all duration-300 whitespace-nowrap cursor-pointer flex items-center justify-center h-full disabled:opacity-70 disabled:cursor-not-allowed min-w-[280px]"
+                            >
+                                {isStartingMultiShipping ? (
+                                    <>
+                                        <Loader2 className="animate-spin mr-2" size={18} />
+                                        Processing...
+                                    </>
+                                ) : (
+                                    "Ship to Multiple Addresses"
+                                )}
                             </button>
                         </div>
                     </div>

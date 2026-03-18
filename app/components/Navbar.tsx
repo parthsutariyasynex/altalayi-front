@@ -25,7 +25,7 @@ export default function Navbar() {
 
   // Requirement: Dynamic Username from a variable
   // Requirement: Dynamic Username/Email from session
-  const displayUser = session?.user?.name || session?.user?.email || "Devendra Patel";
+  const displayUser = session?.user?.name || session?.user?.email;
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -147,16 +147,16 @@ export default function Navbar() {
                     onClick={() => setIsProfileOpen(false)}
                   >
                     <UserCircle size={18} className="text-gray-500" />
-                    My Profile
+                    My Account
                   </Link>
-                  <Link
+                  {/* <Link
                     href="/customer/orders"
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     onClick={() => setIsProfileOpen(false)}
                   >
                     <Package size={18} className="text-gray-500" />
                     My Orders
-                  </Link>
+                  </Link> */}
                   <hr className="my-1 border-gray-50" />
                   <button
                     onClick={() => {

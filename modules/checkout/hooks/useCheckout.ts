@@ -12,6 +12,7 @@ export interface Address {
     id: string;
     firstname: string;
     lastname: string;
+    company?: string;
     street: string;
     city: string;
     region?: string;
@@ -149,6 +150,7 @@ export function useCheckout(options: UseCheckoutOptions = {}) {
                     id: (addr.id || addr.entity_id || "").toString(),
                     firstname: addr.firstname || "",
                     lastname: addr.lastname || "",
+                    company: addr.company || "",
                     street: Array.isArray(addr.street) ? addr.street.join(", ") : (addr.street || ""),
                     city: addr.city || "",
                     region: typeof addr.region === 'string' ? addr.region : (addr.region?.region || addr.region?.region_code || ""),
@@ -277,6 +279,13 @@ export function useCheckout(options: UseCheckoutOptions = {}) {
             const res = await fetch("/api/kleverapi/checkout/pickup-stores", {
                 headers: { Authorization: `Bearer ${token}` },
             });
+
+            if (res.status === 401) {
+                console.warn("[useCheckout] 401 Unauthorized for pickup stores");
+                const { signOut } = await import("next-auth/react");
+                signOut({ callbackUrl: "/login" });
+                return;
+            }
 
             if (res.ok) {
                 const data = await res.json();
@@ -639,6 +648,96 @@ export function useCheckout(options: UseCheckoutOptions = {}) {
         }
     }, []);
 
+    // ─── Start Multi-Shipping ───
+    const startMultiShipping = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            const token = await getAuthToken();
+            if (!token) throw new Error("Not authenticated");
+
+            const res = await fetch("/api/kleverapi/multishipping/start", {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                const errorMsg = formatMagentoError(data);
+                throw new Error(errorMsg);
+            }
+            return data;
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : "Failed to start multi-shipping";
+            setError(msg);
+            throw new Error(msg);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    // ─── Assign Multi-Shipping ───
+    const assignMultiShipping = useCallback(async (assignments: Array<{ quote_item_id: number, customer_address_id: number | string, qty: number }>) => {
+        try {
+            setIsLoading(true);
+            const token = await getAuthToken();
+            if (!token) throw new Error("Not authenticated");
+
+            const res = await fetch("/api/kleverapi/multishipping/assign", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    request: {
+                        assignments: assignments
+                    }
+                }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                const errorMsg = formatMagentoError(data);
+                throw new Error(errorMsg);
+            }
+            return data;
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : "Failed to assign multi-shipping addresses";
+            setError(msg);
+            throw new Error(msg);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    // ─── Fetch Multi-Shipping Shipping Methods ───
+    const fetchMultiShippingMethods = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            const token = await getAuthToken();
+            if (!token) throw new Error("Not authenticated");
+
+            const res = await fetch("/api/kleverapi/multishipping/shipping-methods", {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                const errorMsg = formatMagentoError(data);
+                throw new Error(errorMsg);
+            }
+            return data;
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : "Failed to fetch multi-shipping shipping methods";
+            setError(msg);
+            throw new Error(msg);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
     // ─── Fetch Checkout Success ───
     const fetchCheckoutSuccess = useCallback(async (orderId: string) => {
         try {
@@ -695,5 +794,8 @@ export function useCheckout(options: UseCheckoutOptions = {}) {
         setShippingMethod,
         setShippingExtras,
         fetchCheckoutSuccess,
+        startMultiShipping,
+        assignMultiShipping,
+        fetchMultiShippingMethods,
     };
 }

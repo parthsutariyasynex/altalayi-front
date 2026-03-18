@@ -17,7 +17,8 @@ export default function NotificationsPage() {
         fetchNotifications,
         markAsRead,
         removeNotification,
-        totalCount
+        totalCount,
+        deletingIds
     } = useNotifications();
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -126,20 +127,26 @@ export default function NotificationsPage() {
                                                 <tr
                                                     key={`${item.notification_id || index}-${index}`}
                                                     onClick={() => handleNotificationClick(item)}
-                                                    className="border-b border-[#ebebeb] last:border-0 hover:bg-[#fafafa] transition-colors cursor-pointer group"
+                                                    className={`border-b border-[#ebebeb] last:border-0 transition-colors cursor-pointer ${!item.is_read ? "bg-[#fcf8ec]" : "bg-white"
+                                                        }`}
                                                 >
-                                                    <td className="px-6 py-6 text-[14px] text-[#333333] text-center border-r border-[#ebebeb] align-middle">
+                                                    <td className="px-6 py-6 text-[14px] text-[#333333] text-center border-r border-[#ebebeb] align-middle relative">
+                                                        {!item.is_read && (
+                                                            <div className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 bg-[#f5af02] rounded-full shadow-sm"></div>
+                                                        )}
                                                         {item.date_added_formatted}
                                                     </td>
-                                                    <td className="px-6 py-6 text-[14px] text-center border-r border-[#ebebeb] font-bold text-[#333333] group-hover:text-[#f5af02] transition-colors align-middle">
+                                                    <td className={`px-6 py-6 text-[14px] text-center border-r border-[#ebebeb] hover:text-[#f5af02] transition-colors align-middle ${!item.is_read ? "font-bold text-black" : "font-normal text-[#666666]"
+                                                        }`}>
                                                         {item.title}
                                                     </td>
-                                                    <td className="px-6 py-6 text-[14px] text-[#333333] text-center border-r border-[#ebebeb] leading-relaxed align-middle">
+                                                    <td className={`px-6 py-6 text-[14px] text-center border-r border-[#ebebeb] leading-relaxed align-middle ${!item.is_read ? "font-medium text-black" : "text-[#666666]"
+                                                        }`}>
                                                         {item.description}
                                                     </td>
                                                     <td className="px-6 py-6 text-[13px] text-center align-middle">
                                                         <div className="flex items-center justify-center gap-2 whitespace-nowrap text-[#333333]">
-                                                            {!item.is_read ? (
+                                                            {!item.is_read && (
                                                                 <>
                                                                     <button
                                                                         onClick={(e) => {
@@ -152,20 +159,16 @@ export default function NotificationsPage() {
                                                                     </button>
                                                                     <span className="text-[#cccccc]">|</span>
                                                                 </>
-                                                            ) : (
-                                                                <>
-                                                                    <span className="text-[#999999]">Read</span>
-                                                                    <span className="text-[#cccccc]">|</span>
-                                                                </>
                                                             )}
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     removeNotification(item.notification_id, item.is_read);
                                                                 }}
-                                                                className="hover:text-red-600 cursor-pointer transition-colors font-bold"
+                                                                disabled={deletingIds.includes(item.notification_id)}
+                                                                className="hover:text-[#f5af02] cursor-pointer transition-colors font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                                                             >
-                                                                Remove
+                                                                {deletingIds.includes(item.notification_id) ? "Deleting..." : "Remove"}
                                                             </button>
                                                         </div>
                                                     </td>

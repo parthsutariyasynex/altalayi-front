@@ -67,11 +67,13 @@ export const authOptions: NextAuthOptions = {
                             return null;
                         }
 
+                        const trimmedToken = String(token).trim();
+
                         return {
                             id: (credentials as any).email || (credentials as any).mobile,
                             email: (credentials as any).email || "",
                             name: (credentials as any).email || (credentials as any).mobile,
-                            token: token,
+                            token: trimmedToken,
                         };
                     }
                     return null;
