@@ -9,6 +9,8 @@ import Navbar from "@/app/components/Navbar";
 import Filters from "@/components/Filters";
 import OrdersTable, { Order } from "@/components/OrdersTable";
 import Pagination from "@/components/Pagination";
+import { useCart } from "@/modules/cart/context/CartContext";
+import { toast } from "react-hot-toast";
 
 function mapOrder(item: any): Order {
     // Order #
@@ -27,15 +29,13 @@ function mapOrder(item: any): Order {
     // Grand Total → "﷼ 5,836.25"
     const grandTotal = formatPrice(item.grand_total);
 
-    // Ordered By — show customer name only when billing name differs
-    // (means someone else placed the order on behalf)
-    let orderedBy = "";
-    if (item.billing_address) {
-        const billingName = `${item.billing_address.firstname || ""} ${item.billing_address.lastname || ""}`.trim();
-        const customerName = `${item.customer_firstname || ""} ${item.customer_lastname || ""}`.trim();
-        if (billingName && billingName !== customerName) {
-            orderedBy = customerName;
-        }
+    // Ordered By - prioritize direct ordered_by field, fallback to billing address or customer name
+    let orderedBy = item.ordered_by || "";
+    if (!orderedBy && item.billing_address) {
+        orderedBy = `${item.billing_address.firstname || ""} ${item.billing_address.lastname || ""}`.trim();
+    }
+    if (!orderedBy && (item.customer_firstname || item.customer_lastname)) {
+        orderedBy = `${item.customer_firstname || ""} ${item.customer_lastname || ""}`.trim();
     }
 
     // Status
@@ -54,18 +54,20 @@ function mapOrder(item: any): Order {
         orderedBy,
         status,
         increment_id: item.increment_id || "",
-        entity_id: (item.entity_id || item.increment_id || "").toString(),
+        entity_id: (item.entity_id || item.order_id || item.increment_id || "").toString(),
     };
 }
 
 export default function MyOrdersPage() {
     const { data: session, status: authStatus } = useSession();
     const router = useRouter();
+    const { refetchCart } = useCart();
 
     const [orders, setOrders] = useState<Order[]>([]);
     const [totalItems, setTotalItems] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isExporting, setIsExporting] = useState(false);
     const [hasFetched, setHasFetched] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -142,8 +144,83 @@ export default function MyOrdersPage() {
         router.push(`/my-orders/${entityId}`);
     };
 
-    const handleReorder = (order: Order) => {
-        console.log("Reordering:", order);
+    const handleReorder = async (order: Order) => {
+        const token = (session as any)?.accessToken;
+        if (!token) {
+            toast.error("You must be logged in to reorder.");
+            return;
+        }
+
+        const toastId = toast.loading("Adding items to cart...");
+        try {
+            const res = await fetch(`/api/kleverapi/order/${order.entity_id}/reorder`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || "Failed to reorder");
+
+            await refetchCart();
+            toast.success("Items added to cart", { id: toastId });
+            router.push("/cart");
+        } catch (err: any) {
+            toast.error(err.message || "Something went wrong", { id: toastId });
+        }
+    };
+
+    const handleExportOrders = async () => {
+        const token = (session as any)?.accessToken;
+        if (!token) {
+            toast.error("You must be logged in to export orders.");
+            return;
+        }
+
+        setIsExporting(true);
+        const toastId = toast.loading("Exporting orders...");
+
+        try {
+            const response = await fetch("/api/kleverapi/orders/export", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || "Failed to export orders");
+
+            const base64Content = data.pdf_base64 || data.content || data.base64 || data.csv_base64;
+            if (!base64Content) throw new Error("No file content received from server");
+
+            // --- Base64 to Blob (Uint8Array approach) ---
+            const byteCharacters = atob(base64Content);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: "text/csv" });
+
+            // Trigger download
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            a.download = data.filename || `Orders_Export_${new Date().getTime()}.csv`;
+            document.body.appendChild(a);
+            a.click();
+
+            // Cleanup
+            setTimeout(() => {
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            }, 100);
+
+            toast.success("Orders exported successfully", { id: toastId });
+        } catch (err: any) {
+            console.error("Export Error:", err);
+            toast.error(err.message || "Something went wrong", { id: toastId });
+        } finally {
+            setIsExporting(false);
+        }
     };
 
     const totalPages = Math.ceil(totalItems / pageSize);
@@ -169,11 +246,19 @@ export default function MyOrdersPage() {
                         <h1 className="text-[24px] font-bold text-black uppercase">
                             MY ORDERS
                         </h1>
-                        <button className="flex items-center gap-2 border-2 border-[#f5a623] text-black text-[12px] font-bold px-5 py-2 uppercase tracking-wide hover:bg-[#f5a623] transition-colors">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Export Orders
+                        <button
+                            onClick={handleExportOrders}
+                            disabled={isExporting}
+                            className={`flex items-center gap-2 border-2 border-[#f5a623] text-black text-[12px] font-bold px-5 py-2 uppercase tracking-wide hover:bg-[#f5a623] transition-colors ${isExporting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        >
+                            {isExporting ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black"></div>
+                            ) : (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            )}
+                            {isExporting ? 'Exporting...' : 'Export Orders'}
                         </button>
                     </div>
 

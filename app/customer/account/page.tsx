@@ -201,9 +201,7 @@ export default function MyAccountPage() {
                                             ) : (
                                                 <p>You have not set a default billing address.</p>
                                             )}
-                                            <div className="pt-3">
-                                                <Link href="/edit-address" className={buttonYellow}>Edit Address</Link>
-                                            </div>
+
                                         </div>
                                     </div>
 

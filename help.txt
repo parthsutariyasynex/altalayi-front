@@ -127,3 +127,12 @@ Provide complete working Next.js code step-by-step.
 
 
 Multi location delivery page continue to work shipping-methods get method  after dashboard complate 
+
+
+
+
+ let orderedBy = "";
+    if (item.billing_address) {
+        orderedBy = `${item.billing_address.firstname || ""} ${item.billing_address.lastname || ""}`.trim();
+    }
+   check this code  after run my orderpage api

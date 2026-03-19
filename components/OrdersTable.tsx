@@ -41,7 +41,10 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ orders, onViewOrder, onReorde
                                 key={order.increment_id + idx}
                                 className="border-b border-gray-200 hover:bg-gray-50/50 transition-colors"
                             >
-                                <td className="px-4 py-3 border-r border-gray-200 text-gray-800 font-medium">
+                                <td
+                                    className="px-4 py-3 border-r border-gray-200 text-gray-800 font-medium cursor-pointer"
+                                    onClick={() => onViewOrder(order.entity_id)}
+                                >
                                     {order.id}
                                 </td>
                                 <td className="px-4 py-3 border-r border-gray-200 text-gray-500">
@@ -63,14 +66,14 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ orders, onViewOrder, onReorde
                                     <div className="flex items-center justify-center gap-3 text-[12px]">
                                         <button
                                             onClick={() => onViewOrder(order.entity_id)}
-                                            className="text-gray-700 hover:text-black hover:underline underline-offset-2"
+                                            className="text-gray-700 hover:text-[#f5a623] hover:underline underline-offset-2 transition-colors"
                                         >
                                             View Order
                                         </button>
                                         <span className="text-gray-300">|</span>
                                         <button
                                             onClick={() => onReorder(order)}
-                                            className="text-gray-700 hover:text-black hover:underline underline-offset-2"
+                                            className="text-gray-700 hover:text-[#f5a623] hover:underline underline-offset-2 transition-colors"
                                         >
                                             Reorder
                                         </button>

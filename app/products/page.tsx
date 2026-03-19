@@ -9,6 +9,7 @@ import ProductEnquiryModal from "../components/ProductEnquiryModal";
 import { checkAuth } from "./api";
 import { useCart } from "@/modules/cart/hooks/useCart";
 import SidebarFilter from "../components/SidebarFilter";
+import { api } from "@/lib/api/api-client";
 import { formatPrice } from "@/utils/helpers";
 import { toast } from "react-hot-toast";
 
@@ -47,14 +48,30 @@ export default function ProductsPage() {
     if (stored) setFavIds(JSON.parse(stored));
   }, []);
 
-  const toggleFavorite = (productId: number) => {
-    setFavIds(prev => {
-      const next = prev.includes(productId)
-        ? prev.filter(id => id !== productId)
-        : [...prev, productId];
-      localStorage.setItem("favourites", JSON.stringify(next));
-      return next;
-    });
+  const toggleFavorite = async (product: any) => {
+    const { product_id: productId, sku } = product;
+    const stored = localStorage.getItem("favourites");
+    const favIds: number[] = stored ? JSON.parse(stored) : [];
+
+    if (!favIds.includes(productId)) {
+      favIds.push(productId);
+      localStorage.setItem("favourites", JSON.stringify(favIds));
+      setFavIds(favIds);
+
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (token) {
+        const toastId = toast.loading("Adding to favorites...");
+        try {
+          await api.post("/kleverapi/favorite-products", { product_id: productId });
+          toast.success("Added to favorites", { id: toastId });
+        } catch (err) {
+          console.error("API favorite add error:", err);
+          toast.error("Could not sync favorites", { id: toastId });
+        }
+      }
+    }
+
+    router.push("/my-account/favourite-products");
   };
 
   const [debouncedFilters, setDebouncedFilters] = useState(selectedFilters);
@@ -234,16 +251,11 @@ export default function ProductsPage() {
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center gap-4 flex-shrink-0">
               <div className="flex items-center gap-4">
                 <button
-                  onClick={() => setIsFavorite(!isFavorite)}
+                  onClick={() => router.push("/my-account/favourite-products")}
                   className="text-xl font-black text-gray-900 uppercase tracking-tighter flex items-center gap-2 hover:opacity-80 transition-all"
                 >
-                  <Star
-                    className={`w-6 h-6 transition-colors ${isFavorite
-                      ? "text-yellow-500 fill-yellow-500"
-                      : "text-gray-400"
-                      }`}
-                  />
-                  {isFavorite ? "My Favorites" : "Favourite products"}
+                  <Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />
+                  Favourite products
                 </button>
                 {Object.keys(selectedFilters).length > 0 && (
                   <button onClick={clearAllFilters} className="text-[10px] font-black text-red-500 hover:text-red-700 uppercase flex items-center gap-1.5 bg-red-50 px-2.5 py-1 rounded-full transition-colors">
@@ -410,8 +422,8 @@ export default function ProductsPage() {
                                   )}
 
                                   <button
-                                    onClick={() => toggleFavorite(product.product_id)}
-                                    className={`w-9 h-9 rounded-lg flex items-center justify-center shadow-md hover:-translate-y-0.5 transition-all ${favIds.includes(product.product_id) ? "bg-black text-yellow-400" : "bg-yellow-400 text-black hover:bg-yellow-500"}`}
+                                    onClick={() => toggleFavorite(product)}
+                                    className="w-9 h-9 rounded-lg flex items-center justify-center shadow-md hover:-translate-y-0.5 transition-all bg-yellow-400 text-black hover:bg-yellow-500"
                                     title={favIds.includes(product.product_id) ? "Remove from Favourites" : "Add to Favourites"}
                                   >
                                     <Star size={16} strokeWidth={2.5} fill={favIds.includes(product.product_id) ? "currentColor" : "none"} />

@@ -2,11 +2,14 @@ import * as Types from '../constants/actionTypes';
 import { axiosGet, axiosPost, axiosPut, axiosDelete } from '../axiosHelper';
 
 export const fetchAddresses = () => async (dispatch: any) => {
+    dispatch({ type: Types.FETCH_ADDRESSES_REQUEST });
     axiosGet({
         url: '/addresses',
     }, (response) => {
         if (response.status === 200) {
             dispatch({ type: Types.FETCH_ADDRESSES_SUCCESS, payload: response.data });
+        } else {
+            dispatch({ type: Types.FETCH_ADDRESSES_FAILURE, payload: response.data?.message || "Failed to fetch addresses" });
         }
     });
 };
