@@ -19,109 +19,153 @@ const Filters: React.FC<FiltersProps> = ({
     onSearch,
     onReset,
 }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [statusOptions, setStatusOptions] = useState<string[]>(["All"]);
-    const dropdownRef = useRef<HTMLDivElement>(null);
+    const [isStatusOpen, setIsStatusOpen] = useState(false);
+    const [isOrderOpen, setIsOrderOpen] = useState(false);
 
-    // Fetch dynamic status options
+    const [statusOptions, setStatusOptions] = useState<any[]>(["All"]);
+    const [orderOptions, setOrderOptions] = useState<any[]>(["All"]);
+
+    const statusRef = useRef<HTMLDivElement>(null);
+    const orderRef = useRef<HTMLDivElement>(null);
+
+    // Fetch dynamic filter options
     useEffect(() => {
-        async function fetchStatuses() {
+        async function fetchFilterOptions() {
             try {
-                const res = await fetch("/api/kleverapi/order-statuses", {
+                const res = await fetch("/api/kleverapi/my-orders/filter-options", {
                     headers: {
                         "Content-Type": "application/json",
                     },
                 });
                 const data = await res.json();
+                console.log("[Filters] API Response Data:", data);
 
-                // Assuming data is an array of strings or has an items property
-                const fetchedOptions = Array.isArray(data)
-                    ? data
-                    : (data.items || data.data || []);
+                // Handle FilterByStatus
+                let fetchedStatusOptions: any[] = [];
+                const statusData = data["Filter By Status"] || data.FilterByStatus || data.status_options || data.statuses || data.status || data;
+                if (Array.isArray(statusData)) {
+                    fetchedStatusOptions = statusData;
+                } else if (statusData && typeof statusData === 'object' && Array.isArray(statusData.items)) {
+                    fetchedStatusOptions = statusData.items;
+                }
 
-                if (fetchedOptions.length > 0) {
-                    // Ensure "All" is always at the top if not present
-                    const finalOptions = fetchedOptions.includes("All")
-                        ? fetchedOptions
-                        : ["All", ...fetchedOptions];
-                    setStatusOptions(finalOptions);
-                } else {
+                if (fetchedStatusOptions.length > 0) {
+                    // Smart deduplicate "All"
+                    const hasAll = fetchedStatusOptions.some(opt => {
+                        const label = typeof opt === 'string' ? opt : (opt.label || opt.name || opt.status || "");
+                        return label.toLowerCase() === "all";
+                    });
+
+                    const finalStatusOptions = hasAll ? fetchedStatusOptions : ["All", ...fetchedStatusOptions];
+                    setStatusOptions(finalStatusOptions);
+                }
+
+                // Handle FilterByOrder
+                let fetchedOrderOptions: any[] = [];
+                const orderData = data["Filter By Order"] || data.FilterByOrder || data.order_options || data.orders || data.order;
+                if (Array.isArray(orderData)) {
+                    fetchedOrderOptions = orderData;
+                } else if (orderData && typeof orderData === 'object' && Array.isArray(orderData.items)) {
+                    fetchedOrderOptions = orderData.items;
+                }
+
+                if (fetchedOrderOptions.length > 0) {
+                    // Smart deduplicate "All"
+                    const hasAll = fetchedOrderOptions.some(opt => {
+                        const label = typeof opt === 'string' ? opt : (opt.label || opt.name || opt.increment_id || "");
+                        return label.toLowerCase() === "all";
+                    });
+
+                    const finalOrderOptions = hasAll ? fetchedOrderOptions : ["All", ...fetchedOrderOptions];
+                    setOrderOptions(finalOrderOptions);
+                }
+                else {
                     // Fallback to minimal if nothing returned
-                    setStatusOptions(["All", "Check Pending"]);
+                    setOrderOptions(["All"]);
                 }
             } catch (error) {
-                console.error("Failed to fetch order statuses:", error);
-                // Fallback for safety
+                console.error("Failed to fetch order filter options:", error);
                 setStatusOptions(["All", "Check Pending"]);
+                setOrderOptions(["All"]);
             }
         }
-        fetchStatuses();
+        fetchFilterOptions();
     }, []);
 
-    // Close dropdown on outside click
+    // Close dropdowns on outside click
     useEffect(() => {
         function handleClickOutside(e: MouseEvent) {
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-                setIsOpen(false);
+            if (statusRef.current && !statusRef.current.contains(e.target as Node)) {
+                setIsStatusOpen(false);
+            }
+            if (orderRef.current && !orderRef.current.contains(e.target as Node)) {
+                setIsOrderOpen(false);
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const handleSelect = (value: string) => {
-        onStatusChange(value);
-        setIsOpen(false);
-    };
-
     return (
         <div className="mb-6">
             <div className="flex flex-wrap gap-x-5 gap-y-4 items-end">
-                {/* Custom Status Dropdown */}
+                {/* Status Dropdown */}
                 <div className="flex flex-col gap-1.5">
                     <label className="text-[14px] font-bold text-black uppercase tracking-tight">
                         Filter By Status
                     </label>
-                    <div className="relative" ref={dropdownRef}>
+                    <div className="relative" ref={statusRef}>
                         <button
                             type="button"
-                            onClick={() => setIsOpen(!isOpen)}
-                            className="h-[42px] w-[180px] px-3 bg-[#f5a623] text-black text-[13px] font-bold flex items-center justify-between cursor-pointer focus:outline-none rounded-[1px]"
+                            onClick={() => {
+                                setIsStatusOpen(!isStatusOpen);
+                                setIsOrderOpen(false);
+                            }}
+                            className="h-[42px] min-w-[180px] px-3 bg-[#f5a623] text-black text-[13px] font-bold flex items-center justify-between cursor-pointer focus:outline-none rounded-[1px]"
                         >
-                            <span>{status}</span>
-                            <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <span>{status || "All"}</span>
+                            <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${isStatusOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
 
-                        {isOpen && (
-                            <ul className="absolute top-full left-0 w-[180px] bg-[#f5a623] z-50 shadow-md max-h-[320px] overflow-y-auto border-t border-black/10">
-                                {statusOptions.map((opt: string) => (
-                                    <li key={opt}>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleSelect(opt)}
-                                            className={`w-full text-left px-3 py-2 text-[13px] text-black hover:bg-black hover:text-white transition-colors ${status === opt ? "bg-black/20 font-bold" : ""}`}
-                                        >
-                                            {opt}
-                                        </button>
-                                    </li>
-                                ))}
+                        {isStatusOpen && (
+                            <ul className="absolute top-full left-0 min-w-[180px] w-full bg-[#f5a623] z-50 shadow-md max-h-[320px] overflow-y-auto border-t border-black/10">
+                                {statusOptions.map((opt: any, idx: number) => {
+                                    const optionLabel = typeof opt === 'string' ? opt : (opt.label || opt.name || opt.status || String(idx));
+                                    const optionValue = typeof opt === 'string' ? opt : (opt.value || opt.id || optionLabel);
+
+                                    return (
+                                        <li key={`${optionLabel}-${idx}`}>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    onStatusChange(optionValue);
+                                                    setIsStatusOpen(false);
+                                                }}
+                                                className={`w-full text-left px-4 py-2 text-[14px] text-black hover:bg-[#1a73e8] hover:text-white transition-colors ${status === optionValue ? "bg-[#1a73e8] text-white font-bold" : ""}`}
+                                            >
+                                                {optionLabel}
+                                            </button>
+                                        </li>
+                                    );
+                                })}
                             </ul>
                         )}
                     </div>
                 </div>
 
-                {/* Order Number Input */}
-                <div className="flex flex-col gap-1.5">
-                    <label className="text-[14px] font-bold text-black uppercase tracking-tight">
-                        Filter By Order
+                {/* Order Search (Text Input) */}
+                <div className="flex-1 min-w-[220px]">
+                    <label className="block text-[14px] font-bold text-black mb-1.5 uppercase tracking-tight">
+                        Search By Order #
                     </label>
                     <input
                         type="text"
-                        value={orderNumber}
+                        value={orderNumber === "All" ? "" : orderNumber}
                         onChange={(e) => onOrderNumberChange(e.target.value)}
-                        className="h-[42px] w-[220px] px-3 bg-white border border-gray-300 text-[13px] focus:outline-none focus:border-black rounded-[1px]"
+                        placeholder="e.g. 000001"
+                        className="w-full h-[42px] px-3 bg-[#f8f8f8] border border-gray-200 text-[14px] text-gray-700 focus:outline-none focus:border-[#f5a623] transition-colors rounded-[1px]"
                     />
                 </div>
 
@@ -143,5 +187,6 @@ const Filters: React.FC<FiltersProps> = ({
         </div>
     );
 };
+
 
 export default Filters;

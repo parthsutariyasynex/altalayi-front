@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/store/store";
 import { useState, useRef, useEffect } from "react";
 import {
   ShoppingCart,
@@ -25,7 +27,11 @@ export default function Navbar() {
 
   // Requirement: Dynamic Username from a variable
   // Requirement: Dynamic Username/Email from session
-  const displayUser = session?.user?.name || session?.user?.email;
+  const { data: customerData } = useSelector((state: RootState) => state.customer);
+  const dispatch = useDispatch();
+  const displayUser = (customerData as any)?.firstname
+    ? `${(customerData as any).firstname} ${(customerData as any).lastname}`
+    : (session?.user?.name || session?.user?.email);
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -37,6 +43,7 @@ export default function Navbar() {
   const cartCount = cart?.items_count || 0;
 
   const handleLogout = async () => {
+    localStorage.removeItem('token');
     await signOut({ callbackUrl: "/login" });
   };
 
@@ -74,11 +81,11 @@ export default function Navbar() {
 
   return (
     <div className="w-full sticky top-0 z-50 flex flex-col">
-      {/* Main Header Section */}
-      <header className="bg-white border-b border-gray-100 py-3 px-6 md:px-12 shadow-sm">
+      {/* 1. Header Section */}
+      <header className="bg-white border-b border-gray-100 py-3 px-6 md:px-12 relative shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
 
-          {/* 1. Left Section: Logo */}
+          {/* Logo Area */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2">
               <img
@@ -89,116 +96,90 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* 2. Middle Section: Optional Brand Logo (Hidden on small screens) */}
+          {/* Secondary Brand Logo */}
           <div className="hidden lg:flex flex-1 justify-center px-10">
             <img
               src="/logo/atcl-bridgestone-logo-v1.jpg"
               alt="Bridgestone Logo"
-              className="h-11 w-auto opacity-80"
+              className="h-11 w-auto"
             />
           </div>
 
-          {/* 3. Right Section: Welcome Badge & Icons Side-by-Side */}
-          <div className="flex items-center gap-6">
-
-            {/* Notification Bell */}
-            <div
-              className="relative cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => setIsNotificationOpen(true)}
-            >
-              <div className="text-black">
-                <Bell size={26} fill="black" strokeWidth={1} />
-              </div>
-              {unreadCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-[#f5af02] text-black text-[10px] font-black w-[18px] h-[18px] flex items-center justify-center rounded-full border border-white">
-                  {unreadCount}
-                </span>
-              )}
-            </div>
-
-            {/* Language Selection */}
-            <button className="text-[#003d7e] text-xl font-medium hover:text-black transition-colors cursor-pointer">
-              Arabic
-            </button>
-
-            {/* Profile Dropdown */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="text-black transition-colors cursor-pointer flex items-center"
-                aria-label="User Profile"
-              >
-                <div className="w-8 h-8 flex items-center justify-center">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.33 4 18V20H20V18C20 15.33 14.67 14 12 14Z" />
-                  </svg>
-                </div>
-              </button>
-
-              {isProfileOpen && (
-                <div className="absolute right-0 mt-3 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="px-4 py-2 border-b border-gray-50 mb-1">
-                    <p className="text-xs text-gray-400 font-medium">Signed in as</p>
-                    <p className="text-sm font-bold text-gray-800 truncate">{displayUser}</p>
-                  </div>
-                  <Link
-                    href="/customer/account"
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    onClick={() => setIsProfileOpen(false)}
-                  >
-                    <UserCircle size={18} className="text-gray-500" />
-                    My Account
-                  </Link>
-                  {/* <Link
-                    href="/customer/orders"
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    onClick={() => setIsProfileOpen(false)}
-                  >
-                    <Package size={18} className="text-gray-500" />
-                    My Orders
-                  </Link> */}
-                  <hr className="my-1 border-gray-50" />
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      setIsProfileOpen(false);
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                  >
-                    <LogOut size={18} />
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Cart Icon */}
-            <button
-              onClick={() => setIsCartOpen(true)}
-              className="relative text-black hover:text-[#003d7e] transition-colors p-2 rounded-full hover:bg-gray-100 cursor-pointer"
-              aria-label="Shopping Cart"
-            >
-              <ShoppingCart size={24} />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#003d7e] text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
-                  {cartCount}
-                </span>
-              )}
-            </button>
-            {/* Welcome Badge */}
+          {/* 2. Top-right Welcome Badge & Icons */}
+          <div className="flex flex-col items-end">
             {isAuthenticated && (
-              <div className="flex items-center gap-2 group cursor-default">
-                <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 px-3.5 py-1.5 rounded-full shadow-sm hover:border-yellow-400 transition-all">
-                  <div className="w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center">
-                    <UserCircle size={14} className="text-black" />
-                  </div>
-                  <div className="flex flex-col -space-y-0.5">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-tight">Welcome</span>
-                    <span className="text-[13px] font-bold text-gray-900 leading-tight">{displayUser}</span>
-                  </div>
-                </div>
+              <div className="bg-[#f5b21a] text-black text-[11px] font-bold px-3 py-1 mb-1 rounded-sm shadow-sm">
+                Welcome: {displayUser}
               </div>
             )}
+
+            <div className="flex items-center gap-6">
+              {/* Notification Bell */}
+              <div
+                className="relative cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => setIsNotificationOpen(true)}
+              >
+                <div className="text-black">
+                  <Bell size={26} fill="black" strokeWidth={1} />
+                </div>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-[#f5af02] text-black text-[10px] font-black w-[18px] h-[18px] flex items-center justify-center rounded-full border border-white">
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
+
+              {/* Language (Arabic) placeholder as styled text */}
+              <span className="text-black text-[14px] font-bold cursor-pointer hover:text-yellow-600 transition-colors">
+                Arabic
+              </span>
+
+              {/* Profile Avatar & Dropdown */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="text-black transition-colors cursor-pointer flex items-center"
+                  aria-label="User Profile"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.33 4 18V20H20V18C20 15.33 14.67 14 12 14Z" />
+                  </svg>
+                </button>
+
+                {isProfileOpen && (
+                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-sm shadow-2xl border border-gray-200 py-1 z-[100]">
+                    <Link
+                      href="/customer/account"
+                      className="block px-5 py-3 text-[14px] font-bold text-gray-800 hover:bg-gray-50 transition-colors"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      My Account
+                    </Link>
+
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-5 py-3 text-[14px] font-bold text-gray-800 hover:bg-gray-50 transition-colors cursor-pointer border-t border-gray-100"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Cart Icon */}
+              <button
+                onClick={() => setIsCartOpen(true)}
+                className="relative text-black transition-colors cursor-pointer"
+                aria-label="Shopping Cart"
+              >
+                <ShoppingCart size={24} strokeWidth={1.5} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-2.5 -right-2.5 bg-[#f5af02] text-black text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border border-white">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -227,18 +208,6 @@ export default function Navbar() {
             >
               About Us
             </Link>
-            {/* <Link
-              href="/locations"
-              className="h-full flex items-center px-6 hover:bg-black hover:text-white transition-all duration-200 cursor-pointer"
-            >
-              Branch Locations
-            </Link> */}
-            {/* <Link
-              href="/guides"
-              className="h-full flex items-center px-6 hover:bg-black hover:text-white transition-all duration-200 cursor-pointer"
-            >
-              User Guides
-            </Link> */}
             <Link
               href="/catalogue"
               className="h-full flex items-center px-6 hover:bg-black hover:text-white transition-all duration-200 cursor-pointer"
@@ -303,6 +272,6 @@ export default function Navbar() {
           </div>
         )}
       </nav>
-    </div>
+    </div >
   );
 }

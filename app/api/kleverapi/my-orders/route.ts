@@ -9,6 +9,7 @@ export async function GET(request: Request) {
         const currentPage = searchParams.get('currentPage') || '1';
         const status = searchParams.get('status');
         const orderNumber = searchParams.get('orderNumber');
+        const companyCode = searchParams.get('companyCode');
 
         const authHeader = request.headers.get('Authorization');
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -18,12 +19,19 @@ export async function GET(request: Request) {
             );
         }
 
+        // Use the BASE_URL from environment for proper consistent calls
         let magentoUrl = `${BASE_URL}/my-orders?pageSize=${pageSize}&currentPage=${currentPage}`;
 
         if (status && status !== 'All') {
-            magentoUrl += `&status=${encodeURIComponent(status)}`;
+            magentoUrl += `&orderStatus=${encodeURIComponent(status)}`;
         }
-        if (orderNumber) {
+
+        if (companyCode && companyCode !== 'All') {
+            magentoUrl += `&companyCode=${encodeURIComponent(companyCode)}`;
+        }
+
+        if (orderNumber && orderNumber !== 'All' && orderNumber.trim() !== '') {
+            // Correct the parameter name and ensure it's properly encoded
             magentoUrl += `&orderNumber=${encodeURIComponent(orderNumber)}`;
         }
 

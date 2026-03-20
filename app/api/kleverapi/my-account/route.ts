@@ -14,8 +14,10 @@ export async function GET(request: Request) {
             );
         }
 
-        // 2. Define the Backend Magento URL
-        const magentoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/my-account`;
+        // Use a more robust normalization to match the expected https://altalayi-demo.btire.com/rest/V1/kleverapi format
+        // Removing the localized /en/rest/en/ prefixes
+        const cleanBaseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace(/https?:\/\/[^\/]+(\/en)?\/rest\/en/, 'https://altalayi-demo.btire.com/rest');
+        const magentoUrl = `${cleanBaseUrl}/my-account`;
 
         console.log(`[API ROUTE] Fetching Customer Info from: ${magentoUrl}`);
 
@@ -61,7 +63,9 @@ export async function POST(request: Request) {
             return NextResponse.json({ message: 'Authorization required' }, { status: 401 });
         }
 
-        const magentoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/my-account`;
+        // Use normalized URL to match standard REST path
+        const cleanBaseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace(/https?:\/\/[^\/]+(\/en)?\/rest\/en/, 'https://altalayi-demo.btire.com/rest');
+        const magentoUrl = `${cleanBaseUrl}/my-account`;
         console.log(`[API ROUTE] Updating Customer Info at: ${magentoUrl}`);
 
         const response = await fetch(magentoUrl, {

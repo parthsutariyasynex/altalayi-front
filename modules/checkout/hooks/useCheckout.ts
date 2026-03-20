@@ -470,6 +470,57 @@ export function useCheckout(options: UseCheckoutOptions = {}) {
         }
     }, []);
 
+    // ─── Set Order Comment ───
+    const saveOrderComment = useCallback(async (comment: string) => {
+        try {
+            const token = await getAuthToken();
+            if (!token) throw new Error("Not authenticated");
+
+            const res = await fetch("/api/kleverapi/checkout/order-comment", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ comment }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                const errorMsg = formatMagentoError(data);
+                throw new Error(errorMsg);
+            }
+            return data;
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to save order comment");
+            throw err;
+        }
+    }, []);
+
+    // ─── Get Order Comment ───
+    const getOrderComment = useCallback(async () => {
+        try {
+            const token = await getAuthToken();
+            if (!token) throw new Error("Not authenticated");
+
+            const res = await fetch("/api/kleverapi/checkout/order-comment", {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || "Failed to get order comment");
+
+            // Handle different resonse formats: { comment: "..." } or "..." or { data: { comment: "..." } }
+            // If common Magento responses return just the string
+            if (typeof data === 'string') return data;
+            return data.comment || data.order_comment || "";
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to get order comment");
+            throw err;
+        }
+    }, []);
+
     // ─── Upload PO File ───
     const uploadPoFile = useCallback(async (formData: FormData) => {
         try {
@@ -620,6 +671,7 @@ export function useCheckout(options: UseCheckoutOptions = {}) {
         payment_method: string;
         cart_id?: number | string | null;
         po_number?: string;
+        comment?: string;
     }) => {
         try {
             setIsLoading(true);
@@ -797,5 +849,7 @@ export function useCheckout(options: UseCheckoutOptions = {}) {
         startMultiShipping,
         assignMultiShipping,
         fetchMultiShippingMethods,
+        getOrderComment,
+        saveOrderComment,
     };
 }

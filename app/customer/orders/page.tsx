@@ -75,7 +75,7 @@ export default function MyOrdersPage() {
     const [hasFetched, setHasFetched] = useState(false);
 
     const [statusFilter, setStatusFilter] = useState("All");
-    const [orderNumberFilter, setOrderNumberFilter] = useState("");
+    const [orderNumberFilter, setOrderNumberFilter] = useState("All");
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [searchQuery, setSearchQuery] = useState("");
@@ -106,7 +106,7 @@ export default function MyOrdersPage() {
             if (statusQuery !== "All") {
                 params.append("status", statusQuery);
             }
-            if (searchQuery) {
+            if (searchQuery && searchQuery !== "All") {
                 params.append("orderNumber", searchQuery);
             }
 
@@ -154,7 +154,7 @@ export default function MyOrdersPage() {
 
     const handleReset = () => {
         setStatusFilter("All");
-        setOrderNumberFilter("");
+        setOrderNumberFilter("All");
         setStatusQuery("All");
         setSearchQuery("");
         setCurrentPage(1);

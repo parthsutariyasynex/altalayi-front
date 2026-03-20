@@ -72,6 +72,8 @@ const CheckoutPageUI: React.FC = () => {
         stores,
         refetchPickupStores,
         fetchPickupTimeSlots,
+        getOrderComment,
+        saveOrderComment,
     } = useCheckout();
 
     // --- State ---
@@ -281,6 +283,24 @@ const CheckoutPageUI: React.FC = () => {
         }
     }, [shippingMethods, shippingType, selectedShippingMethodCode, setShippingMethod]);
 
+    // Fetch existing Order Comment
+    useEffect(() => {
+        const fetchExistingComment = async () => {
+            try {
+                const existingComment = await getOrderComment();
+                if (existingComment) {
+                    setComment(existingComment);
+                }
+            } catch (err) {
+                console.error("Failed to fetch order comment:", err);
+            }
+        };
+
+        if (status === "authenticated") {
+            fetchExistingComment();
+        }
+    }, [status, getOrderComment]);
+
     // Fetch existing PO Upload
     useEffect(() => {
         const fetchPoUpload = async () => {
@@ -398,13 +418,19 @@ const CheckoutPageUI: React.FC = () => {
                 });
             }
 
-            // 3. Call Place Order
+            // 3. Save Order Comment
+            if (comment) {
+                await saveOrderComment(comment);
+            }
+
+            // 4. Call Place Order
             const result = await placeOrder({
                 address_id: Number(selectedAddressId),
                 shipping_method: selectedShippingMethodCode,
                 payment_method: paymentMethod,
                 cart_id: cart?.cart_id,
-                po_number: poNumber
+                po_number: poNumber,
+                comment: comment // Pass it just in case backend expects it here too
             });
 
             // 4. Handle Success
@@ -437,6 +463,16 @@ const CheckoutPageUI: React.FC = () => {
             toast.success("PO Number saved");
         } catch (error: any) {
             toast.error(error.message || "Failed to save PO number");
+        }
+    };
+
+    const handleCommentBlur = async () => {
+        if (!comment) return;
+        try {
+            await saveOrderComment(comment);
+            toast.success("Order comment saved");
+        } catch (error: any) {
+            toast.error(error.message || "Failed to save order comment");
         }
     };
 
@@ -627,7 +663,7 @@ const CheckoutPageUI: React.FC = () => {
                                                 key={addr.id}
                                                 address={addr}
                                                 onEdit={() => {
-                                                    toast.success("Edit feature coming soon!");
+                                                    router.push(`/customer/address-book/edit/${addr.id}?redirect=/checkout`);
                                                 }}
                                             />
                                         ) : (
@@ -671,7 +707,7 @@ const CheckoutPageUI: React.FC = () => {
                                                             className="text-[10px] font-black uppercase tracking-[0.2em] px-5 py-2.5 bg-white text-gray-400 border border-gray-100 hover:bg-gray-50 hover:text-black hover:border-gray-300 transition-all duration-300"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                toast.success("Edit feature coming soon!");
+                                                                router.push(`/customer/address-book/edit/${addr.id}?redirect=/checkout`);
                                                             }}
                                                         >
                                                             Edit Address
@@ -781,9 +817,26 @@ const CheckoutPageUI: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* 3. Shipping Methods */}
+                        {/* 3. Order Comment */}
                         <div className="bg-white border border-gray-200 shadow-sm rounded-sm overflow-hidden">
-                            <div className="bg-[#F2F2F2] px-6 py-4 border-b border-gray-200">
+                            <SectionHeader title="Order Comment" step={3} />
+                            <div className="p-6">
+                                <div className="space-y-2">
+                                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Additional Information</label>
+                                    <textarea
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 outline-none text-[14px] font-medium transition-all placeholder:text-gray-300 focus:bg-white focus:border-black min-h-[100px] resize-none"
+                                        value={comment}
+                                        onChange={(e) => setComment(e.target.value)}
+                                        onBlur={handleCommentBlur}
+                                        placeholder="Add any special instructions or comments for your order..."
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 4. Shipping Methods */}
+                        <div className="bg-white border border-gray-200 shadow-sm rounded-sm overflow-hidden">
+                            <div className="bg-[#F2F2F2] px-6 py-4 border-b border-gray-200" id="step-3">
                                 <h3 className="text-[14px] font-black text-[#333] uppercase tracking-wider">
                                     SHIPPING METHODS
                                 </h3>

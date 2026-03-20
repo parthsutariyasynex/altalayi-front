@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Navbar from "../../components/Navbar";
@@ -17,6 +17,9 @@ type CustomAttribute = {
     value: string;
 };
 
+import { useSearchParams } from "next/navigation";
+import { CheckCircle } from "lucide-react";
+
 export default function MyAccountPage() {
     const router = useRouter();
     const dispatch = useDispatch();
@@ -24,6 +27,7 @@ export default function MyAccountPage() {
     const { data: customer, loading } = useSelector((state: RootState) => state.customer);
     const token = useSelector((state: RootState) => state.auth.token);
     const { unreadCount } = useNotifications();
+    const searchParams = useSearchParams();
 
     useEffect(() => {
         if (status === "unauthenticated") {
@@ -48,10 +52,11 @@ export default function MyAccountPage() {
 
     if (!customer) return null;
 
-    const getAttr = (code: string) =>
-        customer.custom_attributes?.find(
+    const getAttr = (code: string) => {
+        return customer.custom_attributes?.find(
             (a: CustomAttribute) => a.attribute_code === code
         )?.value || "N/A";
+    }
 
     const billingAddress = customer.addresses?.find((addr: any) => addr.default_billing);
     const shippingAddress = customer.addresses?.find((addr: any) => addr.default_shipping);
@@ -72,6 +77,7 @@ export default function MyAccountPage() {
                 {/* Right Content */}
                 <main className="flex-1 p-8 bg-[#fcfcfc] min-h-screen">
                     <div className="max-w-[1200px]">
+
                         <h1 className="text-2xl font-light text-gray-800 mb-6 uppercase tracking-[0.6px]">
                             My Account
                         </h1>
@@ -79,35 +85,49 @@ export default function MyAccountPage() {
                         <div className="space-y-8">
                             {/* ACCOUNT INFORMATION SECTION */}
                             <section>
-                                <div className="flex items-center justify-between mb-4 border-b border-[#e5e7eb] pb-2">
-                                    <h2 className="text-lg font-medium text-gray-900 uppercase text-sm tracking-[0.6px]">
-                                        Account Information
+                                <div className="border-b border-[#e5e7eb] pb-2 mb-6">
+                                    <h2 className="text-[15px] font-bold text-black uppercase tracking-tight">
+                                        ACCOUNT INFORMATION
                                     </h2>
                                 </div>
 
-                                <div className="bg-white border border-gray-300">
-                                    {/* CONTACT HEADER */}
-                                    <div className="bg-gray-200 px-4 py-3 font-semibold text-sm uppercase tracking-[0.6px]">
-                                        Contact Information
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* CONTACT INFORMATION BOX */}
+                                    <div className="bg-white border border-[#e5e7eb] rounded-sm shadow-sm overflow-hidden">
+                                        <div className="bg-[#f5f5f5] px-5 py-3 border-b border-[#e5e7eb]">
+                                            <h3 className="text-[13px] font-bold text-black uppercase tracking-tight">
+                                                CONTACT INFORMATION
+                                            </h3>
+                                        </div>
+                                        <div className="p-6 text-[13px] text-gray-700 space-y-2.5 font-medium leading-relaxed">
+                                            <p><span className="text-black">Contact Name:</span> {customer.firstname} {customer.lastname}</p>
+                                            <p><span className="text-black">Email:</span> {customer.email}</p>
+                                            <p><span className="text-black">Contact Information:</span> {customer.email} ,</p>
+
+                                            <div className="flex gap-3 pt-6">
+                                                <Link href="/customer/account/edit" className="bg-[#F5B21B] hover:bg-black hover:text-white text-black text-[12px] font-bold px-8 py-2.5 uppercase transition-all rounded-sm shadow-sm tracking-wider">
+                                                    Edit
+                                                </Link>
+                                                <Link href="/customer/account/edit?change=password" className="bg-[#F5B21B] hover:bg-black hover:text-white text-black text-[12px] font-bold px-8 py-2.5 uppercase transition-all rounded-sm shadow-sm tracking-wider whitespace-nowrap">
+                                                    Change Password
+                                                </Link>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    {/* CONTENT */}
-                                    <div className="p-6 text-sm space-y-2">
-                                        <p><span className="font-semibold">Contact Name:</span> {customer.firstname} {customer.lastname}</p>
-                                        <p><span className="font-semibold">Email:</span> {customer.email}</p>
-                                        <p><span className="font-semibold">Customer Mobile:</span> {getAttr("mobile_number")}</p>
-                                        <p><span className="font-semibold">Company Name:</span> {getAttr("company_name")}</p>
-                                        <p><span className="font-semibold">Customer Code:</span> {getAttr("customer_code")}</p>
-                                        <p><span className="font-semibold">Industry:</span> {getAttr("industry")}</p>
-                                        <p><span className="font-semibold">Location:</span> {getAttr("location")}</p>
-
-                                        <div className="flex gap-3 pt-4">
-                                            <button className={buttonYellow}>
-                                                Edit
-                                            </button>
-                                            <button className={buttonYellow}>
-                                                Change Password
-                                            </button>
+                                    {/* COMPANY INFORMATION BOX */}
+                                    <div className="bg-white border border-[#e5e7eb] rounded-sm shadow-sm overflow-hidden">
+                                        <div className="bg-[#f5f5f5] px-5 py-3 border-b border-[#e5e7eb]">
+                                            <h3 className="text-[13px] font-bold text-black uppercase tracking-tight">
+                                                COMPANY INFORMATION
+                                            </h3>
+                                        </div>
+                                        <div className="p-6 text-[13px] text-gray-700 space-y-2.5 font-medium leading-relaxed">
+                                            <p><span className="text-black">Company Name:</span> {getAttr("company_name") || customer.addresses?.[0]?.company || "N/A"}</p>
+                                            <p><span className="text-black">Company Contact Name:</span> {getAttr("company_contact_name") !== "N/A" ? getAttr("company_contact_name") : "N/A"}</p>
+                                            <p><span className="text-black">Company Email:</span> {getAttr("company_email") !== "N/A" ? getAttr("company_email") : "N/A"}</p>
+                                            <p><span className="text-black">Customer Mobile:</span> {getAttr("mobile") !== "N/A" ? getAttr("mobile") : (getAttr("mobile_number") !== "N/A" ? getAttr("mobile_number") : (customer.addresses?.[0]?.telephone || "N/A"))}</p>
+                                            <p><span className="text-black">Customer Code:</span> {getAttr("customer_code")}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -118,25 +138,23 @@ export default function MyAccountPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className={cardBase}>
                                         <div className={sectionHeader + " flex justify-between items-center"}>
-                                            <span>Business Overview</span>
-                                            <button className={buttonYellow}>Edit</button>
+                                            <span className="uppercase text-[13px] font-bold">Business Overview</span>
+                                            <button className="bg-[#F5B21B] hover:bg-black hover:text-white text-black text-[10px] font-bold px-4 py-1.5 uppercase transition-all rounded-sm shadow-sm tracking-widest">Edit</button>
                                         </div>
-                                        <div className="p-5 text-sm space-y-2 text-gray-600">
-                                            <p><span className="font-semibold text-gray-800">Total Employees:</span> {getAttr("total_employees")}</p>
-                                            <p><span className="font-semibold text-gray-800">Trucks:</span> {getAttr("trucks")}</p>
-                                            <p><span className="font-semibold text-gray-800">Annual Revenue:</span> {getAttr("annual_revenue")}</p>
-                                            <p><span className="font-semibold text-gray-800">Business Model:</span> {getAttr("business_model")}</p>
-                                            <p><span className="font-semibold text-gray-800">Products Offered:</span> {getAttr("products_offered")}</p>
+                                        <div className="p-5 text-[14px] space-y-3 font-medium">
+                                            <p className="text-gray-800">Company Size: <span className="font-bold">{getAttr("total_employees") !== "N/A" ? getAttr("total_employees") : "0"} employees, {getAttr("trucks") !== "N/A" ? getAttr("trucks") : "0"} Trucks, {getAttr("annual_revenue") !== "N/A" ? getAttr("annual_revenue") : "0"} annual revenue</span></p>
+                                            <p className="text-gray-800">Business Model: <span className="font-bold">{getAttr("business_model") !== "N/A" ? getAttr("business_model") : "N/A"}</span></p>
+                                            <p className="text-gray-800">Products/Services Offered: <span className="font-bold">{getAttr("products_offered") !== "N/A" ? getAttr("products_offered") : "N/A"}</span></p>
                                         </div>
                                     </div>
 
                                     <div className={cardBase}>
                                         <div className={sectionHeader}>
-                                            Sales Data (Qty)
+                                            <span className="uppercase text-[13px] font-bold">Sales Data (Qty)</span>
                                         </div>
-                                        <div className="p-5 text-sm space-y-2 text-gray-600">
-                                            <p><span className="font-semibold text-gray-800">Total Sales Qty:</span> 1</p>
-                                            <p><span className="font-semibold text-gray-800">Order Frequency:</span> 0 orders/month</p>
+                                        <div className="p-5 text-[14px] space-y-3 font-medium">
+                                            <p className="text-gray-800">Total Sales Qty: <span className="font-bold">{getAttr("total_sales_qty") !== "N/A" ? getAttr("total_sales_qty") : "0"}</span></p>
+                                            <p className="text-gray-800">Order Frequency: <span className="font-bold">{getAttr("order_frequency") !== "N/A" ? getAttr("order_frequency") : "0"} orders/month</span></p>
                                         </div>
                                     </div>
                                 </div>
@@ -147,28 +165,31 @@ export default function MyAccountPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className={cardBase}>
                                         <div className={sectionHeader + " flex justify-between items-center"}>
-                                            <span>Targets and Achievements</span>
-                                            <select className="bg-transparent border border-gray-300 text-[10px] px-1 py-0.5 rounded-sm">
-                                                <option>2023</option>
-                                                <option>2024</option>
-                                            </select>
+                                            <span className="uppercase text-[13px] font-bold">Targets and Achievements</span>
+                                            <div className="relative">
+                                                <select className="bg-white border border-gray-300 text-[12px] px-3 py-1 mr-2 rounded-sm focus:ring-0 focus:outline-none min-w-[100px] h-[28px] cursor-pointer appearance-none pr-8">
+                                                    <option>Select Year</option>
+                                                </select>
+                                                <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center px-2 text-gray-700">
+                                                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="p-5 text-sm space-y-2 text-gray-600">
-                                            <p><span className="font-semibold text-gray-800">Sales Targets:</span> N/A</p>
-                                            <p><span className="font-semibold text-gray-800">Achievements:</span> N/A</p>
-                                            <p><span className="font-semibold text-gray-800">Incentive:</span> ﷼ 0.00</p>
+                                        <div className="p-5 text-[14px] space-y-3 font-medium">
+                                            <p className="text-gray-800">Sales Targets: <span className="font-bold">{getAttr("sales_targets")}</span></p>
+                                            <p className="text-gray-800">Achievements: <span className="font-bold">{getAttr("achievements")}</span></p>
+                                            <p className="text-gray-800">Incentive: <span className="font-bold">SAR {getAttr("incentive") !== "N/A" ? getAttr("incentive") : "0.00"}</span></p>
                                         </div>
                                     </div>
 
                                     <div className={cardBase}>
                                         <div className={sectionHeader}>
-                                            Customer Behavior
+                                            <span className="uppercase text-[13px] font-bold">Customer Behavior</span>
                                         </div>
-                                        <div className="p-5 text-sm space-y-2 text-gray-600">
-                                            <p><span className="font-semibold text-gray-800">Payment History:</span> {getAttr("payment_history")}</p>
-                                            <p><span className="font-semibold text-gray-800">Credit Period:</span> {getAttr("credit_period")}</p>
-                                            <p><span className="font-semibold text-gray-800">Total Credit Limit:</span> {getAttr("total_credit_limit")}</p>
-                                            <p><span className="font-semibold text-gray-800">Used Credit Limit:</span> {getAttr("used_credit_limit")}</p>
+                                        <div className="p-5 text-[14px] space-y-3 font-medium">
+                                            <p className="text-gray-800">Payment History(DSO): <span className="font-bold">{getAttr("payment_history")}</span></p>
+                                            <p className="text-gray-800">Credit Limit: <span className="font-bold">SAR {getAttr("total_credit_limit")}</span></p>
+                                            <p className="text-gray-800">Credit Period: <span className="font-bold">{getAttr("credit_period") !== "N/A" ? getAttr("credit_period") : "0"} days</span></p>
                                         </div>
                                     </div>
                                 </div>

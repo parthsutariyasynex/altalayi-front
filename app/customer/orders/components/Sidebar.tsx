@@ -10,7 +10,6 @@ const Sidebar = () => {
     const menuItems = [
         { name: "My Account", href: "/customer/account" },
         { name: "My Statement", href: "/customer/statement" },
-        { name: "Manage Accounts", href: "/customer/manage-accounts" },
         { name: "My Orders", href: "/customer/orders" },
         { name: "My Order Attachments", href: "/customer/order-attachments" },
         { name: "Favourite Products", href: "/customer/favourite-products" },

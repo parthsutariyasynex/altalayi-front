@@ -22,6 +22,7 @@ export default function OrderDetailsPage() {
     const [isAttachmentsLoading, setIsAttachmentsLoading] = useState(false);
     const [attachmentsError, setAttachmentsError] = useState<string | null>(null);
     const [isPrinting, setIsPrinting] = useState(false);
+    const [openingAttachmentId, setOpeningAttachmentId] = useState<string | null>(null);
 
     // Auth Guard
     useEffect(() => {
@@ -196,6 +197,56 @@ export default function OrderDetailsPage() {
             router.push("/cart");
         } catch (err: any) {
             toast.error(err.message || "Something went wrong", { id: toastId });
+        }
+    };
+
+    const handleOpenAttachment = async (attachment: any) => {
+        const token = (session as any)?.accessToken;
+        if (!token) {
+            toast.error("Unable to open attachment");
+            return;
+        }
+
+        // Open blank tab immediately (synchronous) to avoid popup blocker
+        const newTab = window.open("about:blank", "_blank");
+        if (!newTab) {
+            toast.error("Popup blocked. Please allow popups for this site.");
+            return;
+        }
+        newTab.document.title = "Loading file...";
+        newTab.document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#666;"><p style="font-size:18px;">Loading file...</p></div>';
+
+        const attachmentId = attachment.attachment_id || attachment.id;
+        setOpeningAttachmentId(attachmentId);
+
+        try {
+            const fileUrl = attachment.file_url || "";
+            const proxyUrl = `/api/kleverapi/order-attachments/file/${attachmentId}?url=${encodeURIComponent(fileUrl)}`;
+
+            const response = await fetch(proxyUrl, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.message || `Failed to fetch file (${response.status})`);
+            }
+
+            const contentType = response.headers.get("content-type") || "application/octet-stream";
+            const blob = await response.blob();
+
+            if (blob.size === 0) {
+                throw new Error("File is empty");
+            }
+
+            const blobUrl = URL.createObjectURL(new Blob([blob], { type: contentType }));
+            newTab.location.href = blobUrl;
+        } catch (err: any) {
+            console.error("Attachment open error:", err);
+            newTab.close();
+            toast.error(err.message || "Unable to open attachment");
+        } finally {
+            setOpeningAttachmentId(null);
         }
     };
 
@@ -395,71 +446,73 @@ export default function OrderDetailsPage() {
 
                     {/* Order Information Section */}
                     <div className="mb-10">
-                        <div className="flex items-center gap-4 mb-4">
-                            <h2 className="text-[14px] font-bold text-black uppercase tracking-wider whitespace-nowrap">
+                        <div className="border-b border-gray-200 pb-2 mb-6">
+                            <h2 className="text-[18px] font-bold text-black uppercase tracking-tight">
                                 Order Information
                             </h2>
-                            <div className="h-[1px] bg-gray-200 flex-1"></div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Shipping Address */}
                             <div className="bg-white border border-gray-200 rounded-sm shadow-sm">
-                                <div className="bg-[#f0f0f0] px-5 py-3 border-b border-gray-200">
-                                    <h3 className="text-[12px] font-bold text-gray-900 uppercase tracking-tight">Shipping Address</h3>
+                                <div className="bg-[#f8f8f8] px-5 py-3 border-b border-gray-200">
+                                    <h3 className="text-[14px] font-bold text-black uppercase tracking-tight">Shipping Address</h3>
                                 </div>
-                                <div className="p-6 text-[14px] text-gray-800 leading-[1.6] min-h-[140px]">
+                                <div className="p-6 text-[14px] text-gray-700 leading-relaxed min-h-[140px]">
                                     {shippingAddress ? (
-                                        <>
-                                            <p className="font-bold text-black">{shippingAddress.firstname} {shippingAddress.lastname}</p>
+                                        <div className="space-y-0.5">
+                                            <p>{shippingAddress.firstname} {shippingAddress.lastname}</p>
+                                            {shippingAddress.company && <p>{shippingAddress.company}</p>}
                                             <p>{shippingAddress.street?.join(", ")}</p>
                                             <p>{shippingAddress.city}, {shippingAddress.postcode}</p>
                                             <p>{shippingAddress.country_id === "SA" ? "Saudi Arabia" : shippingAddress.country_id}</p>
-                                            <p className="mt-2 font-bold">T: {shippingAddress.telephone}</p>
-                                        </>
+                                            <p className="pt-1">T: {shippingAddress.telephone}</p>
+                                        </div>
                                     ) : (
-                                        "No shipping address available"
+                                        <p className="text-gray-400 italic">No shipping address available</p>
                                     )}
                                 </div>
                             </div>
 
                             {/* Shipping Method */}
                             <div className="bg-white border border-gray-200 rounded-sm shadow-sm">
-                                <div className="bg-[#f0f0f0] px-5 py-3 border-b border-gray-200">
-                                    <h3 className="text-[12px] font-bold text-gray-900 uppercase tracking-tight">Shipping Method</h3>
+                                <div className="bg-[#f8f8f8] px-5 py-3 border-b border-gray-200">
+                                    <h3 className="text-[14px] font-bold text-black uppercase tracking-tight">Shipping Method</h3>
                                 </div>
-                                <div className="p-6 text-[14px] text-gray-800 leading-[1.6] min-h-[140px]">
-                                    <p className="font-bold">{order.shipping_description || "Standard Shipping"}</p>
+                                <div className="p-6 text-[14px] text-gray-700 leading-relaxed min-h-[140px]">
+                                    <p>{order.shipping_description || "Pickup from Warehouse"}</p>
+                                    <p className="mt-2"><span className="font-bold">Delivery Date</span> N/A</p>
                                 </div>
                             </div>
 
                             {/* Billing Address */}
                             <div className="bg-white border border-gray-200 rounded-sm shadow-sm">
-                                <div className="bg-[#f0f0f0] px-5 py-3 border-b border-gray-200">
-                                    <h3 className="text-[12px] font-bold text-gray-900 uppercase tracking-tight">Billing Address</h3>
+                                <div className="bg-[#f8f8f8] px-5 py-3 border-b border-gray-200">
+                                    <h3 className="text-[14px] font-bold text-black uppercase tracking-tight">Billing Address</h3>
                                 </div>
-                                <div className="p-6 text-[14px] text-gray-800 leading-[1.6] min-h-[140px]">
+                                <div className="p-6 text-[14px] text-gray-700 leading-relaxed min-h-[140px]">
                                     {billingAddress ? (
-                                        <>
-                                            <p className="font-bold text-black">{billingAddress.firstname} {billingAddress.lastname}</p>
+                                        <div className="space-y-0.5">
+                                            <p>{billingAddress.firstname} {billingAddress.lastname}</p>
+                                            {billingAddress.company && <p>{billingAddress.company}</p>}
                                             <p>{billingAddress.street?.join(", ")}</p>
                                             <p>{billingAddress.city}, {billingAddress.postcode}</p>
                                             <p>{billingAddress.country_id === "SA" ? "Saudi Arabia" : billingAddress.country_id}</p>
-                                            <p className="mt-2 font-bold">T: {billingAddress.telephone}</p>
-                                        </>
+                                            <p className="pt-1">T: {billingAddress.telephone}</p>
+                                        </div>
                                     ) : (
-                                        "No billing address available"
+                                        <p className="text-gray-400 italic">No billing address available</p>
                                     )}
                                 </div>
                             </div>
 
                             {/* Payment Method */}
                             <div className="bg-white border border-gray-200 rounded-sm shadow-sm">
-                                <div className="bg-[#f0f0f0] px-5 py-3 border-b border-gray-200">
-                                    <h3 className="text-[12px] font-bold text-gray-900 uppercase tracking-tight">Payment Method</h3>
+                                <div className="bg-[#f8f8f8] px-5 py-3 border-b border-gray-200">
+                                    <h3 className="text-[14px] font-bold text-black uppercase tracking-tight">Payment Method</h3>
                                 </div>
-                                <div className="p-6 text-[14px] text-gray-800 leading-[1.6] min-h-[140px]">
-                                    <p className="font-bold">{order.payment?.method_title || paymentMethod}</p>
+                                <div className="p-6 text-[14px] text-gray-700 leading-relaxed min-h-[140px]">
+                                    <p>{order.payment?.method_title || paymentMethod}</p>
                                 </div>
                             </div>
                         </div>
@@ -511,22 +564,22 @@ export default function OrderDetailsPage() {
                                                     }
                                                 };
 
-                                                // Fix double slashes in URL path (e.g. media//t/y/ → media/t/y/)
-                                                const fixedUrl = attachment.file_url
-                                                    ? attachment.file_url.replace(/(https?:\/\/)|(\/)+/g, (match: string, protocol: string) => protocol || '/')
-                                                    : "#";
+                                                const currentAttachmentId = attachment.attachment_id || attachment.id || idx;
+                                                const isOpening = openingAttachmentId === String(currentAttachmentId);
 
                                                 return (
-                                                    <tr key={attachment.attachment_id || idx} className="hover:bg-gray-50 transition-colors">
+                                                    <tr key={currentAttachmentId} className="hover:bg-gray-50 transition-colors">
                                                         <td className="px-6 py-4 text-left border-r border-gray-100 last:border-r-0">
-                                                            <a
-                                                                href={fixedUrl}
-                                                                target="_blank"
-                                                                rel="noreferrer"
-                                                                className="text-black hover:underline font-bold break-all"
+                                                            <button
+                                                                onClick={() => handleOpenAttachment(attachment)}
+                                                                disabled={isOpening}
+                                                                className="text-[#2980B9] hover:text-[#1a5276] hover:underline font-bold break-all text-left cursor-pointer inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-wait"
                                                             >
+                                                                {isOpening && (
+                                                                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-[#2980B9] border-t-transparent flex-shrink-0"></span>
+                                                                )}
                                                                 {attachment.file_name || "-"}
-                                                            </a>
+                                                            </button>
                                                         </td>
                                                         <td className="px-6 py-4 text-center text-gray-800 border-r border-gray-100 last:border-r-0">
                                                             {attachment.document_type || attachment.attachment_type || "-"}

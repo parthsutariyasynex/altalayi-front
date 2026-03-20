@@ -50,7 +50,9 @@ function AddressCard({ title, address, onEdit, buttonLabel }: AddressCardProps) 
               {address.city}, {address.postcode}
             </p>
             <p>{address.country_id === 'SA' ? 'Saudi Arabia' : address.country_id}</p>
-            <p className="pt-2">T: {address.telephone}</p>
+            <p className="pt-2 text-gray-700">T: <span className="text-gray-600 hover:text-[#ffb12b] cursor-pointer transition-colors duration-200 hover:font-bold">
+              {address.telephone}
+            </span></p>
             {buttonLabel && (
               <div className="pt-6">
                 <button
@@ -87,7 +89,7 @@ export default function Addresses() {
 
   const handleAddressAction = async (action: string, addressId: number | string) => {
     if (action === "edit") {
-      router.push(`/add-address?id=${addressId}`);
+      router.push(`/customer/address-book/edit/${addressId}`);
       return;
     }
 
@@ -167,13 +169,12 @@ export default function Addresses() {
           title="DEFAULT BILLING ADDRESS"
           address={defaultBilling}
           onEdit={(id) => handleAddressAction("edit", id)}
-        // buttonLabel removed to match screenshot
         />
         <AddressCard
           title="DEFAULT SHIPPING ADDRESS"
           address={defaultShipping}
           onEdit={(id) => handleAddressAction("edit", id)}
-          buttonLabel="CHANGE SHIPPING ADDRESS"
+          buttonLabel="EDIT SHIPPING ADDRESS"
         />
       </div>
 
@@ -220,7 +221,11 @@ export default function Addresses() {
                   <td className="p-4">{Array.isArray(address.street) ? address.street.join(", ") : address.street || "-"}</td>
                   <td className="p-4">{address.city}</td>
                   <td className="p-4">{address.postcode}</td>
-                  <td className="p-4">{address.telephone}</td>
+                  <td className="p-4">
+                    <span className="text-gray-700 hover:text-[#ffb12b] cursor-pointer transition-colors duration-200 hover:font-bold">
+                      {address.telephone}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>

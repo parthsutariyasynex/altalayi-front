@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { formatPrice } from "@/utils/helpers";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/app/components/Navbar";
 import Filters from "@/components/Filters";
@@ -13,23 +13,17 @@ import { useCart } from "@/modules/cart/context/CartContext";
 import { toast } from "react-hot-toast";
 
 function mapOrder(item: any): Order {
-    // Order #
     const id = item.increment_id || "";
-
-    // SAP Order Number — not in API
     const sapOrderNumber = item.sap_order_number || "";
 
-    // Date → M/D/YY (e.g. "3/17/26")
     let date = "";
     if (item.created_at) {
         const d = new Date(item.created_at);
         date = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear().toString().slice(-2)}`;
     }
 
-    // Grand Total → "﷼ 5,836.25"
     const grandTotal = formatPrice(item.grand_total);
 
-    // Ordered By - prioritize direct ordered_by field, fallback to billing address or customer name
     let orderedBy = item.ordered_by || "";
     if (!orderedBy && item.billing_address) {
         orderedBy = `${item.billing_address.firstname || ""} ${item.billing_address.lastname || ""}`.trim();
@@ -38,7 +32,6 @@ function mapOrder(item: any): Order {
         orderedBy = `${item.customer_firstname || ""} ${item.customer_lastname || ""}`.trim();
     }
 
-    // Status
     let status = item.status || "";
     if (status === "approval_pending") {
         status = "Check Pending";
@@ -61,21 +54,33 @@ function mapOrder(item: any): Order {
 export default function MyOrdersPage() {
     const { data: session, status: authStatus } = useSession();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { refetchCart } = useCart();
 
     const [orders, setOrders] = useState<Order[]>([]);
+    const [allOrdersForCounts, setAllOrdersForCounts] = useState<any[]>([]);
     const [totalItems, setTotalItems] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isExporting, setIsExporting] = useState(false);
     const [hasFetched, setHasFetched] = useState(false);
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
-    const [search, setSearch] = useState("");
-    const [selectedStatus, setSelectedStatus] = useState("All");
-    const [appliedSearch, setAppliedSearch] = useState("");
-    const [appliedStatus, setAppliedStatus] = useState("All");
+    // Filter states - derived from URL
+    const searchInput = searchParams.get("orderNumber") || "All";
+    const statusInput = searchParams.get("status") || "All";
+    const companyInput = searchParams.get("companyCode") || "All";
+    const currentPage = parseInt(searchParams.get("page") || "1", 10);
+    const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
+
+    // Local states for inputs to handle debounce
+    const [localSearch, setLocalSearch] = useState(searchInput);
+    const [localStatus, setLocalStatus] = useState(statusInput);
+
+    // Sync local state when URL changes
+    useEffect(() => {
+        setLocalSearch(searchInput);
+        setLocalStatus(statusInput);
+    }, [searchInput, statusInput]);
 
     useEffect(() => {
         if (authStatus === "unauthenticated") {
@@ -83,7 +88,39 @@ export default function MyOrdersPage() {
         }
     }, [authStatus, router]);
 
-    const fetchOrders = useCallback(async () => {
+    // Calculate counts dynamically from all orders
+    const statusCounts = useMemo(() => {
+        const counts: Record<string, number> = { "All": allOrdersForCounts.length };
+        allOrdersForCounts.forEach(order => {
+            const rawStatus = order.status || "";
+            // Normalize status to match what's in the filter options (usually lowercase or specific code)
+            const s = rawStatus.toLowerCase();
+            counts[s] = (counts[s] || 0) + 1;
+
+            // Also handle human-readable status codes if they differ
+            if (rawStatus === "approval_pending") counts["approval_pending"] = (counts["approval_pending"] || 0) + 1;
+        });
+        return counts;
+    }, [allOrdersForCounts]);
+
+    const fetchAllOrdersForCounts = useCallback(async () => {
+        const token = (session as any)?.accessToken;
+        if (!token) return;
+        try {
+            // Fetch a large enough page size to get all orders for counts
+            const res = await fetch(`/api/kleverapi/my-orders?pageSize=1000&currentPage=1`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setAllOrdersForCounts(data.items || []);
+            }
+        } catch (err) {
+            console.error("Failed to fetch all orders for counts", err);
+        }
+    }, [session]);
+
+    const fetchOrders = useCallback(async (search: string, status: string, page: number, size: number, company: string) => {
         const token = (session as any)?.accessToken;
         if (!token) return;
 
@@ -91,15 +128,16 @@ export default function MyOrdersPage() {
         setError(null);
         try {
             const params = new URLSearchParams({
-                pageSize: pageSize.toString(),
-                currentPage: currentPage.toString(),
+                pageSize: size.toString(),
+                currentPage: page.toString(),
             });
-            if (appliedStatus !== "All") {
-                params.append("status", appliedStatus);
+            if (status !== "All") {
+                params.append("status", status);
             }
-            if (appliedSearch) {
-                params.append("orderNumber", appliedSearch);
+            if (search && search !== "All") {
+                params.append("orderNumber", search);
             }
+            if (company && company !== "All") params.append("companyCode", company);
 
             const res = await fetch(`/api/kleverapi/my-orders?${params.toString()}`, {
                 headers: { Authorization: `Bearer ${token}` },
@@ -118,26 +156,71 @@ export default function MyOrdersPage() {
             setIsLoading(false);
             setHasFetched(true);
         }
-    }, [session, currentPage, pageSize, appliedSearch, appliedStatus]);
+    }, [session]);
 
+    // Initial fetch
     useEffect(() => {
         if (authStatus === "authenticated") {
-            fetchOrders();
+            fetchOrders(searchInput, statusInput, currentPage, pageSize, companyInput);
+            fetchAllOrdersForCounts();
         }
-    }, [authStatus, fetchOrders]);
+    }, [authStatus, fetchOrders, fetchAllOrdersForCounts, searchInput, statusInput, currentPage, pageSize, companyInput]);
+
+    // Update URL helper
+    const updateURLParams = useCallback((newSearch: string, newStatus: string, newPage: number, newSize: number = pageSize, newCompany: string = companyInput) => {
+        const params = new URLSearchParams(searchParams.toString());
+
+        // Handle Toast if no data for selected status
+        if (newStatus !== "All" && (statusCounts[newStatus.toLowerCase()] === 0 || statusCounts[newStatus] === 0)) {
+            toast.error("No orders found for selected status");
+        }
+
+        if (newSearch && newSearch !== "All") params.set("orderNumber", newSearch);
+        else params.delete("orderNumber");
+
+        if (newStatus && newStatus !== "All") params.set("status", newStatus);
+        else params.delete("status");
+
+        if (newCompany && newCompany !== "All") params.set("companyCode", newCompany);
+        else params.delete("companyCode");
+
+        if (newPage > 1) params.set("page", newPage.toString());
+        else params.delete("page");
+
+        if (newSize !== 10) params.set("pageSize", newSize.toString());
+        else params.delete("pageSize");
+
+        router.push(`/my-orders?${params.toString()}`);
+    }, [router, searchParams, statusCounts, pageSize, companyInput]);
+
+    // Auto search with debounce
+    useEffect(() => {
+        if (localSearch === searchInput && localStatus === statusInput) return;
+
+        const timer = setTimeout(() => {
+            updateURLParams(localSearch, localStatus, 1, pageSize, companyInput);
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [localSearch, localStatus, updateURLParams, searchInput, statusInput, pageSize, companyInput]);
 
     const handleSearchClick = () => {
-        setAppliedSearch(search);
-        setAppliedStatus(selectedStatus);
-        setCurrentPage(1);
+        updateURLParams(localSearch, localStatus, 1, pageSize, companyInput);
     };
 
     const handleResetClick = () => {
-        setSearch("");
-        setSelectedStatus("All");
-        setAppliedSearch("");
-        setAppliedStatus("All");
-        setCurrentPage(1);
+        toast.dismiss();
+        setLocalSearch("All");
+        setLocalStatus("All");
+        router.push("/my-orders");
+    };
+
+    const handlePageChange = (page: number) => {
+        updateURLParams(localSearch, localStatus, page, pageSize, companyInput);
+    };
+
+    const handlePageSizeChange = (size: number) => {
+        updateURLParams(localSearch, localStatus, 1, size, companyInput);
     };
 
     const handleViewOrder = (entityId: string) => {
@@ -190,7 +273,6 @@ export default function MyOrdersPage() {
             const base64Content = data.pdf_base64 || data.content || data.base64 || data.csv_base64;
             if (!base64Content) throw new Error("No file content received from server");
 
-            // --- Base64 to Blob (Uint8Array approach) ---
             const byteCharacters = atob(base64Content);
             const byteNumbers = new Array(byteCharacters.length);
             for (let i = 0; i < byteCharacters.length; i++) {
@@ -199,7 +281,6 @@ export default function MyOrdersPage() {
             const byteArray = new Uint8Array(byteNumbers);
             const blob = new Blob([byteArray], { type: "text/csv" });
 
-            // Trigger download
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.style.display = "none";
@@ -208,7 +289,6 @@ export default function MyOrdersPage() {
             document.body.appendChild(a);
             a.click();
 
-            // Cleanup
             setTimeout(() => {
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
@@ -224,6 +304,7 @@ export default function MyOrdersPage() {
     };
 
     const totalPages = Math.ceil(totalItems / pageSize);
+    const isFiltered = !!(localSearch !== "All" || localStatus !== "All" || searchParams.get("orderNumber") || searchParams.get("status"));
 
     if (authStatus === "loading") {
         return (
@@ -241,7 +322,6 @@ export default function MyOrdersPage() {
                 <Sidebar />
 
                 <main className="flex-1 p-8 min-h-screen">
-                    {/* Header */}
                     <div className="flex justify-between items-center mb-8">
                         <h1 className="text-[24px] font-bold text-black uppercase">
                             MY ORDERS
@@ -263,27 +343,51 @@ export default function MyOrdersPage() {
                     </div>
 
                     <Filters
-                        status={selectedStatus}
-                        search={search}
-                        onStatusChange={setSelectedStatus}
-                        onSearchChange={setSearch}
+                        status={localStatus}
+                        search={localSearch}
+                        onStatusChange={setLocalStatus}
+                        onSearchChange={setLocalSearch}
                         onApplySearch={handleSearchClick}
                         onReset={handleResetClick}
+                        isFiltered={isFiltered}
+                        statusCounts={statusCounts}
                     />
 
-                    {(isLoading || (authStatus === "authenticated" && !hasFetched)) ? (
-                        <div className="flex justify-center items-center py-20">
-                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#f5a623]"></div>
+                    {isLoading && !hasFetched ? (
+                        <div className="py-10">
+                            {[...Array(5)].map((_, i) => (
+                                <div key={i} className="h-16 bg-gray-50 mb-2 animate-pulse rounded-lg"></div>
+                            ))}
                         </div>
                     ) : error ? (
                         <div className="text-center py-16 text-red-500">
                             <p className="text-[14px] font-medium mb-3">{error}</p>
-                            <button onClick={fetchOrders} className="text-[12px] font-bold uppercase underline underline-offset-4 text-black hover:text-[#f5a623]">
+                            <button
+                                onClick={() => fetchOrders(searchInput, statusInput, currentPage, pageSize, companyInput)}
+                                className="h-[45px] px-8 bg-black text-white text-[13px] font-bold uppercase tracking-wider hover:bg-gray-800 transition-all rounded-[2px]"
+                            >
                                 Try Again
                             </button>
                         </div>
+                    ) : orders.length === 0 ? (
+                        <div className="w-full">
+                            <div className="mb-4">
+                                <button
+                                    onClick={handleResetClick}
+                                    className="px-4 py-1.5 bg-[#f0f0f0] border border-gray-300 text-[13px] text-black hover:bg-gray-200 transition-colors rounded-[2px]"
+                                >
+                                    Reset
+                                </button>
+                            </div>
+                            <div className="flex items-center gap-3 bg-[#fef9c3] border border-[#fef08a] p-4 rounded-md text-[#854d0e]">
+                                <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                <span className="text-[14px] font-medium">You have placed no orders.</span>
+                            </div>
+                        </div>
                     ) : (
-                        <>
+                        <div className={`transition-opacity duration-200 ${isLoading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
                             <OrdersTable
                                 orders={orders}
                                 onViewOrder={handleViewOrder}
@@ -295,10 +399,11 @@ export default function MyOrdersPage() {
                                     totalPages={totalPages}
                                     totalItems={totalItems}
                                     pageSize={pageSize}
-                                    onPageChange={setCurrentPage}
+                                    onPageChange={handlePageChange}
+                                    onPageSizeChange={handlePageSizeChange}
                                 />
                             )}
-                        </>
+                        </div>
                     )}
                 </main>
             </div>

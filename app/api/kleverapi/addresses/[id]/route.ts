@@ -2,6 +2,39 @@ import { NextResponse } from 'next/server';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
+export async function GET(request: Request, { params }: { params: { id: string } }) {
+    try {
+        const authHeader = request.headers.get('Authorization');
+
+        if (!authHeader) {
+            return NextResponse.json({ message: 'Authorization required' }, { status: 401 });
+        }
+
+        const magentoUrl = `${BASE_URL}/addresses/${params.id}`;
+        console.log(`[API ROUTE] Fetching Customer Address ${params.id} from: ${magentoUrl}`);
+
+        const response = await fetch(magentoUrl, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': authHeader,
+                'platform': 'web',
+            },
+            cache: 'no-store',
+        });
+
+        const data = await response.json();
+        return NextResponse.json(data, { status: response.status });
+
+    } catch (error: any) {
+        console.error('[API ROUTE ERROR] Addresses GET Catch:', error);
+        return NextResponse.json(
+            { message: 'Server-side error fetching address.' },
+            { status: 500 }
+        );
+    }
+}
+
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
     try {
         const authHeader = request.headers.get('Authorization');
