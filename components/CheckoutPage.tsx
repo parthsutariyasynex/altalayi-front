@@ -127,7 +127,7 @@ const CheckoutPageUI: React.FC = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // Generate next 45 days to allow picking dates in the next month
+    // Generate next 45 days
     useEffect(() => {
         const dates = [];
         for (let i = 0; i < 45; i++) {
@@ -183,12 +183,6 @@ const CheckoutPageUI: React.FC = () => {
                     }
 
                     setAvailableTimeSlots(slots);
-
-                    // Reset selected time if it's not in the new slots or disabled
-                    const currentSlot = slots.find((s: { time: string; enabled: boolean }) => s.time === pickupTime);
-                    if (pickupTime && (!currentSlot || !currentSlot.enabled)) {
-                        setPickupTime("");
-                    }
                 } catch (error) {
                     console.error("Failed to fetch time slots:", error);
                     toast.error("Failed to fetch available time slots");
@@ -199,6 +193,14 @@ const CheckoutPageUI: React.FC = () => {
         };
         getSlots();
     }, [shippingType, selectedWarehouseId, pickupDate, fetchPickupTimeSlots]);
+
+    // Reset selected time if it's not in the new slots or disabled
+    useEffect(() => {
+        const currentSlot = availableTimeSlots.find((s) => s.time === pickupTime);
+        if (pickupTime && (!currentSlot || !currentSlot.enabled)) {
+            setPickupTime("");
+        }
+    }, [availableTimeSlots, pickupTime]);
 
     // File inputs refs
     const poUploadRef = useRef<HTMLInputElement>(null);
@@ -226,7 +228,7 @@ const CheckoutPageUI: React.FC = () => {
             setSelectedAddressId(defaultAddr.id);
             setShippingAddress(defaultAddr.id).catch(() => { });
         }
-    }, [addresses]);
+    }, [addresses, selectedAddressId, setShippingAddress]);
 
     // Auto-select first available payment method if current one is invalid
     useEffect(() => {
@@ -281,7 +283,7 @@ const CheckoutPageUI: React.FC = () => {
                 }
             }
         }
-    }, [shippingMethods, shippingType, selectedShippingMethodCode, setShippingMethod]);
+    }, [shippingMethods, shippingType, selectedShippingMethodCode, setShippingMethod, selectedAddressId, isTotalsLoading, cart]);
 
     // Fetch existing Order Comment
     useEffect(() => {

@@ -99,7 +99,7 @@ export async function GET(
         for (const url of urlsToTry) {
             // Use auth header only for API endpoints, not for media URLs
             const isApiUrl = url.includes('/rest/');
-            const headers = isApiUrl
+            const headers: Record<string, string> = isApiUrl
                 ? { Authorization: authHeader, platform: 'web' }
                 : {};
 

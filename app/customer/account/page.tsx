@@ -1,33 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import Navbar from "../../components/Navbar";
-import Sidebar from "@/components/Sidebar";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState, AppDispatch } from "@/store/store";
 import { fetchCustomerInfo } from "@/store/actions/customerActions";
-import { RootState } from "@/store/store";
+import Sidebar from "@/components/Sidebar";
+import Navbar from "@/app/components/Navbar";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { Bell } from "lucide-react";
-import { useNotifications } from "@/modules/notifications/hooks/useNotifications";
 
 type CustomAttribute = {
     attribute_code: string;
     value: string;
 };
 
-import { useSearchParams } from "next/navigation";
-import { CheckCircle } from "lucide-react";
+type Address = {
+    default_billing?: boolean;
+    default_shipping?: boolean;
+    street?: string[];
+    city?: string;
+    postcode?: string;
+    country_id?: string;
+    telephone?: string;
+    company?: string;
+};
 
 export default function MyAccountPage() {
     const router = useRouter();
-    const dispatch = useDispatch();
+    const dispatch = useDispatch<AppDispatch>();
     const { data: session, status } = useSession();
     const { data: customer, loading } = useSelector((state: RootState) => state.customer);
     const token = useSelector((state: RootState) => state.auth.token);
-    const { unreadCount } = useNotifications();
-    const searchParams = useSearchParams();
 
     useEffect(() => {
         if (status === "unauthenticated") {
@@ -36,42 +40,41 @@ export default function MyAccountPage() {
         }
 
         if (status === "authenticated" && token) {
-            // @ts-ignore
             dispatch(fetchCustomerInfo());
         }
-    }, [dispatch, status, router, token]);
+    }, [status, token, dispatch, router]);
 
-    if (status === "loading" || loading) {
+    if (loading) {
         return (
-            <>
+            <div className="min-h-screen bg-white">
                 <Navbar />
-                <div className="p-10 font-['Rubik'] text-center">Loading...</div>
-            </>
+                <div className="flex items-center justify-center h-[60vh]">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F5B21B]"></div>
+                </div>
+            </div>
         );
     }
 
     if (!customer) return null;
 
     const getAttr = (code: string) => {
-        return customer.custom_attributes?.find(
+        return (customer as any).custom_attributes?.find(
             (a: CustomAttribute) => a.attribute_code === code
         )?.value || "N/A";
     }
 
-    const billingAddress = customer.addresses?.find((addr: any) => addr.default_billing);
-    const shippingAddress = customer.addresses?.find((addr: any) => addr.default_shipping);
+    const cardBase = "bg-white border border-gray-100 rounded-sm shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] overflow-hidden transition-all duration-300 hover:shadow-[0_8px_25px_-5px_rgba(0,0,0,0.1)]";
+    const sectionHeader = "bg-[#fcfcfc] px-6 py-4 border-b border-gray-50 text-black font-black tracking-wider uppercase text-[14px]";
 
-    // Common classes based on requirements
-    const cardBase = "bg-white border border-[#e5e7eb] rounded-sm shadow-sm overflow-hidden";
-    const sectionHeader = "bg-[#f5f5f5] px-4 py-3 border-b border-[#e5e7eb] uppercase text-xs font-medium text-gray-700 tracking-[0.6px]";
-    const buttonYellow = "bg-yellow-400 hover:bg-yellow-500 text-black text-[11px] font-bold px-4 py-2 uppercase transition-colors rounded-sm shadow-sm tracking-[0.6px]";
+    const addresses = (customer as any).addresses as Address[] | undefined;
+    const defaultBilling = addresses?.find((a: Address) => a.default_billing);
+    const defaultShipping = addresses?.find((a: Address) => a.default_shipping);
 
     return (
-        <div className="min-h-screen bg-white font-['Rubik']">
+        <div className="min-h-screen bg-white font-['Rubik',sans-serif]">
             <Navbar />
 
-            <div className="flex max-w-[1440px] mx-auto mt-[100px]">
-                {/* Left Sidebar */}
+            <div className="flex flex-col md:flex-row min-h-screen">
                 <Sidebar />
 
                 {/* Right Content */}
@@ -83,26 +86,18 @@ export default function MyAccountPage() {
                         </h1>
 
                         <div className="space-y-8">
-                            {/* ACCOUNT INFORMATION SECTION */}
+                            {/* TOP ROW: CONTACT & COMPANY INFORMATION */}
                             <section>
-                                <div className="border-b border-[#e5e7eb] pb-2 mb-6">
-                                    <h2 className="text-[15px] font-bold text-black uppercase tracking-tight">
-                                        ACCOUNT INFORMATION
-                                    </h2>
-                                </div>
-
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* CONTACT INFORMATION BOX */}
-                                    <div className="bg-white border border-[#e5e7eb] rounded-sm shadow-sm overflow-hidden">
-                                        <div className="bg-[#f5f5f5] px-5 py-3 border-b border-[#e5e7eb]">
-                                            <h3 className="text-[13px] font-bold text-black uppercase tracking-tight">
-                                                CONTACT INFORMATION
-                                            </h3>
+                                    {/* Contact Information */}
+                                    <div className={cardBase}>
+                                        <div className={sectionHeader}>
+                                            Contact Information
                                         </div>
                                         <div className="p-6 text-[13px] text-gray-700 space-y-2.5 font-medium leading-relaxed">
-                                            <p><span className="text-black">Contact Name:</span> {customer.firstname} {customer.lastname}</p>
-                                            <p><span className="text-black">Email:</span> {customer.email}</p>
-                                            <p><span className="text-black">Contact Information:</span> {customer.email} ,</p>
+                                            <p><span className="text-black font-bold">Name:</span> {(customer as any).firstname} {(customer as any).lastname}</p>
+                                            <p><span className="text-black font-bold">Email:</span> {(customer as any).email}</p>
+                                            <p><span className="text-black font-bold">Mobile:</span> {getAttr("mobile") !== "N/A" ? getAttr("mobile") : getAttr("mobile_number")}</p>
 
                                             <div className="flex gap-3 pt-6">
                                                 <Link href="/customer/account/edit" className="bg-[#F5B21B] hover:bg-black hover:text-white text-black text-[12px] font-bold px-8 py-2.5 uppercase transition-all rounded-sm shadow-sm tracking-wider">
@@ -115,19 +110,16 @@ export default function MyAccountPage() {
                                         </div>
                                     </div>
 
-                                    {/* COMPANY INFORMATION BOX */}
-                                    <div className="bg-white border border-[#e5e7eb] rounded-sm shadow-sm overflow-hidden">
-                                        <div className="bg-[#f5f5f5] px-5 py-3 border-b border-[#e5e7eb]">
-                                            <h3 className="text-[13px] font-bold text-black uppercase tracking-tight">
-                                                COMPANY INFORMATION
-                                            </h3>
+                                    {/* Company Information */}
+                                    <div className={cardBase}>
+                                        <div className={sectionHeader}>
+                                            Company Information
                                         </div>
                                         <div className="p-6 text-[13px] text-gray-700 space-y-2.5 font-medium leading-relaxed">
-                                            <p><span className="text-black">Company Name:</span> {getAttr("company_name") || customer.addresses?.[0]?.company || "N/A"}</p>
-                                            <p><span className="text-black">Company Contact Name:</span> {getAttr("company_contact_name") !== "N/A" ? getAttr("company_contact_name") : "N/A"}</p>
-                                            <p><span className="text-black">Company Email:</span> {getAttr("company_email") !== "N/A" ? getAttr("company_email") : "N/A"}</p>
-                                            <p><span className="text-black">Customer Mobile:</span> {getAttr("mobile") !== "N/A" ? getAttr("mobile") : (getAttr("mobile_number") !== "N/A" ? getAttr("mobile_number") : (customer.addresses?.[0]?.telephone || "N/A"))}</p>
-                                            <p><span className="text-black">Customer Code:</span> {getAttr("customer_code")}</p>
+                                            <p><span className="text-black font-bold">Company Name:</span> {getAttr("company_name") || addresses?.[0]?.company || "N/A"}</p>
+                                            <p><span className="text-black font-bold">Company Contact:</span> {getAttr("company_contact_name")}</p>
+                                            <p><span className="text-black font-bold">Company Email:</span> {getAttr("company_email")}</p>
+                                            <p><span className="text-black font-bold">Customer Code:</span> {getAttr("customer_code")}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -138,19 +130,19 @@ export default function MyAccountPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className={cardBase}>
                                         <div className={sectionHeader + " flex justify-between items-center"}>
-                                            <span className="uppercase text-[13px] font-bold">Business Overview</span>
+                                            <span>Business Overview</span>
                                             <button className="bg-[#F5B21B] hover:bg-black hover:text-white text-black text-[10px] font-bold px-4 py-1.5 uppercase transition-all rounded-sm shadow-sm tracking-widest">Edit</button>
                                         </div>
                                         <div className="p-5 text-[14px] space-y-3 font-medium">
-                                            <p className="text-gray-800">Company Size: <span className="font-bold">{getAttr("total_employees") !== "N/A" ? getAttr("total_employees") : "0"} employees, {getAttr("trucks") !== "N/A" ? getAttr("trucks") : "0"} Trucks, {getAttr("annual_revenue") !== "N/A" ? getAttr("annual_revenue") : "0"} annual revenue</span></p>
-                                            <p className="text-gray-800">Business Model: <span className="font-bold">{getAttr("business_model") !== "N/A" ? getAttr("business_model") : "N/A"}</span></p>
-                                            <p className="text-gray-800">Products/Services Offered: <span className="font-bold">{getAttr("products_offered") !== "N/A" ? getAttr("products_offered") : "N/A"}</span></p>
+                                            <p className="text-gray-800">Company Size: <span className="font-bold">{getAttr("total_employees") !== "N/A" ? getAttr("total_employees") : "0"} employees, {getAttr("trucks") !== "N/A" ? getAttr("trucks") : "0"} Trucks</span></p>
+                                            <p className="text-gray-800">Business Model: <span className="font-bold">{getAttr("business_model")}</span></p>
+                                            <p className="text-gray-800">Products Offered: <span className="font-bold">{getAttr("products_offered")}</span></p>
                                         </div>
                                     </div>
 
                                     <div className={cardBase}>
                                         <div className={sectionHeader}>
-                                            <span className="uppercase text-[13px] font-bold">Sales Data (Qty)</span>
+                                            Sales Data (Qty)
                                         </div>
                                         <div className="p-5 text-[14px] space-y-3 font-medium">
                                             <p className="text-gray-800">Total Sales Qty: <span className="font-bold">{getAttr("total_sales_qty") !== "N/A" ? getAttr("total_sales_qty") : "0"}</span></p>
@@ -165,15 +157,7 @@ export default function MyAccountPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className={cardBase}>
                                         <div className={sectionHeader + " flex justify-between items-center"}>
-                                            <span className="uppercase text-[13px] font-bold">Targets and Achievements</span>
-                                            <div className="relative">
-                                                <select className="bg-white border border-gray-300 text-[12px] px-3 py-1 mr-2 rounded-sm focus:ring-0 focus:outline-none min-w-[100px] h-[28px] cursor-pointer appearance-none pr-8">
-                                                    <option>Select Year</option>
-                                                </select>
-                                                <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center px-2 text-gray-700">
-                                                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
-                                                </div>
-                                            </div>
+                                            <span>Targets and Achievements</span>
                                         </div>
                                         <div className="p-5 text-[14px] space-y-3 font-medium">
                                             <p className="text-gray-800">Sales Targets: <span className="font-bold">{getAttr("sales_targets")}</span></p>
@@ -184,12 +168,12 @@ export default function MyAccountPage() {
 
                                     <div className={cardBase}>
                                         <div className={sectionHeader}>
-                                            <span className="uppercase text-[13px] font-bold">Customer Behavior</span>
+                                            Customer Behavior
                                         </div>
                                         <div className="p-5 text-[14px] space-y-3 font-medium">
-                                            <p className="text-gray-800">Payment History(DSO): <span className="font-bold">{getAttr("payment_history")}</span></p>
+                                            <p className="text-gray-800">Payment History (DSO): <span className="font-bold">{getAttr("payment_history")}</span></p>
                                             <p className="text-gray-800">Credit Limit: <span className="font-bold">SAR {getAttr("total_credit_limit")}</span></p>
-                                            <p className="text-gray-800">Credit Period: <span className="font-bold">{getAttr("credit_period") !== "N/A" ? getAttr("credit_period") : "0"} days</span></p>
+                                            <p className="text-gray-800">Credit Period: <span className="font-bold">{getAttr("credit_period")} days</span></p>
                                         </div>
                                     </div>
                                 </div>
@@ -197,55 +181,42 @@ export default function MyAccountPage() {
 
                             {/* ADDRESS BOOK */}
                             <section>
-                                <div className="flex items-center justify-between mb-4 border-b border-[#e5e7eb] pb-2">
-                                    <h2 className="text-lg font-medium text-gray-900 uppercase text-sm tracking-[0.6px]">
-                                        Address Book
-                                    </h2>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* BILLING ADDRESS */}
-                                    <div className={cardBase}>
-                                        <div className={sectionHeader}>
-                                            Default Billing Address
-                                        </div>
-                                        <div className="p-5 text-sm space-y-1 text-gray-600">
-                                            {billingAddress ? (
-                                                <>
-                                                    <p className="font-bold text-gray-900">{billingAddress.firstname} {billingAddress.lastname}</p>
-                                                    {billingAddress.company && <p>{billingAddress.company}</p>}
-                                                    <p>{billingAddress.street?.join(", ")}</p>
-                                                    <p>{billingAddress.city}, {billingAddress.postcode}</p>
-                                                    <p>{billingAddress.country_id}</p>
-                                                    <p>T: {billingAddress.telephone}</p>
-                                                </>
-                                            ) : (
-                                                <p>You have not set a default billing address.</p>
-                                            )}
-
-                                        </div>
+                                <div className={cardBase}>
+                                    <div className={sectionHeader + " flex justify-between items-center"}>
+                                        <span>Address Book</span>
+                                        <Link href="/customer/address-book" className="text-[11px] font-bold text-[#F5B21B] hover:text-black transition-colors uppercase tracking-widest">
+                                            Manage Addresses
+                                        </Link>
                                     </div>
-
-                                    {/* SHIPPING ADDRESS */}
-                                    <div className={cardBase}>
-                                        <div className={sectionHeader}>
-                                            Default Shipping Address
-                                        </div>
-                                        <div className="p-5 text-sm space-y-1 text-gray-600">
-                                            {shippingAddress ? (
-                                                <>
-                                                    <p className="font-bold text-gray-900">{shippingAddress.firstname} {shippingAddress.lastname}</p>
-                                                    {shippingAddress.company && <p>{shippingAddress.company}</p>}
-                                                    <p>{shippingAddress.street?.join(", ")}</p>
-                                                    <p>{shippingAddress.city}, {shippingAddress.postcode}</p>
-                                                    <p>{shippingAddress.country_id}</p>
-                                                    <p>T: {shippingAddress.telephone}</p>
-                                                </>
-                                            ) : (
-                                                <p>You have not set a default shipping address.</p>
-                                            )}
-                                            <div className="pt-3">
-                                                <Link href="/edit-address" className={buttonYellow}>Edit Address</Link>
+                                    <div className="p-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                            <div>
+                                                <h4 className="text-[13px] font-black text-black mb-4 uppercase tracking-wider border-b border-gray-100 pb-2">Default Billing Address</h4>
+                                                {defaultBilling ? (
+                                                    <div className="text-[13px] text-gray-600 leading-relaxed space-y-1">
+                                                        <p className="font-bold text-gray-900">{(customer as any).firstname} {(customer as any).lastname}</p>
+                                                        {defaultBilling.street?.map((s: string, i: number) => <p key={i}>{s}</p>)}
+                                                        <p>{defaultBilling.city}, {defaultBilling.postcode}</p>
+                                                        <p>{defaultBilling.country_id}</p>
+                                                        <p className="pt-2">T: {defaultBilling.telephone}</p>
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-[13px] text-gray-500 italic">No default billing address set.</p>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <h4 className="text-[13px] font-black text-black mb-4 uppercase tracking-wider border-b border-gray-100 pb-2">Default Shipping Address</h4>
+                                                {defaultShipping ? (
+                                                    <div className="text-[13px] text-gray-600 leading-relaxed space-y-1">
+                                                        <p className="font-bold text-gray-900">{(customer as any).firstname} {(customer as any).lastname}</p>
+                                                        {defaultShipping.street?.map((s: string, i: number) => <p key={i}>{s}</p>)}
+                                                        <p>{defaultShipping.city}, {defaultShipping.postcode}</p>
+                                                        <p>{defaultShipping.country_id}</p>
+                                                        <p className="pt-2">T: {defaultShipping.telephone}</p>
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-[13px] text-gray-500 italic">No default shipping address set.</p>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -255,6 +226,10 @@ export default function MyAccountPage() {
                     </div>
                 </main>
             </div>
+
+            <style jsx>{`
+                @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700;900&display=swap');
+            `}</style>
         </div>
     );
 }
