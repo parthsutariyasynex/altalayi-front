@@ -1,22 +1,47 @@
 import { getServerSession } from "next-auth";
+import { getToken } from "next-auth/jwt";
 import { authOptions } from "@/lib/auth/auth-options";
 import { NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
     try {
-        // Step 1: Get token from header or session
+        // Step 1: Get token - try multiple methods
         let token: string | null = null;
+
+        // Method 1: Authorization header from client
         const authHeader = request.headers.get("authorization");
         if (authHeader && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7).replace(/['"]/g, "").trim();
+            console.log("[category-products] Token from Auth header:", token ? "found" : "missing");
         }
 
+        // Method 2: NextAuth JWT from cookie (most reliable on Vercel)
         if (!token) {
-            const session: any = await getServerSession(authOptions);
-            token = session?.accessToken;
+            try {
+                const jwtToken = await getToken({
+                    req: request,
+                    secret: process.env.NEXTAUTH_SECRET,
+                });
+                token = (jwtToken as any)?.accessToken || null;
+                console.log("[category-products] Token from JWT cookie:", token ? "found" : "missing");
+            } catch (e) {
+                console.error("[category-products] JWT token error:", e);
+            }
+        }
+
+        // Method 3: getServerSession fallback
+        if (!token) {
+            try {
+                const session: any = await getServerSession(authOptions);
+                token = session?.accessToken || null;
+                console.log("[category-products] Token from getServerSession:", token ? "found" : "missing");
+            } catch (e) {
+                console.error("[category-products] getServerSession error:", e);
+            }
         }
 
         if (!token || token === "null" || token === "undefined") {
+            console.error("[category-products] No valid token found. Auth header:", !!authHeader);
             return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 
@@ -50,8 +75,10 @@ export async function GET(request: NextRequest) {
             });
         });
 
-        const magentoUrlStr = `${process.env.NEXT_PUBLIC_BASE_URL}/category-products?${queryParts.join("&")}`;
-        console.log("Magento request URL:", magentoUrlStr);
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+        const magentoUrlStr = `${baseUrl}/category-products?${queryParts.join("&")}`;
+        console.log("[category-products] Magento URL:", magentoUrlStr);
+        console.log("[category-products] Base URL env:", baseUrl ? "set" : "MISSING!");
 
         const res = await fetch(magentoUrlStr, {
             headers: {

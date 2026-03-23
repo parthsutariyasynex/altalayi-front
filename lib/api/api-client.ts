@@ -6,9 +6,19 @@ async function apiClient(
     endpoint: string,
     { method = "GET", body, headers = {}, ...customConfig }: any = {}
 ) {
-    // Get session for token
-    const session: any = await getSession();
-    const token = session?.accessToken;
+    // Get token from NextAuth session first, then fall back to localStorage
+    let token: string | null = null;
+    try {
+        const session: any = await getSession();
+        token = session?.accessToken || null;
+    } catch {
+        // getSession() can fail in non-browser contexts
+    }
+
+    // Fallback: read from localStorage (set by Redux login)
+    if (!token && typeof window !== "undefined") {
+        token = localStorage.getItem("token");
+    }
 
     const config = {
         method,
