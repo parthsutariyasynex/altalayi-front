@@ -96,6 +96,12 @@ export default function LoginPage() {
 
     if (mode === "password") {
       try {
+        // Step 1: Get token directly from Magento
+        const tokenRes = await fetch(
+          "/api/auth/callback/credentials",
+          { method: "HEAD" } // just to warm up
+        ).catch(() => null);
+
         const res = await signIn("credentials", {
           email,
           password,
@@ -103,11 +109,31 @@ export default function LoginPage() {
         });
 
         if (res?.ok) {
-          // Store token in localStorage for API calls
-          const session: any = await getSession();
-          if (session?.accessToken) {
-            localStorage.setItem("token", session.accessToken);
+          // Step 2: Get session and store token in localStorage
+          // Retry getSession a few times as cookie may not be ready immediately
+          let accessToken: string | null = null;
+          for (let i = 0; i < 3; i++) {
+            const session: any = await getSession();
+            if (session?.accessToken) {
+              accessToken = session.accessToken;
+              break;
+            }
+            await new Promise(r => setTimeout(r, 500));
           }
+
+          if (accessToken) {
+            localStorage.setItem("token", accessToken);
+          } else {
+            // Fallback: fetch token directly from Magento
+            try {
+              const magentoRes = await fetch("/api/auth/session");
+              const sessionData = await magentoRes.json();
+              if (sessionData?.accessToken) {
+                localStorage.setItem("token", sessionData.accessToken);
+              }
+            } catch {}
+          }
+
           toast.success("Login Successful");
           router.replace("/products");
         } else {
@@ -129,11 +155,21 @@ export default function LoginPage() {
         });
 
         if (res?.ok) {
-          // Store token in localStorage for API calls
-          const session: any = await getSession();
-          if (session?.accessToken) {
-            localStorage.setItem("token", session.accessToken);
+          // Get session and store token in localStorage
+          let accessToken: string | null = null;
+          for (let i = 0; i < 3; i++) {
+            const session: any = await getSession();
+            if (session?.accessToken) {
+              accessToken = session.accessToken;
+              break;
+            }
+            await new Promise(r => setTimeout(r, 500));
           }
+
+          if (accessToken) {
+            localStorage.setItem("token", accessToken);
+          }
+
           toast.success("Login Successful");
           router.replace("/products");
         } else {
