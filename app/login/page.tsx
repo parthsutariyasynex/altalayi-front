@@ -97,29 +97,42 @@ export default function LoginPage() {
     if (mode === "password") {
       try {
         // Step 1: Get token directly from Magento API
+        console.log("[LOGIN] Step 1: Fetching token from Magento...");
         const magentoRes = await fetch("/api/kleverapi/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username: email, password }),
         });
+        console.log("[LOGIN] Magento response status:", magentoRes.status);
         const magentoData = await magentoRes.json();
+        console.log("[LOGIN] Magento response data:", magentoData);
+        console.log("[LOGIN] Magento data type:", typeof magentoData);
+
         const magentoToken = typeof magentoData === "string"
           ? magentoData.replace(/"/g, "").trim()
           : magentoData?.token || magentoData;
 
+        console.log("[LOGIN] Extracted token:", magentoToken ? "found" : "MISSING");
+
         if (magentoRes.ok && magentoToken) {
-          // Store token in localStorage immediately
-          localStorage.setItem("token", String(magentoToken).replace(/"/g, "").trim());
+          const cleanToken = String(magentoToken).replace(/"/g, "").trim();
+          localStorage.setItem("token", cleanToken);
+          console.log("[LOGIN] Token stored in localStorage:", cleanToken.substring(0, 20) + "...");
+        } else {
+          console.error("[LOGIN] Failed to get token from Magento");
         }
 
         // Step 2: Also do NextAuth signIn for session/middleware
+        console.log("[LOGIN] Step 2: NextAuth signIn...");
         const res = await signIn("credentials", {
           email,
           password,
           redirect: false,
         });
+        console.log("[LOGIN] NextAuth result:", res);
 
         if (res?.ok) {
+          console.log("[LOGIN] Success! localStorage token:", localStorage.getItem("token") ? "SET" : "MISSING");
           toast.success("Login Successful");
           router.replace("/products");
         } else {
