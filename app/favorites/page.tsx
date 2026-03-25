@@ -3,7 +3,6 @@
 import React, { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Navbar from "@/app/components/Navbar";
 import FavouriteProducts from "@/app/components/FavouriteProducts";
 
 /**
@@ -31,7 +30,7 @@ export default function FavoritesPage() {
 
     return (
         <div className="min-h-screen bg-white font-rubik scroll-smooth text-black">
-            <Navbar />
+            
 
             {/* Main Content Area - Optimized Full Width */}
             <div className="w-full mx-auto mt-[100px] px-4 md:px-10 pb-20 min-h-screen bg-white">

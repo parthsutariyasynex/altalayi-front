@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import Navbar from "../../components/Navbar";
 import Sidebar from "./components/Sidebar";
 import Filters from "./components/Filters";
 import OrdersTable, { Order } from "./components/OrdersTable";
@@ -173,7 +172,7 @@ export default function MyOrdersPage() {
 
     return (
         <div className="min-h-screen bg-white font-['Rubik'] pb-20">
-            <Navbar />
+            
 
             <div className="max-w-[1440px] mx-auto px-6 py-10 mt-20">
                 <div className="flex flex-col md:flex-row gap-10 items-start">

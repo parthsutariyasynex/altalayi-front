@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, Package, ArrowRight, Home, ShoppingBag, Loader2 } from "lucide-react";
-import Navbar from "@/app/components/Navbar";
 import { useCheckout } from "@/modules/checkout/hooks/useCheckout";
 import { toast } from "react-hot-toast";
 
@@ -68,7 +67,7 @@ const CheckoutSuccessPage = () => {
 
     return (
         <div className="bg-white min-h-screen font-sans flex flex-col">
-            <Navbar />
+            
 
             <main className="flex-grow flex flex-col items-center justify-center px-4 py-20 text-center">
                 <div className="max-w-2xl mx-auto space-y-6">

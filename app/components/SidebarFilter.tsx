@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { ChevronDown, ChevronLeft, Filter, X } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, ChevronLeft, Filter, X, FileText } from "lucide-react";
 
 export interface FilterOption {
     value: string;
@@ -365,6 +366,21 @@ export default function SidebarFilter({
             )}
 
 
+            {/* User Guides Section at the bottom */}
+            {!isCollapsed && (
+                <div className="p-4 border-t border-gray-100 flex-shrink-0">
+                    <Link href="/guides">
+                        <div className="bg-[#f5a623] rounded-sm p-4 flex items-center gap-4 cursor-pointer hover:bg-black group transition-all duration-300 shadow-sm border border-yellow-600/10">
+                            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-[#f5a623] flex-shrink-0 shadow-inner group-hover:scale-110 transition-transform">
+                                <FileText size={22} strokeWidth={2.5} />
+                            </div>
+                            <span className="font-[900] text-black group-hover:text-white text-[16px] uppercase tracking-tighter leading-none transition-colors">
+                                USER GUIDES
+                            </span>
+                        </div>
+                    </Link>
+                </div>
+            )}
         </aside>
     );
 }

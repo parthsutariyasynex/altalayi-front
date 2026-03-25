@@ -6,9 +6,35 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
 import { fetchCustomerInfo } from "@/store/actions/customerActions";
 import Sidebar from "@/components/Sidebar";
-import Navbar from "@/app/components/Navbar";
 import { useSession } from "next-auth/react";
-import { Upload, FileText, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+
+/**
+ * Proper data structures for the Forecast API
+ */
+interface ForecastFile {
+    forecast_id?: string | number;
+    file_name?: string;
+    filename?: string;
+    name?: string;
+    file_url?: string;
+    uploaded_date?: string;
+    created_at?: string;
+    updated_at?: string;
+    uploaded_at?: string;
+    date?: string;
+    entity_id?: string | number;
+    file_id?: string | number;
+    id?: string | number;
+}
+
+interface ForecastResponse {
+    items: ForecastFile[];
+    total_count: number;
+    page_size: number;
+    current_page: number;
+    total_pages: number;
+}
 
 export default function MyForecastPage() {
     const router = useRouter();
@@ -19,9 +45,14 @@ export default function MyForecastPage() {
 
     const [isSubAccountSession, setIsSubAccountSession] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [forecasts, setForecasts] = useState<any[]>([]);
+    const [forecasts, setForecasts] = useState<ForecastFile[]>([]);
     const [loadingForecasts, setLoadingForecasts] = useState(true);
     const [uploading, setUploading] = useState(false);
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+    const [totalItems, setTotalItems] = useState(0);
 
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -37,27 +68,93 @@ export default function MyForecastPage() {
 
         if (status === "authenticated" && token) {
             dispatch(fetchCustomerInfo());
-            pullForecasts();
+            pullForecasts(currentPage, pageSize);
         }
-    }, [status, token, dispatch, router]);
+    }, [status, token, dispatch, router, currentPage, pageSize]);
 
-    const pullForecasts = async () => {
+    /**
+     * Proper data fetching from the proxy API
+     */
+    const [downloadingId, setDownloadingId] = useState<string | number | null>(null);
+
+    const pullForecasts = async (page: number, size: number) => {
         try {
             setLoadingForecasts(true);
-            const response = await fetch('/api/kleverapi/forecast', {
+            const response = await fetch(`/api/kleverapi/forecast?pageSize=${size}&currentPage=${page}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+
             if (response.ok) {
-                const data = await response.json();
-                setForecasts(data);
+                const data: ForecastResponse = await response.json();
+
+                // Set the items, handling both direct array responses or collection objects
+                const items = data.items || (Array.isArray(data) ? data : []);
+                const total = data.total_count || items.length;
+
+                setForecasts(items);
+                setTotalItems(total);
             }
         } catch (err) {
-            console.error("Fetch forecasts error:", err);
+            console.error("[Forecast List Error]:", err);
         } finally {
             setLoadingForecasts(false);
         }
     };
 
+    /**
+     * File download handler
+     */
+    const handleDownload = async (file: ForecastFile) => {
+        const id = file.forecast_id || file.entity_id || file.id || file.file_id;
+        const name = file.file_name || "forecast_file";
+        const fileUrl = file.file_url;
+
+        if (!id) {
+            console.warn("[Forecast] Missing ID in file object:", file);
+            alert("This file cannot be downloaded (Missing ID).");
+            return;
+        }
+
+        try {
+            setDownloadingId(id);
+            let proxyUrl = `/api/kleverapi/forecast/file/${id}?file_name=${encodeURIComponent(name)}`;
+
+            if (fileUrl) {
+                proxyUrl += `&url=${encodeURIComponent(fileUrl)}`;
+            }
+
+            const response = await fetch(proxyUrl, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.message || "Failed to download file.");
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = name;
+            document.body.appendChild(a);
+            a.click();
+
+            // Cleanup
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        } catch (err: any) {
+            console.error("[Forecast Download Error]:", err);
+            alert(err.message || "An error occurred during download.");
+        } finally {
+            setDownloadingId(null);
+        }
+    };
+
+    /**
+     * File upload handler
+     */
     const handleUpload = async () => {
         if (!selectedFile) {
             alert("Please select a file first");
@@ -78,12 +175,12 @@ export default function MyForecastPage() {
             if (response.ok) {
                 alert("Forecast uploaded successfully!");
                 setSelectedFile(null);
-                pullForecasts(); // Refresh list
+                pullForecasts(currentPage, pageSize);
             } else {
                 alert("Upload failed.");
             }
         } catch (err) {
-            console.error("Upload error:", err);
+            console.error("[Forecast Upload Error]:", err);
             alert("An error occurred during upload.");
         } finally {
             setUploading(false);
@@ -96,10 +193,36 @@ export default function MyForecastPage() {
         }
     };
 
+    /**
+     * Finds and formats the 'proper' date from the API object.
+     * Converts "2026-03-24 13:14:49" to "March 24, 2026"
+     */
+    const getProperDate = (file: any) => {
+        const rawDate = file.uploaded_date || file.created_at || file.uploaded_at ||
+            file.date || file.upload_date || file.updated_at ||
+            file.creation_time || file.createdDate;
+
+        const options: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric', year: 'numeric' };
+
+        if (rawDate) {
+            try {
+                const parsedDate = new Date(rawDate.replace(' ', 'T')); // Handle space between date and time
+                if (!isNaN(parsedDate.getTime())) {
+                    return parsedDate.toLocaleDateString('en-US', options);
+                }
+                return rawDate; // Fallback to raw if parsing fails but exists
+            } catch (e) {
+                return rawDate;
+            }
+        }
+
+        // Final fallback to today
+        return new Date().toLocaleDateString('en-US', options);
+    };
+
     if (loading || loadingForecasts) {
         return (
             <div className="min-h-screen bg-white">
-                <Navbar />
                 <div className="flex items-center justify-center h-[60vh]">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#f5b21a]"></div>
                 </div>
@@ -110,118 +233,153 @@ export default function MyForecastPage() {
     if (!customer) return null;
 
     return (
-        <div className="min-h-screen bg-white font-['Rubik',sans-serif]">
-            <Navbar />
+        <div className="flex flex-col md:flex-row min-h-screen">
+            <Sidebar />
 
-            <div className="flex flex-col md:flex-row min-h-screen">
-                <Sidebar />
-
-                <main className="flex-1 p-8 bg-white max-w-[1240px]">
-                    {/* Header */}
-                    <h1 className="text-[20px] font-black text-black mb-8 uppercase tracking-tight">
+            <main className="flex-1 p-8 bg-[#f9f9f9] min-h-screen">
+                {/* Header with Refresh */}
+                <div className="flex justify-between items-center mb-8">
+                    <h1 className="text-[22px] font-black text-black uppercase tracking-tight">
                         MY FORECAST
                     </h1>
+                    <button
+                        onClick={() => pullForecasts(currentPage, pageSize)}
+                        className="bg-white border border-gray-300 text-[12px] font-black px-4 py-1.5 uppercase hover:bg-gray-100 transition-all shadow-sm flex items-center gap-2"
+                    >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /></svg>
+                        REFRESH
+                    </button>
+                </div>
 
-                    {/* Section Label */}
-                    <h2 className="text-[14px] font-black text-black mb-4 uppercase tracking-tighter">
-                        UPLOAD FORECAST
-                    </h2>
+                {/* Section: Upload */}
+                <h2 className="text-[15px] font-black text-black mb-4 uppercase tracking-tighter">
+                    UPLOAD FORECAST
+                </h2>
 
-                    {/* Upload Container */}
-                    <div className="border border-gray-100 rounded-sm mb-12 shadow-sm overflow-hidden bg-[#fafafa]">
-                        <div className="p-10">
-                            <div className="border-2 border-dashed border-gray-300 rounded-md bg-transparent px-10 py-12 flex flex-col md:flex-row items-center justify-between gap-6">
-                                <div className="flex items-center gap-4">
-                                    <span className="text-[15px] font-medium text-gray-800">Drop files here</span>
-                                    <label className="bg-white border border-gray-300 px-4 py-1 text-[13px] font-medium text-black cursor-pointer hover:bg-gray-50 transition-colors">
-                                        Choose File
-                                        <input type="file" className="hidden" onChange={handleFileChange} />
-                                    </label>
-                                    <span className="text-[13px] text-gray-500 italic">
-                                        {selectedFile ? selectedFile.name : "No file chosen"}
-                                    </span>
-                                </div>
-                                <div className="text-right max-w-[400px]">
-                                    <span className="text-[11px] font-black text-gray-500 uppercase leading-relaxed text-wrap">
-                                        Allowed file types : jpg,jpeg,png,zip,rar,docx,doc,pdf,xls,xlsx,csv,msg
-                                    </span>
-                                </div>
+                <div className="bg-white border border-gray-200 rounded-sm mb-12 shadow-sm overflow-hidden">
+                    <div className="p-8">
+                        <div className="border-2 border-dashed border-gray-300 rounded-sm bg-[#eeeeee] px-6 py-8 flex flex-col lg:flex-row items-center justify-between gap-6">
+                            <div className="flex items-center gap-3">
+                                <span className="text-[14px] font-medium text-black">Drop files here</span>
+                                <input
+                                    type="file"
+                                    id="file-upload"
+                                    className="hidden"
+                                    accept=".jpg,.jpeg,.png,.zip,.rar,.docx,.doc,.pdf,.xls,.xlsx,.csv,.msg"
+                                    onChange={handleFileChange}
+                                />
+                                <label
+                                    htmlFor="file-upload"
+                                    className="bg-[#f0f0f0] border border-gray-400 px-3 py-1 text-[13px] font-medium text-black cursor-pointer hover:bg-gray-200 transition-colors rounded-[2px]"
+                                >
+                                    Choose File
+                                </label>
+                                <span className="text-[13px] text-gray-800 font-medium">
+                                    {selectedFile ? selectedFile.name : "No file chosen"}
+                                </span>
+                            </div>
+                            <div className="text-right">
+                                <span className="text-[14px] font-medium text-black leading-relaxed">
+                                    Allowed file types : jpg,jpeg,png,zip,rar,docx,doc,pdf,xls,xlsx,csv,msg
+                                </span>
                             </div>
                         </div>
-
-                        {/* Submit Row */}
-                        <div className="bg-white px-10 pb-10 flex justify-end">
-                            <button
-                                onClick={handleUpload}
-                                disabled={uploading}
-                                className="bg-[#f5b21a] text-black text-[13px] font-black px-12 py-2.5 uppercase tracking-wider hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-50"
-                            >
-                                {uploading ? "UPLOADING..." : "SUBMIT"}
-                            </button>
-                        </div>
                     </div>
 
-                    {/* Table Header Row */}
-                    <div className="grid grid-cols-2 bg-[#fcfcfc] border-b border-gray-200 py-4 px-6 mb-2">
-                        <span className="text-[13px] font-black text-black">File Name</span>
-                        <span className="text-[13px] font-black text-black text-right">Uploaded Date</span>
+                    <div className="bg-white px-8 pb-8 flex justify-end">
+                        <button
+                            onClick={handleUpload}
+                            disabled={uploading}
+                            className="bg-[#f4b400] text-black text-[13px] font-black px-12 py-2.5 uppercase tracking-wider hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-50"
+                        >
+                            {uploading ? "UPLOADING..." : "SUBMIT"}
+                        </button>
                     </div>
+                </div>
 
-                    {/* Files List */}
-                    <div className="space-y-0.5">
-                        {forecasts.map((file: any, idx: number) => (
-                            <div key={idx} className="grid grid-cols-2 border-b border-gray-50 py-4 px-6 hover:bg-gray-50 transition-colors group">
-                                <span className="text-[13px] text-gray-700 font-medium group-hover:text-black">{file.name}</span>
-                                <span className="text-[13px] text-gray-700 font-medium text-right">{file.date}</span>
+                {/* Table Header Row */}
+                <div className="grid grid-cols-2 bg-[#fcfcfc] border border-gray-100 py-4 mb-2">
+                    <span className="text-[13px] font-black text-black px-6">File Name</span>
+                    <span className="text-[13px] font-black text-black text-center border-l border-gray-100">Uploaded Date</span>
+                </div>
+
+                {/* Files List - Mapping Data from Proxy API */}
+                <div className="bg-white border border-gray-100 border-t-0 rounded-sm overflow-hidden">
+                    {forecasts.length > 0 ? forecasts.map((file, idx) => {
+                        const fileId = file.forecast_id || file.entity_id || file.id || file.file_id;
+                        return (
+                            <div key={fileId || idx} className="grid grid-cols-2 border-b border-gray-50 py-4 hover:bg-[#fff7e6] transition-colors group">
+                                <div className="flex items-center gap-3 px-6">
+                                    <button
+                                        onClick={() => handleDownload(file)}
+                                        disabled={downloadingId !== null && downloadingId === fileId}
+                                        className="text-[13px] text-gray-700 font-medium group-hover:text-[#f4b400] hover:underline text-left disabled:opacity-50"
+                                    >
+                                        {file.file_name || file.filename || file.name || "No name"}
+                                    </button>
+                                    {downloadingId !== null && downloadingId === fileId && (
+                                        <div className="animate-spin h-3 w-3 border-b-2 border-[#f4b400] rounded-full"></div>
+                                    )}
+                                </div>
+                                <span className="text-[13px] text-gray-700 font-medium text-center border-l border-gray-50">
+                                    {getProperDate(file)}
+                                </span>
                             </div>
-                        ))}
-                    </div>
+                        );
+                    }) : (
+                        <div className="py-20 text-center text-gray-400 text-[14px] bg-white">
+                            No records found.
+                        </div>
+                    )}
+                </div>
 
-                    {/* Pagination / Info Row */}
-                    <div className="bg-[#f2f2f2] mt-10 py-3.5 px-6 flex justify-between items-center text-[#555]">
-                        <span className="text-[12px] font-medium">{forecasts.length} Item(s)</span>
+                {/* Pagination / Info Row */}
+                <div className="bg-[#f2f2f2] mt-10 py-3.5 px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-[#555] rounded-sm">
+                    <div className="flex items-center gap-6">
+                        <span className="text-[12px] font-medium">{totalItems} Item(s)</span>
                         <div className="flex items-center gap-2">
                             <span className="text-[12px] font-medium">Show</span>
                             <div className="relative inline-block">
-                                <select className="bg-white border border-gray-300 rounded-sm pl-3 pr-8 py-1.5 text-[12px] font-medium appearance-none outline-none cursor-pointer">
-                                    <option>10</option>
-                                    <option>20</option>
-                                    <option>50</option>
+                                <select
+                                    className="bg-white border border-gray-300 rounded-sm pl-3 pr-8 py-1.5 text-[12px] font-medium appearance-none outline-none cursor-pointer"
+                                    value={pageSize}
+                                    onChange={(e) => {
+                                        setPageSize(Number(e.target.value));
+                                        setCurrentPage(1);
+                                    }}
+                                >
+                                    <option value="10">10</option>
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
                                 </select>
                                 <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
                             </div>
                             <span className="text-[12px] font-medium">per page</span>
                         </div>
                     </div>
-                </main>
-            </div>
 
-            {/* Footer and Style Tags */}
-            <footer className="bg-black text-white py-14 mt-auto">
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-center items-center gap-16 md:gap-32">
-                    <div className="flex flex-col items-center gap-4 cursor-pointer group">
-                        <div className="w-14 h-14 bg-white/5 rounded-full flex items-center justify-center border border-white/10 group-hover:bg-[#f5b21a] group-hover:border-[#f5b21a] transition-all duration-300">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                                <rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                            </svg>
-                        </div>
-                        <span className="text-[14px] font-bold uppercase tracking-[1.5px] group-hover:text-[#f5b21a] transition-colors">
-                            Send us an email
+                    {/* Pagination Buttons */}
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                            className="px-4 py-1.5 bg-white border border-gray-300 text-[12px] font-black disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all rounded-sm shadow-sm"
+                        >
+                            PREV
+                        </button>
+                        <span className="text-[12px] font-black text-black min-w-[80px] text-center uppercase tracking-tight">
+                            PAGE {currentPage}
                         </span>
-                    </div>
-                    <div className="flex flex-col items-center gap-4 cursor-pointer group">
-                        <div className="w-14 h-14 bg-white/5 rounded-full flex items-center justify-center border border-white/10 group-hover:bg-[#f5b21a] group-hover:border-[#f5b21a] transition-all duration-300">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                                <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" x2="15.42" y1="13.51" y2="17.49" /><line x1="15.41" x2="8.59" y1="6.51" y2="10.49" />
-                            </svg>
-                        </div>
-                        <span className="text-[14px] font-bold uppercase tracking-[1.5px] group-hover:text-[#f5b21a] transition-colors">
-                            Connect with Us
-                        </span>
+                        <button
+                            onClick={() => setCurrentPage(prev => prev + 1)}
+                            disabled={forecasts.length < pageSize}
+                            className="px-4 py-1.5 bg-white border border-gray-300 text-[12px] font-black disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all rounded-sm shadow-sm"
+                        >
+                            NEXT
+                        </button>
                     </div>
                 </div>
-            </footer>
-
+            </main>
         </div>
     );
 }

@@ -92,7 +92,6 @@ const CartPage: React.FC = () => {
     if (!hasItems) {
         return (
             <div className="bg-white min-h-screen">
-                <Navbar />
                 <div className="max-w-7xl mx-auto py-24 px-6 text-center">
                     <ShoppingBag size={64} className="mx-auto text-gray-200 mb-6" />
                     <h1 className="text-2xl font-bold text-gray-900 uppercase tracking-widest mb-4">
@@ -109,7 +108,6 @@ const CartPage: React.FC = () => {
 
     return (
         <div className="bg-white min-h-screen font-sans">
-            <Navbar />
             <div className="max-w-7xl mx-auto py-10 px-6">
                 {/* Page Title */}
                 <div className="text-center mb-10">

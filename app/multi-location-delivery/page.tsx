@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
-import Navbar from "@/app/components/Navbar";
 import { useCart } from "@/modules/cart/hooks/useCart";
 import { useCheckout, Address } from "@/modules/checkout/hooks/useCheckout";
 import Link from "next/link";
@@ -135,7 +134,7 @@ const MultiLocationDeliveryPage: React.FC = () => {
     if (!cart?.items || cart.items.length === 0) {
         return (
             <div className="bg-white min-h-screen font-sans">
-                <Navbar />
+                
                 <div className="max-w-[1440px] mx-auto py-24 px-4 flex flex-col items-center text-center">
                     <h1 className="text-[28px] font-black text-black uppercase mb-12 tracking-wide">
                         SHOPPING CART
@@ -172,7 +171,7 @@ const MultiLocationDeliveryPage: React.FC = () => {
 
     return (
         <div className="bg-white min-h-screen font-sans pb-32">
-            <Navbar />
+            
 
             <div className="max-w-[1440px] mx-auto py-12 px-4 sm:px-6 lg:px-10">
                 {/* Heading Block */}

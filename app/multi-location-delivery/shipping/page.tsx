@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState, useMemo, useRef } from "react";
-import Navbar from "@/app/components/Navbar";
 import { useCart } from "@/modules/cart/hooks/useCart";
 import { useCheckout, Address } from "@/modules/checkout/hooks/useCheckout";
 import { useRouter } from "next/navigation";
@@ -161,7 +160,7 @@ const MultiShippingShippingPage: React.FC = () => {
 
     return (
         <div className="bg-white min-h-screen font-sans pb-20">
-            <Navbar />
+            
 
             <div className="max-w-[1200px] mx-auto pt-10 px-4">
                 <h1 className="text-[24px] font-[900] text-black text-center uppercase mb-3 tracking-tighter">

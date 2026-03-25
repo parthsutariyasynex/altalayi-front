@@ -5,7 +5,6 @@ import { formatPrice } from "@/utils/helpers";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
-import Navbar from "@/app/components/Navbar";
 import { toast } from "react-hot-toast";
 import { useCart } from "@/modules/cart/context/CartContext";
 
@@ -274,7 +273,7 @@ export default function OrderDetailsPage() {
     if (authStatus === "loading" || (isLoading && !order)) {
         return (
             <div className="min-h-screen bg-white">
-                <Navbar />
+                
                 <div className="flex max-w-[1440px] mx-auto mt-[100px]">
                     <Sidebar />
                     <main className="flex-1 p-8 bg-[#fcfcfc] flex items-center justify-center">
@@ -288,7 +287,7 @@ export default function OrderDetailsPage() {
     if (error) {
         return (
             <div className="min-h-screen bg-white">
-                <Navbar />
+                
                 <div className="flex max-w-[1440px] mx-auto mt-[100px]">
                     <Sidebar />
                     <main className="flex-1 p-8 bg-[#fcfcfc]">
@@ -316,7 +315,7 @@ export default function OrderDetailsPage() {
 
     return (
         <div className="min-h-screen bg-white">
-            <Navbar />
+            
 
             <div className="flex max-w-[1440px] mx-auto mt-[100px]">
                 {/* Left Sidebar */}

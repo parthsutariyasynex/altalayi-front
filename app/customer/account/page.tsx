@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
 import { fetchCustomerInfo } from "@/store/actions/customerActions";
 import Sidebar from "@/components/Sidebar";
-import Navbar from "@/app/components/Navbar";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import BusinessOverviewEditModal from "@/components/BusinessOverviewEditModal";
 
 type CustomAttribute = {
     attribute_code: string;
@@ -33,6 +33,19 @@ export default function MyAccountPage() {
     const { data: customer, loading } = useSelector((state: RootState) => state.customer);
     const token = useSelector((state: RootState) => state.auth.token);
 
+    const [businessOverview, setBusinessOverview] = useState<any>(null);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+    const fetchOverview = async () => {
+        try {
+            const response = await fetch("/api/kleverapi/business-overview");
+            const data = await response.json();
+            setBusinessOverview(Array.isArray(data) ? data[0] : data);
+        } catch (err) {
+            console.error("Overview Fetch Error:", err);
+        }
+    };
+
     useEffect(() => {
         if (status === "unauthenticated") {
             router.replace("/login");
@@ -41,13 +54,18 @@ export default function MyAccountPage() {
 
         if (status === "authenticated" && token) {
             dispatch(fetchCustomerInfo());
+            fetchOverview();
         }
     }, [status, token, dispatch, router]);
+
+    const getOverviewAttr = (key: string, fallback: string = "N/A") => {
+        return businessOverview?.[key] || fallback;
+    };
 
     if (loading) {
         return (
             <div className="min-h-screen bg-white">
-                <Navbar />
+
                 <div className="flex items-center justify-center h-[60vh]">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F5B21B]"></div>
                 </div>
@@ -71,8 +89,8 @@ export default function MyAccountPage() {
     const defaultShipping = addresses?.find((a: Address) => a.default_shipping);
 
     return (
-        <div className="min-h-screen bg-white font-['Rubik',sans-serif]">
-            <Navbar />
+        <>
+
 
             <div className="flex flex-col md:flex-row min-h-screen">
                 <Sidebar />
@@ -95,9 +113,9 @@ export default function MyAccountPage() {
                                             Contact Information
                                         </div>
                                         <div className="p-6 text-[13px] text-gray-700 space-y-2.5 font-medium leading-relaxed">
-                                            <p><span className="text-black font-bold">Name:</span> {(customer as any).firstname} {(customer as any).lastname}</p>
-                                            <p><span className="text-black font-bold">Email:</span> {(customer as any).email}</p>
-                                            <p><span className="text-black font-bold">Mobile:</span> {getAttr("mobile") !== "N/A" ? getAttr("mobile") : getAttr("mobile_number")}</p>
+                                            <p>Name: {(customer as any).firstname} {(customer as any).lastname}</p>
+                                            <p>Email: {(customer as any).email}</p>
+                                            <p>Mobile: {getAttr("mobile") !== "N/A" ? getAttr("mobile") : getAttr("mobile_number")}</p>
 
                                             <div className="flex gap-3 pt-6">
                                                 <Link href="/customer/account/edit" className="bg-[#F5B21B] hover:bg-black hover:text-white text-black text-[12px] font-bold px-8 py-2.5 uppercase transition-all rounded-sm shadow-sm tracking-wider">
@@ -116,10 +134,10 @@ export default function MyAccountPage() {
                                             Company Information
                                         </div>
                                         <div className="p-6 text-[13px] text-gray-700 space-y-2.5 font-medium leading-relaxed">
-                                            <p><span className="text-black font-bold">Company Name:</span> {getAttr("company_name") || addresses?.[0]?.company || "N/A"}</p>
-                                            <p><span className="text-black font-bold">Company Contact:</span> {getAttr("company_contact_name")}</p>
-                                            <p><span className="text-black font-bold">Company Email:</span> {getAttr("company_email")}</p>
-                                            <p><span className="text-black font-bold">Customer Code:</span> {getAttr("customer_code")}</p>
+                                            <p>Company Name: {getAttr("company_name") || addresses?.[0]?.company || "N/A"}</p>
+                                            <p>Company Contact: {getAttr("company_contact_name")}</p>
+                                            <p>Company Email: {getAttr("company_email")}</p>
+                                            <p>Customer Code: {getAttr("customer_code")}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -131,12 +149,17 @@ export default function MyAccountPage() {
                                     <div className={cardBase}>
                                         <div className={sectionHeader + " flex justify-between items-center"}>
                                             <span>Business Overview</span>
-                                            <button className="bg-[#F5B21B] hover:bg-black hover:text-white text-black text-[10px] font-bold px-4 py-1.5 uppercase transition-all rounded-sm shadow-sm tracking-widest">Edit</button>
+                                            <button
+                                                onClick={() => setIsEditModalOpen(true)}
+                                                className="bg-[#F5B21B] hover:bg-black hover:text-white text-black text-[10px] font-bold px-4 py-1.5 uppercase transition-all rounded-sm shadow-sm tracking-widest"
+                                            >
+                                                Edit
+                                            </button>
                                         </div>
-                                        <div className="p-5 text-[14px] space-y-3 font-medium">
-                                            <p className="text-gray-800">Company Size: <span className="font-bold">{getAttr("total_employees") !== "N/A" ? getAttr("total_employees") : "0"} employees, {getAttr("trucks") !== "N/A" ? getAttr("trucks") : "0"} Trucks</span></p>
-                                            <p className="text-gray-800">Business Model: <span className="font-bold">{getAttr("business_model")}</span></p>
-                                            <p className="text-gray-800">Products Offered: <span className="font-bold">{getAttr("products_offered")}</span></p>
+                                        <div className="p-6 text-[14px] text-gray-700 space-y-2 font-medium leading-relaxed">
+                                            <p>Company Size: {getOverviewAttr("total_employees")} employees, {getOverviewAttr("trucks")} Trucks, {getOverviewAttr("annual_revenue")} annual revenue</p>
+                                            <p>Business Model: {getOverviewAttr("business_model")}</p>
+                                            <p>Products/Services Offered: {getOverviewAttr("products_offered")}</p>
                                         </div>
                                     </div>
 
@@ -144,9 +167,9 @@ export default function MyAccountPage() {
                                         <div className={sectionHeader}>
                                             Sales Data (Qty)
                                         </div>
-                                        <div className="p-5 text-[14px] space-y-3 font-medium">
-                                            <p className="text-gray-800">Total Sales Qty: <span className="font-bold">{getAttr("total_sales_qty") !== "N/A" ? getAttr("total_sales_qty") : "0"}</span></p>
-                                            <p className="text-gray-800">Order Frequency: <span className="font-bold">{getAttr("order_frequency") !== "N/A" ? getAttr("order_frequency") : "0"} orders/month</span></p>
+                                        <div className="p-6 text-[13px] text-gray-700 space-y-2.5 font-medium leading-relaxed">
+                                            <p>Total Sales Qty: {getAttr("total_sales_qty") !== "N/A" ? getAttr("total_sales_qty") : "0"}</p>
+                                            <p>Order Frequency: {getAttr("order_frequency") !== "N/A" ? getAttr("order_frequency") : "0"} orders/month</p>
                                         </div>
                                     </div>
                                 </div>
@@ -159,10 +182,10 @@ export default function MyAccountPage() {
                                         <div className={sectionHeader + " flex justify-between items-center"}>
                                             <span>Targets and Achievements</span>
                                         </div>
-                                        <div className="p-5 text-[14px] space-y-3 font-medium">
-                                            <p className="text-gray-800">Sales Targets: <span className="font-bold">{getAttr("sales_targets")}</span></p>
-                                            <p className="text-gray-800">Achievements: <span className="font-bold">{getAttr("achievements")}</span></p>
-                                            <p className="text-gray-800">Incentive: <span className="font-bold">SAR {getAttr("incentive") !== "N/A" ? getAttr("incentive") : "0.00"}</span></p>
+                                        <div className="p-6 text-[13px] text-gray-700 space-y-2.5 font-medium leading-relaxed">
+                                            <p>Sales Targets: {getAttr("sales_targets")}</p>
+                                            <p>Achievements: {getAttr("achievements")}</p>
+                                            <p>Incentive: SAR {getAttr("incentive") !== "N/A" ? getAttr("incentive") : "0.00"}</p>
                                         </div>
                                     </div>
 
@@ -170,10 +193,10 @@ export default function MyAccountPage() {
                                         <div className={sectionHeader}>
                                             Customer Behavior
                                         </div>
-                                        <div className="p-5 text-[14px] space-y-3 font-medium">
-                                            <p className="text-gray-800">Payment History (DSO): <span className="font-bold">{getAttr("payment_history")}</span></p>
-                                            <p className="text-gray-800">Credit Limit: <span className="font-bold">SAR {getAttr("total_credit_limit")}</span></p>
-                                            <p className="text-gray-800">Credit Period: <span className="font-bold">{getAttr("credit_period")} days</span></p>
+                                        <div className="p-6 text-[13px] text-gray-700 space-y-2.5 font-medium leading-relaxed">
+                                            <p>Payment History (DSO): {getAttr("payment_history")}</p>
+                                            <p>Credit Limit: SAR {getAttr("total_credit_limit")}</p>
+                                            <p>Credit Period: {getAttr("credit_period")} days</p>
                                         </div>
                                     </div>
                                 </div>
@@ -227,6 +250,12 @@ export default function MyAccountPage() {
                 </main>
             </div>
 
-        </div>
+            <BusinessOverviewEditModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                initialData={businessOverview}
+                onSuccess={fetchOverview}
+            />
+        </>
     );
 }

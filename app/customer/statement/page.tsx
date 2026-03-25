@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import Sidebar from "@/components/Sidebar";
-import Navbar from "@/app/components/Navbar";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
@@ -142,7 +141,7 @@ export default function MyStatementPage() {
 
     return (
         <div className="min-h-screen bg-white">
-            <Navbar />
+            
 
             <div className="flex max-w-[1440px] mx-auto mt-[100px]">
                 {/* Left Sidebar */}

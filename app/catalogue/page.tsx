@@ -1,12 +1,11 @@
 "use client";
 
 import React from "react";
-import Navbar from "@/app/components/Navbar";
 
 export default function CataloguePage() {
     return (
         <div className="min-h-screen bg-white">
-            <Navbar />
+            
 
             {/* Banner Section */}
             <div className="w-full h-[300px] md:h-[400px] lg:h-[500px]">

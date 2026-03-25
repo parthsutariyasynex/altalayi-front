@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { useSession } from "next-auth/react";
-import Navbar from "@/app/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 
 type SubAccount = {
@@ -128,7 +127,7 @@ export default function ManageSubAccountsPage() {
     if (loading) {
         return (
             <div className="min-h-screen bg-white">
-                <Navbar />
+
                 <div className="flex items-center justify-center h-[60vh]">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F5B21B]"></div>
                 </div>
@@ -137,8 +136,8 @@ export default function ManageSubAccountsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-white font-['Rubik',sans-serif]">
-            <Navbar />
+        <>
+
 
             <div className="flex flex-col md:flex-row min-h-[calc(100vh-80px)]">
                 <Sidebar />
@@ -173,31 +172,31 @@ export default function ManageSubAccountsPage() {
                                     {subAccounts.map((account, idx) => {
                                         const accountId = account.entity_id || account.id || account.customer_id || account.sub_account_id;
                                         return (
-                                        <tr key={accountId || idx} className="border-b border-gray-100 hover:bg-gray-50">
-                                            <td className="px-4 py-3 text-[13px] text-gray-800">
-                                                {account.firstname || account.name || "N/A"} {account.lastname || ""}
-                                            </td>
-                                            <td className="px-4 py-3 text-[13px] text-gray-800">
-                                                {account.email || "N/A"}
-                                            </td>
-                                            <td className="px-4 py-3 text-[13px]">
-                                                <span className={`px-2 py-1 text-[11px] font-bold uppercase rounded-sm ${account.is_active !== false
-                                                    ? "bg-green-100 text-green-800"
-                                                    : "bg-red-100 text-red-800"
-                                                    }`}>
-                                                    {account.is_active !== false ? "Active" : "Inactive"}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <button
-                                                    onClick={() => handleLoginAsSubAccount(account)}
-                                                    disabled={loggingInId === accountId}
-                                                    className="bg-[#F5B21B] hover:bg-black hover:text-white text-black text-[11px] font-bold px-4 py-2 uppercase transition-all rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                                >
-                                                    {loggingInId === accountId ? "Logging in..." : "Login As"}
-                                                </button>
-                                            </td>
-                                        </tr>
+                                            <tr key={accountId || idx} className="border-b border-gray-100 hover:bg-gray-50">
+                                                <td className="px-4 py-3 text-[13px] text-gray-800">
+                                                    {account.firstname || account.name || "N/A"} {account.lastname || ""}
+                                                </td>
+                                                <td className="px-4 py-3 text-[13px] text-gray-800">
+                                                    {account.email || "N/A"}
+                                                </td>
+                                                <td className="px-4 py-3 text-[13px]">
+                                                    <span className={`px-2 py-1 text-[11px] font-bold uppercase rounded-sm ${account.is_active !== false
+                                                        ? "bg-green-100 text-green-800"
+                                                        : "bg-red-100 text-red-800"
+                                                        }`}>
+                                                        {account.is_active !== false ? "Active" : "Inactive"}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <button
+                                                        onClick={() => handleLoginAsSubAccount(account)}
+                                                        disabled={loggingInId === accountId}
+                                                        className="bg-[#F5B21B] hover:bg-black hover:text-white text-black text-[11px] font-bold px-4 py-2 uppercase transition-all rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        {loggingInId === accountId ? "Logging in..." : "Login As"}
+                                                    </button>
+                                                </td>
+                                            </tr>
                                         );
                                     })}
                                 </tbody>
@@ -207,6 +206,6 @@ export default function ManageSubAccountsPage() {
                 </main>
             </div>
 
-        </div>
+        </>
     );
 }

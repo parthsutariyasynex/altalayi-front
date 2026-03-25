@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
-import Navbar from "../components/Navbar";
 import { ShoppingCart, X, Star, ChevronLeft, ChevronRight, AlertTriangle, Info, Check } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProductDialog from "../components/ProductDialog";
@@ -50,7 +49,21 @@ export default function ProductsPage() {
     setIsMounted(true);
     const stored = localStorage.getItem("favourites");
     if (stored) setFavIds(JSON.parse(stored));
-  }, []);
+
+    // Handle initial filters from URL params
+    if (searchParams) {
+      const newFilters: Record<string, string[]> = {};
+      const reserved = ["categoryId", "page", "pageSize"];
+      searchParams.forEach((value, key) => {
+        if (!reserved.includes(key)) {
+          newFilters[key] = value.split(",").filter(Boolean);
+        }
+      });
+      if (Object.keys(newFilters).length > 0) {
+        setSelectedFilters(newFilters);
+      }
+    }
+  }, [searchParams]);
 
   const toggleFavorite = async (product: any) => {
     const { product_id: productId } = product;
@@ -239,7 +252,27 @@ export default function ProductsPage() {
       result = result.filter(p => p?.offer && selectedOffers.some((o: string) => o === p.offer));
     }
 
-    // Sorting only — other filtering is handled by the API
+    // Client-side tyre size filtering
+    // Magento REST API does NOT filter by width/height/rim — only the live frontend does.
+    // We parse tyre_size (e.g. "195/65 R15") and filter locally to match live site behavior.
+    const sw = selectedFilters["width"]?.[0];
+    const sh = selectedFilters["height"]?.[0];
+    const sr = selectedFilters["rim"]?.[0];
+    if (sw || sh || sr) {
+      result = result.filter(p => {
+        const size = String(p?.tyre_size || "").trim();
+        if (!size) return false;
+        // Parse: "195/65 R15" or "195 R15" or "315/80 R22.5"
+        const m = size.match(/^(\d+)\/?(\d+)?\s*R?\s*(\d+\.?\d*)?/i);
+        if (!m) return false;
+        if (sw && m[1] !== sw) return false;
+        if (sh && m[2] !== sh) return false;
+        if (sr && m[3] !== sr) return false;
+        return true;
+      });
+    }
+
+    // Sorting — other filtering is handled by the API
     if (sortBy === "price-asc") return result.sort((a, b) => (a.final_price ?? 0) - (b.final_price ?? 0));
     if (sortBy === "price-desc") return result.sort((a, b) => (b.final_price ?? 0) - (a.final_price ?? 0));
     return result;
@@ -248,7 +281,10 @@ export default function ProductsPage() {
   const showActionColumn = useMemo(() => products.some(p => p.is_action === "Yes"), [products]);
   const totalColumns = 10 + (showActionColumn ? 1 : 0);
 
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  // Use filtered count when tyre size search is active
+  const hasSizeFilter = selectedFilters["width"] || selectedFilters["height"] || selectedFilters["rim"];
+  const displayCount = hasSizeFilter ? sortedProducts.length : totalCount;
+  const totalPages = Math.ceil(displayCount / PAGE_SIZE);
 
   if (!isMounted) return null;
 
@@ -263,11 +299,7 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 font-sans">
-      <div className="flex-shrink-0 sticky top-0 z-[50]">
-        <Navbar />
-      </div>
-
+    <>
       <div className="flex flex-1">
         <SidebarFilter
           onFilterChange={handleFilterChange}
@@ -474,10 +506,10 @@ export default function ProductsPage() {
             </div>
 
             {/* Pagination Footer */}
-            {!loading && totalCount > 0 && (
+            {!loading && displayCount > 0 && (
               <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/30 flex-shrink-0">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                  Found <span className="text-gray-900">{totalCount}</span> Products
+                  Found <span className="text-gray-900">{displayCount}</span> Products
                 </span>
 
                 <div className="flex items-center gap-1.5">
@@ -578,6 +610,6 @@ export default function ProductsPage() {
       </Drawer>
 
 
-    </div>
+    </>
   );
 }

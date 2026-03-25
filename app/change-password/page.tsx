@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import Navbar from "../components/Navbar";
 import { useDispatch } from "react-redux";
 import { changePassword } from "@/store/actions/authActions";
 import toast from "react-hot-toast";
@@ -39,7 +38,7 @@ export default function ChangePasswordPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 font-['Rubik']">
-      <Navbar />
+      
       <div className="max-w-md mx-auto p-6 mt-10">
         <div className="bg-white p-8 rounded shadow-sm border border-gray-200">
           <h1 className="text-xl font-bold mb-6 uppercase tracking-wider text-black">Change Password</h1>

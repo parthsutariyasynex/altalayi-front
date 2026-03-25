@@ -5,7 +5,6 @@ import { useSession } from "next-auth/react";
 import { formatPrice } from "@/utils/helpers";
 import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
-import Navbar from "@/app/components/Navbar";
 import Filters from "@/components/Filters";
 import OrdersTable, { Order } from "@/components/OrdersTable";
 import Pagination from "@/components/Pagination";
@@ -315,10 +314,8 @@ export default function MyOrdersPage() {
     }
 
     return (
-        <div className="min-h-screen bg-white font-['Rubik']">
-            <Navbar />
-
-            <div className="flex max-w-[1440px] mx-auto mt-[80px]">
+        <>
+<div className="flex max-w-[1440px] mx-auto mt-[80px]">
                 <Sidebar />
 
                 <main className="flex-1 p-8 min-h-screen">
@@ -407,6 +404,6 @@ export default function MyOrdersPage() {
                     )}
                 </main>
             </div>
-        </div>
+        </>
     );
 }

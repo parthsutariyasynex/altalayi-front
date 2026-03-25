@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Navbar from "@/app/components/Navbar";
 import MapSection from "./components/MapSection";
 import RegionGrid from "./components/RegionGrid";
 import ContactForm from "./components/ContactForm";
@@ -10,7 +9,7 @@ import styles from "./locations.module.css";
 export default function BranchLocationsPage() {
     return (
         <div className="min-h-screen bg-white font-sans text-black overflow-x-hidden">
-            <Navbar />
+            
 
             {/* Google Map Section */}
             <MapSection />

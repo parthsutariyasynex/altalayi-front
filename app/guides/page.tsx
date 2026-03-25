@@ -1,12 +1,11 @@
 "use client";
 
 import React from "react";
-import Navbar from "@/app/components/Navbar";
 
 export default function UserGuidesPage() {
     return (
         <div className="min-h-screen bg-white">
-            <Navbar />
+            
 
             {/* Banner Section */}
             <div className="w-full">

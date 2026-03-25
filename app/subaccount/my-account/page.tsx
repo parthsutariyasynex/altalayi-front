@@ -6,7 +6,6 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
 import { fetchCustomerInfo } from "@/store/actions/customerActions";
 import { useSession } from "next-auth/react";
-import Navbar from "@/app/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import Link from "next/link";
 
@@ -83,7 +82,7 @@ export default function SubAccountMyAccountPage() {
     if (parentLoading) {
         return (
             <div className="min-h-screen bg-white">
-                <Navbar />
+                
                 <div className="flex items-center justify-center h-[60vh]">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F5B21B]"></div>
                 </div>
@@ -140,8 +139,8 @@ export default function SubAccountMyAccountPage() {
     const sectionHeader = "bg-[#f5f5f5] px-4 py-3 border-b border-gray-300 text-black font-bold uppercase text-[13px]";
 
     return (
-        <div className="min-h-screen bg-white font-['Rubik',sans-serif]">
-            <Navbar />
+        <>
+            
 
             <div className="flex flex-col md:flex-row min-h-[calc(100vh-80px)]">
                 <Sidebar />
@@ -269,6 +268,6 @@ export default function SubAccountMyAccountPage() {
                 </main>
             </div>
 
-        </div>
+        </>
     );
 }

@@ -603,7 +603,6 @@ const CheckoutPageUI: React.FC = () => {
     if (!cart || cart.items.length === 0) {
         return (
             <div className="min-h-screen bg-white">
-                <Navbar />
                 <div className="max-w-7xl mx-auto py-24 px-6 text-center">
                     <ShoppingBag size={64} className="mx-auto text-gray-200 mb-6" />
                     <h1 className="text-2xl font-black text-black uppercase tracking-widest mb-4">Your cart is empty</h1>
@@ -625,8 +624,6 @@ const CheckoutPageUI: React.FC = () => {
 
     return (
         <div className="bg-[#F8F9FA] min-h-screen font-sans">
-            <Navbar />
-
             <main className="max-w-7xl mx-auto py-10 px-4 lg:px-6">
                 {/* Header Section */}
                 <div className="flex items-center justify-between mb-8">

@@ -5,7 +5,6 @@ import useSWR from "swr";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
-import Navbar from "@/app/components/Navbar";
 import { Search, RotateCcw } from "lucide-react";
 import Pagination from "@/components/Pagination";
 import toast from "react-hot-toast";
@@ -195,8 +194,8 @@ export default function OrderAttachmentsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-white font-['Rubik']">
-            <Navbar />
+        <>
+
 
             <div className="flex max-w-[1440px] mx-auto mt-[100px]">
                 {/* Left Sidebar */}
@@ -428,6 +427,6 @@ export default function OrderAttachmentsPage() {
                     </div>
                 </main>
             </div>
-        </div>
+        </>
     );
 }

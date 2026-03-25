@@ -1,49 +1,71 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth/auth-options';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
     try {
-        const authHeader = request.headers.get('Authorization');
+        // Step 1: Get token
+        let token: string | null = null;
 
-        if (!authHeader) {
+        const authHeader = request.headers.get('Authorization');
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.substring(7).replace(/['"]/g, '').trim();
+        }
+
+        if (!token || token === 'null') {
+            const cookie = request.cookies.get('auth-token')?.value;
+            if (cookie) token = cookie.replace(/['"]/g, '').trim();
+        }
+
+        if (!token || token === 'null') {
+            const session: any = await getServerSession(authOptions);
+            token = session?.accessToken;
+        }
+
+        if (!token) {
+            return NextResponse.json({ message: 'Authentication required.' }, { status: 401 });
+        }
+
+        // Step 2: Get query params (searchYear, compareYear)
+        const { searchParams } = new URL(request.url);
+        const searchYear = searchParams.get('searchYear');
+        const compareYear = searchParams.get('compareYear');
+
+        // Step 3: Build Magento URL
+        const queryParts: string[] = [];
+        if (searchYear) queryParts.push(`searchYear=${encodeURIComponent(searchYear)}`);
+        if (compareYear) queryParts.push(`compareYear=${encodeURIComponent(compareYear)}`);
+
+        const queryString = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
+        const magentoUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/customer-target/dashboard${queryString}`;
+
+        console.log('[dashboard] Fetching:', magentoUrl);
+
+        // Step 4: Fetch from Magento
+        const res = await fetch(magentoUrl, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            cache: 'no-store',
+        });
+
+        if (!res.ok) {
+            const errBody = await res.text();
+            console.error('[dashboard] Magento error:', res.status, errBody);
             return NextResponse.json(
-                { message: 'Authentication required.' },
-                { status: 401 }
+                { message: 'Failed to fetch dashboard data', details: errBody },
+                { status: res.status }
             );
         }
 
-        // Mock data to match the UI requirements and avoid JSON errors
-        // In a real scenario, this would fetch from Magento
-        const mockDashboardData = {
-            total_order_qty: {
-                year: "138",
-                quarter: "138",
-                months: "24"
-            },
-            total_order_value: {
-                year: "212,337.90",
-                quarter: "212,337.90",
-                months: "14,769.30"
-            },
-            product_groups: [
-                { name: "Cars" },
-                { name: "Trucks" },
-                { name: "Industrial" }
-            ],
-            tyre_sizes: [
-                { name: "265/40 R21 Turanza T005" },
-                { name: "205/55 R16 ECOPIA" },
-                { name: "225/45 R18 POTENZA" }
-            ],
-            selected_product_group_value: "38",
-            selected_tyre_size_value: "10"
-        };
-
-        return NextResponse.json(mockDashboardData);
+        const data = await res.json();
+        return NextResponse.json(data);
 
     } catch (error: any) {
-        console.error('[DASHBOARD API ERROR]:', error);
+        console.error('[dashboard] Error:', error.message);
         return NextResponse.json(
-            { message: 'Internal Server Error' },
+            { message: 'Internal Server Error', error: error.message },
             { status: 500 }
         );
     }

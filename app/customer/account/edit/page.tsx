@@ -1,321 +1,211 @@
-// "use client";
+"use client";
 
-// import { useEffect, useState } from "react";
-// import { useSearchParams, useRouter } from "next/navigation";
-// import { useSession } from "next-auth/react";
-// import { useDispatch, useSelector } from "react-redux";
-// import Navbar from "@/app/components/Navbar";
-// import Sidebar from "@/components/Sidebar";
-// import { RootState } from "@/store/store";
-// import { fetchCustomerInfo } from "@/store/actions/customerActions";
-// import { axiosPost } from "@/store/axiosHelper";
-// import toast from "react-hot-toast";
+import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useDispatch, useSelector } from "react-redux";
+import Sidebar from "@/components/Sidebar";
+import { RootState, AppDispatch } from "@/store/store";
+import { fetchCustomerInfo } from "@/store/actions/customerActions";
+import { api } from "@/lib/api/api-client";
+import toast from "react-hot-toast";
 
-// export default function EditAccountPage() {
-//     const router = useRouter();
-//     const searchParams = useSearchParams();
-//     const dispatch = useDispatch();
-//     const { data: session, status } = useSession();
-//     const { data: customer, loading } = useSelector((state: RootState) => state.customer);
-//     const token = useSelector((state: RootState) => state.auth.token);
+export default function EditAccountPage() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const dispatch = useDispatch<AppDispatch>();
+    const { data: session, status } = useSession();
+    const { data: customer, loading } = useSelector((state: RootState) => state.customer);
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-//     // Form States
-//     const [firstName, setFirstName] = useState("");
-//     const [lastName, setLastName] = useState("");
-//     const [email, setEmail] = useState("");
-//     const [currentPassword, setCurrentPassword] = useState("");
-//     const [newPassword, setNewPassword] = useState("");
-//     const [confirmPassword, setConfirmPassword] = useState("");
+    // Basic Account Info
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [email, setEmail] = useState("");
 
-//     const [isChangeEmail, setIsChangeEmail] = useState(false);
-//     const [isChangePassword, setIsChangePassword] = useState(searchParams.get("change") === "password");
-//     const [isSaving, setIsSaving] = useState(false);
+    // Business Overview Fields
+    const [totalEmployees, setTotalEmployees] = useState("");
+    const [totalTrucks, setTotalTrucks] = useState("");
+    const [annualRevenue, setAnnualRevenue] = useState("");
+    const [businessModel, setBusinessModel] = useState("");
+    const [productsOffered, setProductsOffered] = useState("");
 
-//     useEffect(() => {
-//         if (status === "unauthenticated") {
-//             router.replace("/login");
-//             return;
-//         }
+    const [isSaving, setIsSaving] = useState(false);
 
-//         if (status === "authenticated" && token && !customer) {
-//             // @ts-ignore
-//             dispatch(fetchCustomerInfo());
-//         }
-//     }, [dispatch, status, router, token, customer]);
+    useEffect(() => {
+        if (status === "unauthenticated") {
+            router.replace("/login");
+            return;
+        }
 
-//     useEffect(() => {
-//         if (customer) {
-//             setFirstName(customer.firstname || "");
-//             setLastName(customer.lastname || "");
-//             setEmail(customer.email || "");
-//         }
-//     }, [customer]);
+        if (status === "authenticated" && token && !customer) {
+            dispatch(fetchCustomerInfo());
+        }
+    }, [dispatch, status, router, token, customer]);
 
-//     const handleSave = async () => {
-//         // Validation
-//         if (!firstName || !lastName) {
-//             toast.error("First name and last name are required");
-//             return;
-//         }
+    useEffect(() => {
+        const fetchOverview = async () => {
+            try {
+                const response = await api.get("/kleverapi/business-overview");
+                const data = Array.isArray(response.data) ? response.data[0] : response.data || {};
 
-//         if (isChangeEmail && !email) {
-//             toast.error("Email is required for change");
-//             return;
-//         }
+                setTotalEmployees(data.total_employees || "");
+                setTotalTrucks(data.trucks || "");
+                setAnnualRevenue(data.annual_revenue || "");
+                setBusinessModel(data.business_model || "");
+                setProductsOffered(data.products_offered || "");
+            } catch (err) {
+                console.error("Overview Fetch Error:", err);
+            }
+        };
 
-//         if (isChangePassword) {
-//             if (!currentPassword) {
-//                 toast.error("Current password is required to change password");
-//                 return;
-//             }
-//             if (!newPassword || !confirmPassword) {
-//                 toast.error("New password and confirmation are required");
-//                 return;
-//             }
-//             if (newPassword !== confirmPassword) {
-//                 toast.error("New passwords do not match");
-//                 return;
-//             }
-//         }
+        if (status === "authenticated" && token) {
+            fetchOverview();
+        }
 
-//         setIsSaving(true);
+        if (customer) {
+            setFirstName(customer.firstname || "");
+            setLastName(customer.lastname || "");
+            setEmail(customer.email || "");
+        }
+    }, [status, token, customer]);
 
-//         try {
-//             // 1. If password change is requested, call the specific change-password API
-//             if (isChangePassword) {
-//                 const passRes = await new Promise<any>((resolve) => {
-//                     axiosPost({
-//                         url: "/change-password",
-//                         reqBody: {
-//                             current_password: currentPassword,
-//                             new_password: newPassword,
-//                         }
-//                     }, resolve);
-//                 });
+    const handleSave = async () => {
+        if (!firstName || !lastName || !email) {
+            toast.error("Required fields are missing");
+            return;
+        }
 
-//                 if (passRes.status !== 200) {
-//                     throw new Error(passRes.data?.message || "Failed to change password");
-//                 }
-//                 toast.success("Password updated successfully");
-//             }
+        setIsSaving(true);
+        const toastId = toast.loading("Saving changes...");
 
-//             // 2. Call the general my-account API for name/email update
-//             const profilePayload: any = {
-//                 customer: {
-//                     firstname: firstName,
-//                     lastname: lastName,
-//                     email: email,
-//                 }
-//             };
+        try {
+            // Updated save logic for business data using PUT as per requirements
+            await api.put("/kleverapi/business-overview", {
+                total_employees: totalEmployees,
+                trucks: totalTrucks,
+                annual_revenue: annualRevenue,
+                business_model: businessModel,
+                products_offered: productsOffered
+            });
 
-//             // If email is changing, Magento needs current password for security
-//             if (isChangeEmail) {
-//                 profilePayload.currentPassword = currentPassword;
-//             }
+            // Standard profile update
+            const profilePayload = {
+                customer: {
+                    ...customer,
+                    firstname: firstName,
+                    lastname: lastName,
+                    email: email,
+                }
+            };
+            await api.post("/kleverapi/my-account", profilePayload);
 
-//             const profileRes = await new Promise<any>((resolve) => {
-//                 axiosPost({
-//                     url: "/my-account",
-//                     reqBody: profilePayload
-//                 }, resolve);
-//             });
+            toast.success("Account information updated successfully", { id: toastId });
+            dispatch(fetchCustomerInfo());
+            router.push("/customer/account");
+        } catch (error: any) {
+            console.error("Save Error:", error);
+            toast.error(error.message || "Failed to update account", { id: toastId });
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
-//             if (profileRes.status !== 200) {
-//                 throw new Error(profileRes.data?.message || "Failed to update profile information");
-//             }
+    if (status === "loading" || loading || !customer) {
+        return (
+            <div className="min-h-screen bg-white flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F5B21B]"></div>
+            </div>
+        );
+    }
 
-//             toast.success("Profile information updated successfully");
+    const inputClass = "w-full border border-gray-200 px-4 py-2.5 text-[13px] focus:border-[#F5B21B] outline-none transition-all rounded-sm bg-white font-medium text-gray-800 placeholder:text-gray-300";
+    const labelClass = "block text-[12px] font-black text-black mb-1.5 uppercase tracking-wider";
+    const sectionHeader = "bg-white px-6 py-4 border-b border-gray-100 text-black font-[900] tracking-tighter uppercase text-[15px] flex justify-between items-center";
 
-//             // Finalizing
-//             // @ts-ignore
-//             dispatch(fetchCustomerInfo());
-//             router.push("/customer/account");
+    return (
+        <div className="flex flex-col md:flex-row min-h-screen bg-gray-50/50">
+            <Sidebar />
 
-//         } catch (error: any) {
-//             console.error("Update Error:", error);
-//             toast.error(error.message || "An error occurred while saving");
-//         } finally {
-//             setIsSaving(false);
-//         }
-//     };
+            <main className="flex-1 p-8 bg-[#fcfcfc]">
+                <div className="max-w-[800px] mx-auto">
+                    <h1 className="text-[22px] font-black text-black mb-8 uppercase tracking-widest border-b-2 border-black inline-block pb-1">
+                        Edit Account Information
+                    </h1>
 
-//     if (status === "loading" || loading || !customer) {
-//         return (
-//             <div className="min-h-screen bg-white">
-//                 <Navbar />
-//                 <div className="p-10 text-center font-['Rubik']">Loading...</div>
-//             </div>
-//         );
-//     }
+                    <div className="space-y-8">
+                        {/* BUSINESS OVERVIEW SECTION */}
+                        <div className="bg-white border border-gray-200 shadow-sm rounded-sm">
+                            <div className={sectionHeader}>
+                                <span>BUSINESS OVERVIEW</span>
+                            </div>
 
-//     const inputClass = "w-full border border-gray-300 px-4 py-2 text-sm focus:border-yellow-400 outline-none transition-colors rounded-sm";
-//     const labelClass = "block text-sm font-semibold text-gray-700 mb-1";
-//     const buttonYellow = "bg-[#F5B21B] hover:bg-yellow-500 text-black text-[13px] font-bold px-8 py-3 uppercase transition-all rounded-sm shadow-sm tracking-[1px] disabled:opacity-50";
+                            <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-1">
+                                    <label className={labelClass}>Total Employee</label>
+                                    <input
+                                        type="text"
+                                        className={inputClass}
+                                        value={totalEmployees}
+                                        onChange={(e) => setTotalEmployees(e.target.value)}
+                                    />
+                                </div>
 
-//     return (
-//         <div className="min-h-screen bg-white font-['Rubik']">
-//             <Navbar />
+                                <div className="space-y-1">
+                                    <label className={labelClass}>Total Trucks</label>
+                                    <input
+                                        type="text"
+                                        className={inputClass}
+                                        value={totalTrucks}
+                                        onChange={(e) => setTotalTrucks(e.target.value)}
+                                    />
+                                </div>
 
-//             <div className="flex max-w-[1440px] mx-auto mt-[100px]">
-//                 <Sidebar />
+                                <div className="space-y-1">
+                                    <label className={labelClass}>Annual Revenue</label>
+                                    <input
+                                        type="text"
+                                        className={inputClass}
+                                        value={annualRevenue}
+                                        onChange={(e) => setAnnualRevenue(e.target.value)}
+                                    />
+                                </div>
 
-//                 <main className="flex-1 p-8 bg-[#fcfcfc] min-h-screen">
-//                     <div className="max-w-[700px]">
-//                         <h1 className="text-2xl font-black text-gray-900 mb-8 uppercase tracking-[1px]">
-//                             Edit Account Information
-//                         </h1>
+                                <div className="space-y-1">
+                                    <label className={labelClass}>Business Model</label>
+                                    <input
+                                        type="text"
+                                        className={inputClass}
+                                        value={businessModel}
+                                        onChange={(e) => setBusinessModel(e.target.value)}
+                                    />
+                                </div>
 
-//                         <div className="bg-white border border-gray-200 shadow-sm overflow-hidden rounded-sm">
-//                             <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-//                                 <h2 className="text-[14px] font-black text-black uppercase tracking-[1px]">
-//                                     Account Information
-//                                 </h2>
-//                             </div>
+                                <div className="space-y-1 md:col-span-2">
+                                    <label className={labelClass}>Product/Service Offered</label>
+                                    <input
+                                        type="text"
+                                        className={inputClass}
+                                        value={productsOffered}
+                                        onChange={(e) => setProductsOffered(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        </div>
 
-//                             <div className="p-8 space-y-6">
-//                                 {/* First Name */}
-//                                 <div className="space-y-1">
-//                                     <label className={labelClass}>First Name <span className="text-red-500">*</span></label>
-//                                     <input
-//                                         type="text"
-//                                         className={inputClass}
-//                                         value={firstName}
-//                                         onChange={(e) => setFirstName(e.target.value)}
-//                                     />
-//                                 </div>
-
-//                                 {/* Last Name */}
-//                                 <div className="space-y-1">
-//                                     <label className={labelClass}>Last Name <span className="text-red-500">*</span></label>
-//                                     <input
-//                                         type="text"
-//                                         className={inputClass}
-//                                         value={lastName}
-//                                         onChange={(e) => setLastName(e.target.value)}
-//                                     />
-//                                 </div>
-
-//                                 {/* Checkboxes */}
-//                                 <div className="space-y-3 pt-2">
-//                                     <label className="flex items-center gap-3 cursor-pointer group">
-//                                         <div className="relative">
-//                                             <input
-//                                                 type="checkbox"
-//                                                 className="peer hidden"
-//                                                 checked={isChangeEmail}
-//                                                 onChange={(e) => setIsChangeEmail(e.target.checked)}
-//                                             />
-//                                             <div className="w-5 h-5 border-2 border-gray-300 rounded-sm peer-checked:bg-[#F5B21B] peer-checked:border-[#F5B21B] transition-all"></div>
-//                                             <svg className="absolute top-1 left-1 w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-//                                                 <path d="M5 13l4 4L19 7" />
-//                                             </svg>
-//                                         </div>
-//                                         <span className="text-sm font-medium text-gray-700 group-hover:text-black transition-colors">Change Email</span>
-//                                     </label>
-
-//                                     <label className="flex items-center gap-3 cursor-pointer group">
-//                                         <div className="relative">
-//                                             <input
-//                                                 type="checkbox"
-//                                                 className="peer hidden"
-//                                                 checked={isChangePassword}
-//                                                 onChange={(e) => setIsChangePassword(e.target.checked)}
-//                                             />
-//                                             <div className="w-5 h-5 border-2 border-gray-300 rounded-sm peer-checked:bg-[#F5B21B] peer-checked:border-[#F5B21B] transition-all"></div>
-//                                             <svg className="absolute top-1 left-1 w-3 h-3 text-black opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-//                                                 <path d="M5 13l4 4L19 7" />
-//                                             </svg>
-//                                         </div>
-//                                         <span className="text-sm font-medium text-gray-700 group-hover:text-black transition-colors">Change Password</span>
-//                                     </label>
-//                                 </div>
-
-//                                 {/* Change Email Section */}
-//                                 {isChangeEmail && (
-//                                     <div className="space-y-4 pt-4 border-t border-gray-100 animate-in fade-in slide-in-from-top-2 duration-300">
-//                                         <div className="space-y-1">
-//                                             <label className={labelClass}>Email <span className="text-red-500">*</span></label>
-//                                             <input
-//                                                 type="email"
-//                                                 className={inputClass}
-//                                                 value={email}
-//                                                 onChange={(e) => setEmail(e.target.value)}
-//                                             />
-//                                         </div>
-//                                         {!isChangePassword && (
-//                                             <div className="space-y-1">
-//                                                 <label className={labelClass}>Current Password <span className="text-red-500">*</span></label>
-//                                                 <input
-//                                                     type="password"
-//                                                     className={inputClass}
-//                                                     value={currentPassword}
-//                                                     onChange={(e) => setCurrentPassword(e.target.value)}
-//                                                 />
-//                                             </div>
-//                                         )}
-//                                     </div>
-//                                 )}
-//                             </div>
-//                         </div>
-
-//                         {/* Change Password Separate Box */}
-//                         {isChangePassword && (
-//                             <div className="mt-8 bg-white border border-gray-200 shadow-sm overflow-hidden rounded-sm animate-in fade-in slide-in-from-top-4 duration-500">
-//                                 <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-//                                     <h2 className="text-[14px] font-black text-black uppercase tracking-[1px]">
-//                                         Change Password
-//                                     </h2>
-//                                 </div>
-//                                 <div className="p-8 space-y-6">
-//                                     <div className="space-y-1">
-//                                         <label className={labelClass}>Current Password <span className="text-red-500">*</span></label>
-//                                         <input
-//                                             type="password"
-//                                             className={inputClass}
-//                                             value={currentPassword}
-//                                             onChange={(e) => setCurrentPassword(e.target.value)}
-//                                         />
-//                                     </div>
-//                                     <div className="space-y-1">
-//                                         <label className={labelClass}>New Password <span className="text-red-500">*</span></label>
-//                                         <input
-//                                             type="password"
-//                                             className={inputClass}
-//                                             value={newPassword}
-//                                             onChange={(e) => setNewPassword(e.target.value)}
-//                                         />
-//                                         {/* Password Strength Bar */}
-//                                         <div className="mt-2 bg-gray-100 h-8 flex items-center px-3 rounded-sm border border-gray-200">
-//                                             <span className="text-[12px] font-medium text-gray-600">
-//                                                 Password Strength: {newPassword ? (newPassword.length > 8 ? "Strong" : "Medium") : "No Password"}
-//                                             </span>
-//                                         </div>
-//                                     </div>
-//                                     <div className="space-y-1">
-//                                         <label className={labelClass}>Confirm New Password <span className="text-red-500">*</span></label>
-//                                         <input
-//                                             type="password"
-//                                             className={inputClass}
-//                                             value={confirmPassword}
-//                                             onChange={(e) => setConfirmPassword(e.target.value)}
-//                                         />
-//                                     </div>
-//                                 </div>
-//                             </div>
-//                         )}
-
-//                         <div className="pt-8">
-//                             <button
-//                                 onClick={handleSave}
-//                                 disabled={isSaving}
-//                                 className={buttonYellow}
-//                             >
-//                                 {isSaving ? "Saving..." : "Save"}
-//                             </button>
-//                         </div>
-//                     </div>
-//                 </main>
-//             </div>
-//         </div>
-//     );
-// }
+                        {/* Save Button */}
+                        <div className="pt-4">
+                            <button
+                                onClick={handleSave}
+                                disabled={isSaving}
+                                className="bg-[#F5B21B] hover:bg-black hover:text-white text-black text-[14px] font-black px-12 py-3 uppercase transition-all rounded-sm shadow-md tracking-widest"
+                            >
+                                {isSaving ? "Saving..." : "Save"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    );
+}

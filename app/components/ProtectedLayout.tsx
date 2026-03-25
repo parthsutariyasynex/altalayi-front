@@ -4,9 +4,9 @@ import React, { ReactNode, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
+import Navbar from './Navbar';
 import Footer from './Footer';
 import ScrollToTop from './ScrollToTop';
-
 
 interface ProtectedLayoutProps {
   children: ReactNode;
@@ -74,23 +74,23 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <div className="flex flex-1">
-        <div className="flex-1 flex flex-col">
-          {(isPublicPage || isAuthenticated) ? (
-            <>
-              <main className="flex-1">
-                {children}
-              </main>
-              {/* Only show global footer on non-auth pages or if user is logged in (excluding simple auth forms) */}
-              {!isPublicPage && <Footer />}
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center min-h-screen">
-              <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-[#f5a623]"></div>
-            </div>
-          )}
+      {(isPublicPage || isAuthenticated) ? (
+        <>
+          {/* Global Navbar - hidden on auth pages if they use their own */}
+          {!isPublicPage && <Navbar />}
+
+          <main className="flex-1 flex flex-col">
+            {children}
+          </main>
+
+          {/* Global Footer */}
+          <Footer />
+        </>
+      ) : (
+        <div className="flex-1 flex items-center justify-center min-h-screen">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-[#f5a623]"></div>
         </div>
-      </div>
+      )}
       <ScrollToTop />
     </div>
   );

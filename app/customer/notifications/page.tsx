@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import Navbar from "@/app/components/Navbar";
 import { useNotifications } from "@/modules/notifications/hooks/useNotifications";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -52,8 +51,8 @@ export default function NotificationsPage() {
     const pageNumbers = Array.from({ length: Math.min(6, totalPages) }, (_, i) => i + 1);
 
     return (
-        <div className="min-h-screen bg-white font-['Rubik',sans-serif]">
-            <Navbar />
+        <>
+
 
             <div className="w-full px-4 md:px-8 lg:px-12 py-10">
                 <div className="flex flex-col md:flex-row gap-6 lg:gap-10">
@@ -241,6 +240,6 @@ export default function NotificationsPage() {
                 </div>
             </div>
 
-        </div>
+        </>
     );
 }

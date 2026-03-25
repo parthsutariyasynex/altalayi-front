@@ -6,8 +6,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
 import { fetchCustomerInfo } from "@/store/actions/customerActions";
 import Sidebar from "@/components/Sidebar";
-import Navbar from "@/app/components/Navbar";
 import { useSession } from "next-auth/react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 type CustomAttribute = {
     attribute_code: string;
@@ -26,6 +26,19 @@ export default function DashboardPage() {
     const [dashboardData, setDashboardData] = useState<any>(null);
     const [loadingDashboard, setLoadingDashboard] = useState(true);
 
+    // Year selection state
+    const currentYear = new Date().getFullYear();
+    const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
+    const [searchYear, setSearchYear] = useState<number>(currentYear);
+    const [compareYear, setCompareYear] = useState<number>(currentYear - 1);
+    const [isCompare, setIsCompare] = useState(false);
+
+    // Selected items for display cards
+    const [selectedProductGroup, setSelectedProductGroup] = useState("");
+    const [selectedTyreSize, setSelectedTyreSize] = useState("");
+    const [availableYears, setAvailableYears] = useState<number[]>([2026, 2025, 2024]);
+    const [activeTab, setActiveTab] = useState<'quarterly' | 'monthly'>('quarterly');
+
     useEffect(() => {
         if (typeof window !== "undefined") {
             setIsSubAccountSession(localStorage.getItem("isSubAccount") === "true");
@@ -40,29 +53,57 @@ export default function DashboardPage() {
 
         if (status === "authenticated" && token) {
             dispatch(fetchCustomerInfo());
-            pullDashboardData();
         }
     }, [status, token, dispatch, router]);
 
-    const pullDashboardData = async () => {
+    // Fetch dashboard data whenever year or compare settings change
+    useEffect(() => {
+        if (status === "authenticated" && token) {
+            fetchDashboard();
+        }
+    }, [status, token, searchYear, compareYear, isCompare]);
+
+    // Proper financial formatter (comas + 2 decimal places)
+    const formatValue = (val: any) => {
+        const num = Number(val || 0);
+        return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+
+    const fetchDashboard = async () => {
         try {
             setLoadingDashboard(true);
-            const response = await fetch('/api/kleverapi/dashboard', {
+
+            const params = new URLSearchParams();
+            params.append('searchYear', String(searchYear));
+            if (isCompare) {
+                params.append('compareYear', String(compareYear));
+            }
+
+            const response = await fetch(`/api/kleverapi/dashboard?${params.toString()}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
 
-            // Resolve 'Unexpected token <' error by checking if response is OK and is JSON
             if (!response.ok) {
                 throw new Error(`API returned ${response.status}`);
             }
 
             const data = await response.json();
-            setDashboardData(data);
+            if (data) {
+                setDashboardData(data);
+                if (data.available_years) setAvailableYears(data.available_years);
+
+                // Dynamically set defaults from the API response using correct keys
+                if (data.product_groups?.length > 0 && !selectedProductGroup) {
+                    setSelectedProductGroup(data.product_groups[0].product_group);
+                }
+                if (data.tyre_sizes?.length > 0 && !selectedTyreSize) {
+                    setSelectedTyreSize(data.tyre_sizes[0].size_pattern);
+                }
+            }
         } catch (err) {
             console.error("Dashboard data fetch error:", err);
-            // Set some dummy data if the API fails just to keep the UI proper
             setDashboardData(null);
         } finally {
             setLoadingDashboard(false);
@@ -72,7 +113,6 @@ export default function DashboardPage() {
     if (loading || loadingDashboard) {
         return (
             <div className="min-h-screen bg-white">
-                <Navbar />
                 <div className="flex items-center justify-center h-[60vh]">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#f5b21a]"></div>
                 </div>
@@ -92,206 +132,361 @@ export default function DashboardPage() {
     const value = dashboardData?.total_order_value || { year: '0.00', quarter: '0.00', months: '0.00' };
 
     return (
-        <div className="min-h-screen bg-white font-['Rubik',sans-serif]">
-            <Navbar />
+        <div className="flex flex-col md:flex-row min-h-screen">
+            <Sidebar />
 
-            <div className="flex flex-col md:flex-row min-h-screen">
-                <Sidebar />
-
-                {/* Right Content */}
-                <main className="flex-1 p-8 bg-white max-w-[1200px]">
+            {/* Right Content Area */}
+            <main className="flex-1 p-8 bg-[#f9f9f9] min-h-screen font-['Rubik',sans-serif]">
+                <div className="max-w-[1240px] mx-auto">
 
                     {/* Sub-account Identity Banner */}
                     {isSubAccountSession && (
-                        <div className="bg-[#e7f6e7] border-l-4 border-[#2d8a2d] text-[#1b5e20] p-4 mb-8 flex items-center gap-3 animate-in fade-in slide-in-from-top duration-500 shadow-sm" role="alert">
+                        <div className="bg-[#e7f6e7] border-l-4 border-[#2d8a2d] text-[#1b5e20] p-4 mb-8 rounded-r-md flex items-center gap-3 animate-in fade-in slide-in-from-top duration-500 shadow-sm" role="alert">
                             <span className="text-[#2d8a2d] font-bold text-lg">✔</span>
                             <p className="text-[14px] font-medium tracking-tight">You are logged as subaccount now.</p>
                         </div>
                     )}
 
-                    <h1 className="text-[20px] font-black text-black mb-6 uppercase tracking-tight font-['Rubik']">
+                    <h1 className="text-[22px] font-black text-black mb-8 uppercase tracking-tight">
                         DASHBOARD
                     </h1>
 
-                    {/* Compare Section */}
-                    <div className="bg-[#f2f2f2] p-6 mb-10 border border-gray-200">
-                        <div className="flex items-center gap-3 mb-5">
-                            <span className="text-[13px] font-black uppercase text-black">Compare?</span>
+                    {/* COMPARE SECTION - High-Resolution Refinement */}
+                    <section className="bg-white border border-gray-200 rounded-sm shadow-sm mb-12 overflow-hidden">
+                        {/* Header Section */}
+                        <div className="bg-[#f8f8f8] p-4 px-8 border-b border-gray-200 flex items-center gap-6">
+                            <span className="text-[13px] font-black uppercase text-black tracking-wider">COMPARE?</span>
                             <input
                                 type="checkbox"
-                                className="w-4 h-4 accent-[#f5b21a] cursor-pointer"
+                                checked={isCompare}
+                                onChange={(e) => {
+                                    setIsCompare(e.target.checked);
+                                    if (!e.target.checked) {
+                                        // Reset primary year to current system year when unchecking
+                                        setSearchYear(new Date().getFullYear());
+                                    }
+                                }}
+                                className="w-[18px] h-[18px] accent-[#f4b400] cursor-pointer border-gray-300"
                             />
                         </div>
-                        <div className="flex items-center gap-6">
-                            <select className="flex-1 bg-[#f5b21a] text-black font-bold h-10 px-4 text-[13px] outline-none cursor-pointer appearance-none">
-                                <option>2026</option>
-                                <option>2025</option>
-                                <option>2024</option>
-                            </select>
-                            <span className="text-[12px] font-bold text-gray-500 lowercase italic">vs.</span>
-                            <select className="flex-1 bg-[#f5b21a] text-black font-bold h-10 px-4 text-[13px] outline-none cursor-pointer appearance-none">
-                                <option>2025</option>
-                                <option>2026</option>
-                                <option>2024</option>
-                            </select>
-                        </div>
-                    </div>
 
-                    {/* 1. Total Order Qty Section */}
-                    <div className="mb-10">
-                        <h2 className="text-[16px] font-black text-black mb-5 uppercase">Total Order Qty</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="border border-yellow-500/30 overflow-hidden shadow-sm">
-                                <div className="bg-[#f5b21a] py-2 px-4 flex justify-between items-center text-black">
-                                    <span className="text-[11px] font-black uppercase tracking-wide">Year - 2026</span>
-                                    <span className="text-[10px]">▼</span>
-                                </div>
-                                <div className="bg-white py-4 px-4 text-center">
-                                    <span className="text-[18px] font-bold text-black">{qty.year}</span>
+                        {/* Body Section - Both selectors always active and identical for a "proper" design */}
+                        <div className="p-10 px-12 flex flex-col md:flex-row items-center justify-between gap-10">
+                            {/* First Selector */}
+                            <div className="flex-1 w-full bg-[#f4b400] h-11 px-5 relative flex items-center shadow-sm rounded-sm group hover:brightness-105 transition-all">
+                                <select
+                                    value={searchYear}
+                                    onChange={(e) => {
+                                        setSearchYear(Number(e.target.value));
+                                        setIsCompare(true);
+                                    }}
+                                    className="w-full bg-transparent text-black font-black text-[14px] outline-none cursor-pointer appearance-none z-10"
+                                >
+                                    {availableYears.map(y => (
+                                        <option key={y} value={y} className="bg-white">{y}</option>
+                                    ))}
+                                </select>
+                                <div className="absolute right-5 pointer-events-none text-black">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="m6 9 6 6 6-6" />
+                                    </svg>
                                 </div>
                             </div>
 
-                            <div className="border border-yellow-500/30 overflow-hidden shadow-sm">
-                                <div className="bg-[#f5b21a] py-2 px-4 flex justify-between items-center text-black">
-                                    <span className="text-[11px] font-black uppercase tracking-wide">Quarter</span>
-                                    <span className="text-[10px]">▼</span>
-                                </div>
-                                <div className="bg-white py-4 px-4 text-center">
-                                    <span className="text-[18px] font-bold text-black">{qty.quarter}</span>
-                                </div>
-                            </div>
+                            {/* Constant "vs." label */}
+                            <span className="text-[14px] font-bold text-black px-4 lowercase italic">vs.</span>
 
-                            <div className="border border-yellow-500/30 overflow-hidden shadow-sm">
-                                <div className="bg-[#f5b21a] py-2 px-4 flex justify-between items-center text-black">
-                                    <span className="text-[11px] font-black uppercase tracking-wide">Months</span>
-                                    <span className="text-[10px]">▼</span>
-                                </div>
-                                <div className="bg-white py-4 px-4 text-center">
-                                    <span className="text-[18px] font-bold text-black">{qty.months}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 2. Total Order Value Section */}
-                    <div className="mb-10">
-                        <h2 className="text-[16px] font-black text-black mb-5 uppercase text-nowrap">Total Order Value</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="border border-yellow-500/30 overflow-hidden shadow-sm">
-                                <div className="bg-[#f5b21a] py-2 px-4 flex justify-between items-center text-black">
-                                    <span className="text-[11px] font-black uppercase tracking-wide">Year - 2026</span>
-                                    <span className="text-[10px]">▼</span>
-                                </div>
-                                <div className="bg-white py-4 px-4 text-center">
-                                    <span className="text-[16px] font-bold text-black">{value.year}</span>
-                                </div>
-                            </div>
-
-                            <div className="border border-yellow-500/30 overflow-hidden shadow-sm">
-                                <div className="bg-[#f5b21a] py-2 px-4 flex justify-between items-center text-black">
-                                    <span className="text-[11px] font-black uppercase tracking-wide">Quarter</span>
-                                    <span className="text-[10px]">▼</span>
-                                </div>
-                                <div className="bg-white py-4 px-4 text-center">
-                                    <span className="text-[16px] font-bold text-black">{value.quarter}</span>
-                                </div>
-                            </div>
-
-                            <div className="border border-yellow-500/30 overflow-hidden shadow-sm">
-                                <div className="bg-[#f5b21a] py-2 px-4 flex justify-between items-center text-black">
-                                    <span className="text-[11px] font-black uppercase tracking-wide">Months</span>
-                                    <span className="text-[10px]">▼</span>
-                                </div>
-                                <div className="bg-white py-4 px-4 text-center">
-                                    <span className="text-[16px] font-bold text-black">{value.months}</span>
+                            {/* Second Selector - Now always active and identical to the first */}
+                            <div className="flex-1 w-full bg-[#f4b400] h-11 px-5 relative flex items-center shadow-sm rounded-sm group hover:brightness-105 transition-all">
+                                <select
+                                    value={compareYear}
+                                    onChange={(e) => {
+                                        setCompareYear(Number(e.target.value));
+                                        setIsCompare(true);
+                                    }}
+                                    className="w-full bg-transparent text-black font-black text-[14px] outline-none cursor-pointer appearance-none z-10"
+                                >
+                                    {/* Filter common years if preferred, but usually keep all options active */}
+                                    {availableYears.map(y => (
+                                        <option key={y} value={y} className="bg-white">{y}</option>
+                                    ))}
+                                </select>
+                                <div className="absolute right-5 pointer-events-none text-black">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="m6 9 6 6 6-6" />
+                                    </svg>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </section>
 
-                    {/* Bottom Dropdowns with Value Cards */}
-                    <div className="flex flex-col md:flex-row gap-8">
-                        <div className="flex-1">
-                            <h3 className="text-[15px] font-black text-black mb-4 uppercase tracking-tight">Product Group</h3>
-                            <div className="border border-yellow-500/30 overflow-hidden shadow-sm">
-                                <div className="bg-[#f5b21a] py-1 px-4 flex justify-between items-center text-black">
-                                    <select className="bg-transparent border-none text-[11px] font-black uppercase tracking-wide outline-none cursor-pointer appearance-none w-full py-1">
-                                        {dashboardData?.product_groups?.map((pg: any) => (
-                                            <option key={pg.name} value={pg.name}>{pg.name}</option>
-                                        )) || <option>Cars</option>}
-                                    </select>
-                                    <span className="text-[10px] pointer-events-none ml-2">▼</span>
+                    {/* Summary Sections - Hide when comparing */}
+                    {!isCompare && (
+                        <>
+                            {/* TOTAL ORDER QTY SECTION */}
+                            <section className="mb-12">
+                                <h2 className="text-[18px] font-black text-black mb-6 uppercase tracking-tight border-b-2 border-[#f4b400] inline-block pb-1">Total Order Qty</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                                    <QtyCard
+                                        label={`Year - ${searchYear}`}
+                                        value={dashboardData?.yearly_summary?.[0]?.qty || "0"}
+                                        compareValue={isCompare ? (dashboardData?.compare_yearly?.[0]?.qty || "0") : undefined}
+                                    />
+                                    <QtyCard
+                                        label="Quarter"
+                                        value={dashboardData?.quarterly_summary?.[0]?.qty || "0"}
+                                        compareValue={isCompare ? (dashboardData?.compare_quarterly?.find((q: any) => q.year === compareYear && q.period === (dashboardData?.quarterly_summary?.[0]?.period || 1))?.qty || "0") : undefined}
+                                    />
+                                    <QtyCard
+                                        label="Months"
+                                        value={dashboardData?.monthly_summary?.[0]?.qty || "0"}
+                                        compareValue={isCompare ? (dashboardData?.compare_monthly?.find((m: any) => m.year === compareYear && m.period === (dashboardData?.monthly_summary?.[0]?.period || 1))?.qty || "0") : undefined}
+                                    />
                                 </div>
-                                <div className="bg-white py-4 px-4 text-center">
-                                    <span className="text-[18px] font-bold text-black">
-                                        {dashboardData?.selected_product_group_value || "38"}
-                                    </span>
+                            </section>
+
+                            {/* TOTAL ORDER VALUE SECTION */}
+                            <section className="mb-14">
+                                <h2 className="text-[18px] font-black text-black mb-6 uppercase tracking-tight border-b-2 border-[#f4b400] inline-block pb-1">Total Order Value</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                                    <ValueCard
+                                        label={`Year - ${searchYear}`}
+                                        value={formatValue(dashboardData?.yearly_summary?.[0]?.amount)}
+                                        compareValue={isCompare ? formatValue(dashboardData?.compare_yearly?.[0]?.amount) : undefined}
+                                    />
+                                    <ValueCard
+                                        label="Quarter"
+                                        value={formatValue(dashboardData?.quarterly_summary?.[0]?.amount)}
+                                        compareValue={isCompare ? formatValue(dashboardData?.compare_quarterly?.find((q: any) => q.year === compareYear && q.period === (dashboardData?.quarterly_summary?.[0]?.period || 1))?.amount) : undefined}
+                                    />
+                                    <ValueCard
+                                        label="Months"
+                                        value={formatValue(dashboardData?.monthly_summary?.[0]?.amount)}
+                                        compareValue={isCompare ? formatValue(dashboardData?.compare_monthly?.find((m: any) => m.year === compareYear && m.period === (dashboardData?.monthly_summary?.[0]?.period || 1))?.amount) : undefined}
+                                    />
+                                </div>
+                            </section>
+                        </>
+                    )}
+
+                    {/* BOTTOM FILTERS - Hide when comparing */}
+                    {!isCompare && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-12 mb-16 px-1">
+                            {/* Product Group Filter */}
+                            <div className="flex-1">
+                                <h3 className="text-[15px] font-black text-black mb-5 uppercase tracking-tight">Product Group</h3>
+                                <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                                    <div className="bg-[#f4b400] h-12 px-5 flex justify-between items-center text-black relative">
+                                        <select
+                                            value={selectedProductGroup}
+                                            onChange={(e) => setSelectedProductGroup(e.target.value)}
+                                            className="bg-transparent border-none text-[13px] font-black uppercase tracking-wide outline-none cursor-pointer appearance-none w-full z-10"
+                                        >
+                                            {(!dashboardData?.product_groups || dashboardData.product_groups.length === 0) && <option key="none">No Groups</option>}
+                                            {dashboardData?.product_groups?.map((pg: any, i: number) => (
+                                                <option key={`pg-${pg.product_group}-${i}`} value={pg.product_group} className="bg-white">{pg.product_group}</option>
+                                            ))}
+                                        </select>
+                                        <span className="text-[10px] pointer-events-none absolute right-5">▼</span>
+                                    </div>
+                                    <div className="py-6 px-4 text-center">
+                                        <p className="text-[22px] font-bold text-black font-['Rubik']">
+                                            {dashboardData?.product_groups?.find((pg: any) => pg.product_group === selectedProductGroup)?.qty || "-"}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Tyre Size Filter */}
+                            <div className="flex-1">
+                                <h3 className="text-[15px] font-black text-black mb-5 uppercase tracking-tight">Tyre Size</h3>
+                                <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                                    <div className="bg-[#f4b400] h-12 px-5 flex justify-between items-center text-black relative">
+                                        <select
+                                            value={selectedTyreSize}
+                                            onChange={(e) => setSelectedTyreSize(e.target.value)}
+                                            className="bg-transparent border-none text-[13px] font-black uppercase tracking-wide outline-none cursor-pointer appearance-none w-full z-10"
+                                        >
+                                            {(!dashboardData?.tyre_sizes || dashboardData.tyre_sizes.length === 0) && <option key="none">No Sizes</option>}
+                                            {dashboardData?.tyre_sizes?.map((ts: any, i: number) => (
+                                                <option key={`ts-${ts.size_pattern}-${i}`} value={ts.size_pattern} className="bg-white">{ts.size_pattern}</option>
+                                            ))}
+                                        </select>
+                                        <span className="text-[10px] pointer-events-none absolute right-5">▼</span>
+                                    </div>
+                                    <div className="py-6 px-4 text-center">
+                                        <p className="text-[22px] font-bold text-black font-['Rubik']">
+                                            {dashboardData?.tyre_sizes?.find((ts: any) => ts.size_pattern === selectedTyreSize)?.qty || "-"}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    )}
 
-                        <div className="flex-1">
-                            <h3 className="text-[15px] font-black text-black mb-4 uppercase tracking-tight">Tyre Size</h3>
-                            <div className="border border-yellow-500/30 overflow-hidden shadow-sm">
-                                <div className="bg-[#f5b21a] py-1 px-4 flex justify-between items-center text-black">
-                                    <select className="bg-transparent border-none text-[11px] font-black uppercase tracking-wide outline-none cursor-pointer appearance-none w-full py-1">
-                                        {dashboardData?.tyre_sizes?.map((ts: any) => (
-                                            <option key={ts.name} value={ts.name}>{ts.name}</option>
-                                        )) || <option>265/40 R21 Turanza T005</option>}
-                                    </select>
-                                    <span className="text-[10px] pointer-events-none ml-2">▼</span>
+                    {/* COMPARISON DETAILS SECTION (Chart & Table) */}
+                    {isCompare && (
+                        <section className="bg-white border border-[#f4b400] rounded-sm shadow-sm p-0 mb-16 overflow-hidden animate-in fade-in slide-in-from-bottom duration-500">
+                            <div className="p-8 pb-4">
+                                <h2 className="text-[20px] font-black text-black uppercase tracking-tight">
+                                    COMPARE {searchYear} WITH {compareYear}
+                                </h2>
+                            </div>
+
+                            {/* Tabs */}
+                            <div className="flex px-1 mt-4">
+                                <button
+                                    onClick={() => setActiveTab('quarterly')}
+                                    className={`px-8 py-3 text-[13px] font-black uppercase tracking-wide cursor-pointer transition-all border-r border-white
+                                        ${activeTab === 'quarterly' ? 'bg-[#f4b400] text-black shadow-inner' : 'bg-[#e5e7eb] text-gray-600 hover:bg-[#d1d5db]'}`}
+                                >
+                                    Quarterly Sales Data
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('monthly')}
+                                    className={`px-8 py-3 text-[13px] font-black uppercase tracking-wide cursor-pointer transition-all
+                                        ${activeTab === 'monthly' ? 'bg-[#f4b400] text-black shadow-inner' : 'bg-[#e5e7eb] text-gray-600 hover:bg-[#d1d5db]'}`}
+                                >
+                                    Monthly Sales Data
+                                </button>
+                            </div>
+
+                            <div className="p-8 pt-10">
+                                {/* Chart Implementation */}
+                                <div className="h-[400px] w-full mb-12">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart
+                                            data={activeTab === 'quarterly' ?
+                                                [1, 2, 3, 4].map(q => ({
+                                                    name: `Quarter ${q}`,
+                                                    [searchYear]: dashboardData?.compare_quarterly?.find((d: any) => d.year === searchYear && d.period === q)?.qty || 0,
+                                                    [compareYear]: dashboardData?.compare_quarterly?.find((d: any) => d.year === compareYear && d.period === q)?.qty || 0
+                                                })) :
+                                                [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => ({
+                                                    name: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m - 1],
+                                                    [searchYear]: dashboardData?.compare_monthly?.find((d: any) => d.year === searchYear && d.period === m)?.qty || 0,
+                                                    [compareYear]: dashboardData?.compare_monthly?.find((d: any) => d.year === compareYear && d.period === m)?.qty || 0
+                                                }))
+                                            }
+                                            margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                                        >
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                                            <XAxis
+                                                dataKey="name"
+                                                axisLine={false}
+                                                tickLine={false}
+                                                tick={{ fill: '#666', fontSize: 12, fontWeight: 700 }}
+                                                dy={10}
+                                            />
+                                            <YAxis
+                                                axisLine={false}
+                                                tickLine={false}
+                                                tick={{ fill: '#666', fontSize: 11 }}
+                                            />
+                                            <Tooltip
+                                                contentStyle={{ backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #ddd', fontWeight: 700 }}
+                                                cursor={{ fill: '#f8f8f8' }}
+                                            />
+                                            <Legend
+                                                verticalAlign="top"
+                                                align="center"
+                                                iconType="rect"
+                                                wrapperStyle={{ paddingBottom: '30px', fontSize: '13px', fontWeight: 900 }}
+                                            />
+                                            <Bar dataKey={searchYear} fill="#f4b400" radius={[2, 2, 0, 0]} barSize={40} name={searchYear.toString()} />
+                                            <Bar dataKey={compareYear} fill="#000000" radius={[2, 2, 0, 0]} barSize={40} name={compareYear.toString()} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
                                 </div>
-                                <div className="bg-white py-4 px-4 text-center">
-                                    <span className="text-[18px] font-bold text-black">
-                                        {dashboardData?.selected_tyre_size_value || "10"}
-                                    </span>
+
+                                {/* Data Table */}
+                                <div className="overflow-x-auto border border-gray-100 rounded-sm">
+                                    <table className="w-full text-center border-collapse">
+                                        <thead>
+                                            <tr className="border-b border-gray-100">
+                                                <th className="bg-[#fff] py-4 px-6"></th>
+                                                <th className="bg-[#fff] py-4 px-6 text-[15px] font-black text-black uppercase border-l border-gray-100">{searchYear}</th>
+                                                <th className="bg-[#fff] py-4 px-6 text-[15px] font-black text-black uppercase border-l border-gray-100">{compareYear}</th>
+                                            </tr>
+                                            <tr className="bg-[#fff] border-b border-gray-100">
+                                                <th className="py-4 px-6 text-[12px] font-black text-black uppercase tracking-wider">{activeTab === 'quarterly' ? 'QUARTER' : 'MONTH'}</th>
+                                                <th className="py-4 px-6 text-[12px] font-black text-black uppercase tracking-wider border-l border-gray-100">QTY</th>
+                                                <th className="py-4 px-6 text-[12px] font-black text-black uppercase tracking-wider border-l border-gray-100">QTY</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {(activeTab === 'quarterly' ? [1, 2, 3, 4] : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]).map((p, idx) => {
+                                                const val1 = (activeTab === 'quarterly' ? dashboardData?.compare_quarterly : dashboardData?.compare_monthly)
+                                                    ?.find((d: any) => d.year === searchYear && d.period === p)?.qty || 0;
+                                                const val2 = (activeTab === 'quarterly' ? dashboardData?.compare_quarterly : dashboardData?.compare_monthly)
+                                                    ?.find((d: any) => d.year === compareYear && d.period === p)?.qty || 0;
+
+                                                const label = activeTab === 'quarterly' ? `Q${p}` : p.toString();
+
+                                                return (
+                                                    <tr key={p} className={`${idx % 2 === 0 ? 'bg-[#f8f8f8]' : 'bg-[#fff]'} border-b border-gray-50 transition-colors hover:bg-[#fff7e6]`}>
+                                                        <td className="py-4 px-6 font-bold text-gray-800 text-[14px]">{label}</td>
+                                                        <td className="py-4 px-6 text-[14px] font-bold border-l border-gray-100">{val1}</td>
+                                                        <td className="py-4 px-6 text-[14px] font-bold border-l border-gray-100">{val2}</td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </main>
-            </div>
-
-            {/* Footer Section */}
-            <footer className="bg-black text-white py-14 mt-auto border-t border-gray-800">
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-center items-center gap-16 md:gap-32">
-                    {/* Email Item */}
-                    <div className="flex flex-col items-center gap-4 cursor-pointer group">
-                        <div className="w-14 h-14 bg-white/5 rounded-full flex items-center justify-center border border-white/10 group-hover:bg-[#f5b21a] group-hover:border-[#f5b21a] transition-all duration-300">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                                <rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                            </svg>
-                        </div>
-                        <span className="text-[14px] font-bold uppercase tracking-[1.5px] font-['Rubik'] group-hover:text-[#f5b21a] transition-colors">
-                            Send us an email
-                        </span>
-                    </div>
-
-                    {/* Connect Item */}
-                    <div className="flex flex-col items-center gap-4 cursor-pointer group relative">
-                        <div className="w-14 h-14 bg-white/5 rounded-full flex items-center justify-center border border-white/10 group-hover:bg-[#f5b21a] group-hover:border-[#f5b21a] transition-all duration-300">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                                <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" x2="15.42" y1="13.51" y2="17.49" /><line x1="15.41" x2="8.59" y1="6.51" y2="10.49" />
-                            </svg>
-                        </div>
-                        <span className="text-[14px] font-bold uppercase tracking-[1.5px] font-['Rubik'] group-hover:text-[#f5b21a] transition-colors">
-                            Connect with Us
-                        </span>
-
-                        {/* Back to top button as seen in image */}
-                        <button
-                            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                            className="fixed bottom-8 right-8 w-11 h-11 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#f5b21a] transition-all group/btn z-50 border border-gray-100"
-                        >
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-gray-800 group-hover/btn:text-white">
-                                <path d="m18 15-6-6-6 6" />
-                            </svg>
-                        </button>
-                    </div>
+                        </section>
+                    )}
                 </div>
-            </footer>
-
-
+            </main>
         </div>
     );
 }
+
+/**
+ * Reusable Card Components for Consistency
+ */
+function QtyCard({ label, value, compareValue }: { label: string; value: string; compareValue?: string }) {
+    return (
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all transform hover:-translate-y-1">
+            <div className="bg-[#f4b400] h-10 px-5 flex justify-between items-center text-black">
+                <span className="text-[11px] font-black uppercase tracking-wider">{label}</span>
+                <span className="text-[10px]">▼</span>
+            </div>
+            <div className="py-6 px-4 text-center">
+                <div className="flex flex-col items-center justify-center">
+                    <p className="text-[26px] font-black text-black">{value}</p>
+                    {compareValue !== undefined && (
+                        <p className="text-[12px] font-bold text-gray-400 mt-1">
+                            vs. <span className="text-gray-600">{compareValue}</span>
+                        </p>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function ValueCard({ label, value, compareValue }: { label: string; value: string; compareValue?: string }) {
+    return (
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all transform hover:-translate-y-1">
+            <div className="bg-[#f4b400] h-10 px-5 flex justify-between items-center text-black">
+                <span className="text-[11px] font-black uppercase tracking-wider">{label}</span>
+                <span className="text-[10px]">▼</span>
+            </div>
+            <div className="py-6 px-4 text-center">
+                <div className="flex flex-col items-center justify-center">
+                    <p className="text-[20px] font-bold text-black tracking-tight">{value}</p>
+                    {compareValue !== undefined && (
+                        <p className="text-[12px] font-bold text-gray-400 mt-1">
+                            vs. <span className="text-gray-600">{compareValue}</span>
+                        </p>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+
+

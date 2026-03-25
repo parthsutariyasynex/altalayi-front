@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import Navbar from "../../components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCustomerInfo } from "@/store/actions/customerActions";
@@ -33,7 +32,7 @@ export default function AddressBookPage() {
     if (status === "loading" || loading) {
         return (
             <>
-                <Navbar />
+
                 <div className="flex items-center justify-center min-h-screen bg-white">
                     <div className="flex flex-col items-center gap-4">
                         <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-[#f5a623]"></div>
@@ -45,8 +44,8 @@ export default function AddressBookPage() {
     }
 
     return (
-        <div className="min-h-screen bg-white font-['Rubik']">
-            <Navbar />
+        <>
+
 
             <div className="flex max-w-[1440px] mx-auto mt-[100px]">
                 {/* Left Sidebar */}
@@ -59,6 +58,6 @@ export default function AddressBookPage() {
                     </div>
                 </main>
             </div>
-        </div>
+        </>
     );
 }

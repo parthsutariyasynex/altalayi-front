@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
-import Navbar from "@/app/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import { api } from "@/lib/api/api-client";
 
@@ -138,18 +137,18 @@ export default function EditAddressPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-white font-['Rubik']">
-                <Navbar />
+            <>
+                
                 <div className="flex items-center justify-center min-h-[calc(100vh-100px)] mt-[100px]">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#f5a623]"></div>
                 </div>
-            </div>
+            </>
         );
     }
 
     return (
         <div className="min-h-screen bg-white font-['Rubik'] text-[#333]">
-            <Navbar />
+            
 
             <div className="flex max-w-[1440px] mx-auto mt-[100px]">
                 {/* Left Sidebar */}
