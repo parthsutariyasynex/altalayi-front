@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
-import { formatPrice } from "@/utils/helpers";
+import { formatPrice, redirectToLogin } from "@/utils/helpers";
 import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import Filters from "@/components/Filters";
@@ -83,7 +83,7 @@ export default function MyOrdersPage() {
 
     useEffect(() => {
         if (authStatus === "unauthenticated") {
-            router.replace("/login");
+            redirectToLogin(router);
         }
     }, [authStatus, router]);
 

@@ -9,6 +9,7 @@ import { fetchCustomerInfo } from "@/store/actions/customerActions";
 import { RootState } from "@/store/store";
 import Link from "next/link";
 import Addresses from "../../components/Addresses";
+import { redirectToLogin } from "@/utils/helpers";
 
 export default function AddressBookPage() {
     const router = useRouter();
@@ -19,7 +20,7 @@ export default function AddressBookPage() {
 
     useEffect(() => {
         if (status === "unauthenticated") {
-            router.replace("/login");
+            redirectToLogin(router);
             return;
         }
 

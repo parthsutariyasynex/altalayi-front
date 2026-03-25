@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { formatPrice } from "@/utils/helpers";
+import { formatPrice, redirectToLogin } from "@/utils/helpers";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
@@ -26,7 +26,7 @@ export default function OrderDetailsPage() {
     // Auth Guard
     useEffect(() => {
         if (authStatus === "unauthenticated") {
-            router.replace("/login");
+            redirectToLogin(router);
         }
     }, [authStatus, router]);
 

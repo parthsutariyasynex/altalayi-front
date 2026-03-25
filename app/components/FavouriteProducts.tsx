@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ShoppingCart, X, Info, Star } from "lucide-react";
-import { formatPrice } from "@/utils/helpers";
+import { formatPrice, redirectToLogin } from "@/utils/helpers";
 import { toast } from "react-hot-toast";
 import ProductEnquiryModal from "./ProductEnquiryModal";
 import ProductDialog from "./ProductDialog";
@@ -166,7 +166,7 @@ export default function FavouriteProducts() {
             toast.success(`${product.name.substring(0, 15)}... added!`, { id: toastId });
         } catch (err) {
             if (err === "Unauthorized") {
-                router.push("/login");
+                redirectToLogin(router);
             }
             toast.error("Failed to add to cart", { id: toastId });
         } finally {

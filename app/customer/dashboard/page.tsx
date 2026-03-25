@@ -8,6 +8,7 @@ import { fetchCustomerInfo } from "@/store/actions/customerActions";
 import Sidebar from "@/components/Sidebar";
 import { useSession } from "next-auth/react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { redirectToLogin } from "@/utils/helpers";
 
 type CustomAttribute = {
     attribute_code: string;
@@ -47,7 +48,7 @@ export default function DashboardPage() {
 
     useEffect(() => {
         if (status === "unauthenticated") {
-            router.replace("/login");
+            redirectToLogin(router);
             return;
         }
 

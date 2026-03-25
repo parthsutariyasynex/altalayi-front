@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { useSession } from "next-auth/react";
 import Sidebar from "@/components/Sidebar";
+import { redirectToLogin } from "@/utils/helpers";
 
 type SubAccount = {
     entity_id: number | string;
@@ -28,7 +29,7 @@ export default function ManageSubAccountsPage() {
 
     useEffect(() => {
         if (status === "unauthenticated") {
-            router.replace("/login");
+            redirectToLogin(router);
             return;
         }
     }, [status, router]);

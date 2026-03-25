@@ -9,6 +9,7 @@ import Sidebar from "@/components/Sidebar";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import BusinessOverviewEditModal from "@/components/BusinessOverviewEditModal";
+import { redirectToLogin } from "@/utils/helpers";
 
 type CustomAttribute = {
     attribute_code: string;
@@ -48,7 +49,7 @@ export default function MyAccountPage() {
 
     useEffect(() => {
         if (status === "unauthenticated") {
-            router.replace("/login");
+            redirectToLogin(router);
             return;
         }
 

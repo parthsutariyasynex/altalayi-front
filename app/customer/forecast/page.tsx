@@ -8,6 +8,7 @@ import { fetchCustomerInfo } from "@/store/actions/customerActions";
 import Sidebar from "@/components/Sidebar";
 import { useSession } from "next-auth/react";
 import { ChevronDown } from "lucide-react";
+import { redirectToLogin } from "@/utils/helpers";
 
 /**
  * Proper data structures for the Forecast API
@@ -62,7 +63,7 @@ export default function MyForecastPage() {
 
     useEffect(() => {
         if (status === "unauthenticated") {
-            router.replace("/login");
+            redirectToLogin(router);
             return;
         }
 

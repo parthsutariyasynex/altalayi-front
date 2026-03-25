@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store/store";
 import { useState, useRef, useEffect } from "react";
@@ -116,6 +116,7 @@ export default function Navbar() {
                 className="h-10 w-auto"
               />
             </Link>
+
           </div>
 
           {/* Secondary Brand Logo */}

@@ -7,6 +7,7 @@ import { useNotifications } from "@/modules/notifications/hooks/useNotifications
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { accountSidebarMenu } from "@/components/account-sidebar-menu";
+import { redirectToLogin } from "@/utils/helpers";
 
 export default function NotificationsPage() {
     const router = useRouter();
@@ -26,7 +27,7 @@ export default function NotificationsPage() {
 
     useEffect(() => {
         if (status === "unauthenticated") {
-            router.replace("/login");
+            redirectToLogin(router);
             return;
         }
         if (status === "authenticated") {

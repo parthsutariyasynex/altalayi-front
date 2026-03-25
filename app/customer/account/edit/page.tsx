@@ -9,6 +9,7 @@ import { RootState, AppDispatch } from "@/store/store";
 import { fetchCustomerInfo } from "@/store/actions/customerActions";
 import { api } from "@/lib/api/api-client";
 import toast from "react-hot-toast";
+import { redirectToLogin } from "@/utils/helpers";
 
 export default function EditAccountPage() {
     const router = useRouter();
@@ -23,18 +24,13 @@ export default function EditAccountPage() {
     const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
 
-    // Business Overview Fields
-    const [totalEmployees, setTotalEmployees] = useState("");
-    const [totalTrucks, setTotalTrucks] = useState("");
-    const [annualRevenue, setAnnualRevenue] = useState("");
-    const [businessModel, setBusinessModel] = useState("");
-    const [productsOffered, setProductsOffered] = useState("");
-
     const [isSaving, setIsSaving] = useState(false);
+    const [changeEmail, setChangeEmail] = useState(false);
+    const [changePassword, setChangePassword] = useState(false);
 
     useEffect(() => {
         if (status === "unauthenticated") {
-            router.replace("/login");
+            redirectToLogin(router);
             return;
         }
 
@@ -44,34 +40,20 @@ export default function EditAccountPage() {
     }, [dispatch, status, router, token, customer]);
 
     useEffect(() => {
-        const fetchOverview = async () => {
-            try {
-                const response = await api.get("/kleverapi/business-overview");
-                const data = Array.isArray(response.data) ? response.data[0] : response.data || {};
-
-                setTotalEmployees(data.total_employees || "");
-                setTotalTrucks(data.trucks || "");
-                setAnnualRevenue(data.annual_revenue || "");
-                setBusinessModel(data.business_model || "");
-                setProductsOffered(data.products_offered || "");
-            } catch (err) {
-                console.error("Overview Fetch Error:", err);
-            }
-        };
-
-        if (status === "authenticated" && token) {
-            fetchOverview();
-        }
-
         if (customer) {
             setFirstName(customer.firstname || "");
             setLastName(customer.lastname || "");
             setEmail(customer.email || "");
         }
-    }, [status, token, customer]);
+
+        // Handle deep-linking from Change Password / Change Email buttons
+        const changeType = searchParams.get("change");
+        if (changeType === "password") setChangePassword(true);
+        if (changeType === "email") setChangeEmail(true);
+    }, [status, token, customer, searchParams]);
 
     const handleSave = async () => {
-        if (!firstName || !lastName || !email) {
+        if (!firstName || !lastName) {
             toast.error("Required fields are missing");
             return;
         }
@@ -80,24 +62,18 @@ export default function EditAccountPage() {
         const toastId = toast.loading("Saving changes...");
 
         try {
-            // Updated save logic for business data using PUT as per requirements
-            await api.put("/kleverapi/business-overview", {
-                total_employees: totalEmployees,
-                trucks: totalTrucks,
-                annual_revenue: annualRevenue,
-                business_model: businessModel,
-                products_offered: productsOffered
-            });
-
-            // Standard profile update
-            const profilePayload = {
+            // 1. Update Profile (Name/Email)
+            const profilePayload: any = {
                 customer: {
                     ...customer,
                     firstname: firstName,
                     lastname: lastName,
-                    email: email,
                 }
             };
+
+            // Only send these if they were checked and fields would be provided (logic can be expanded)
+            if (changeEmail) profilePayload.customer.email = email;
+
             await api.post("/kleverapi/my-account", profilePayload);
 
             toast.success("Account information updated successfully", { id: toastId });
@@ -119,86 +95,174 @@ export default function EditAccountPage() {
         );
     }
 
-    const inputClass = "w-full border border-gray-200 px-4 py-2.5 text-[13px] focus:border-[#F5B21B] outline-none transition-all rounded-sm bg-white font-medium text-gray-800 placeholder:text-gray-300";
-    const labelClass = "block text-[12px] font-black text-black mb-1.5 uppercase tracking-wider";
-    const sectionHeader = "bg-white px-6 py-4 border-b border-gray-100 text-black font-[900] tracking-tighter uppercase text-[15px] flex justify-between items-center";
+    const inputClass = "w-full border border-gray-200 px-4 py-2 text-[14px] focus:border-[#F5B21B] outline-none transition-all rounded-sm bg-white font-medium text-gray-800 placeholder:text-gray-300";
+    const labelClass = "block text-[13px] font-bold text-gray-900 mb-1.5";
+    const sectionHeader = "bg-white px-6 py-3 border-b border-gray-100 text-black font-black uppercase text-[15px] tracking-tight";
 
     return (
-        <div className="flex flex-col md:flex-row min-h-screen bg-gray-50/50">
+        <div className="flex flex-col md:flex-row min-h-screen bg-[#FDFDFD]">
             <Sidebar />
 
-            <main className="flex-1 p-8 bg-[#fcfcfc]">
-                <div className="max-w-[800px] mx-auto">
-                    <h1 className="text-[22px] font-black text-black mb-8 uppercase tracking-widest border-b-2 border-black inline-block pb-1">
+            <main className="flex-1 p-6 md:p-12">
+                <div className="max-w-[1000px] mx-auto">
+                    <h1 className="text-[28px] font-black text-black mb-10 uppercase tracking-tight">
                         Edit Account Information
                     </h1>
 
-                    <div className="space-y-8">
-                        {/* BUSINESS OVERVIEW SECTION */}
-                        <div className="bg-white border border-gray-200 shadow-sm rounded-sm">
+                    <div className="space-y-10">
+                        {/* ACCOUNT INFORMATION SECTION - MATCHING SCREENSHOT */}
+                        <div className="bg-white border border-gray-200 shadow-sm rounded-sm overflow-hidden">
                             <div className={sectionHeader}>
-                                <span>BUSINESS OVERVIEW</span>
+                                ACCOUNT INFORMATION
                             </div>
 
-                            <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-1">
-                                    <label className={labelClass}>Total Employee</label>
+                            <div className="p-8 space-y-6">
+                                <div className="space-y-2">
+                                    <label className={labelClass}>
+                                        First Name <span className="text-red-500">*</span>
+                                    </label>
                                     <input
                                         type="text"
                                         className={inputClass}
-                                        value={totalEmployees}
-                                        onChange={(e) => setTotalEmployees(e.target.value)}
+                                        value={firstName}
+                                        onChange={(e) => setFirstName(e.target.value)}
                                     />
                                 </div>
 
-                                <div className="space-y-1">
-                                    <label className={labelClass}>Total Trucks</label>
+                                <div className="space-y-2">
+                                    <label className={labelClass}>
+                                        Last Name <span className="text-red-500">*</span>
+                                    </label>
                                     <input
                                         type="text"
                                         className={inputClass}
-                                        value={totalTrucks}
-                                        onChange={(e) => setTotalTrucks(e.target.value)}
+                                        value={lastName}
+                                        onChange={(e) => setLastName(e.target.value)}
                                     />
                                 </div>
 
-                                <div className="space-y-1">
-                                    <label className={labelClass}>Annual Revenue</label>
-                                    <input
-                                        type="text"
-                                        className={inputClass}
-                                        value={annualRevenue}
-                                        onChange={(e) => setAnnualRevenue(e.target.value)}
-                                    />
-                                </div>
+                                <div className="space-y-4 pt-2">
+                                    {/* Change Email Toggle */}
+                                    <div className="space-y-4">
+                                        <label className="flex items-center gap-3 cursor-pointer group">
+                                            <input
+                                                type="checkbox"
+                                                className="w-4 h-4 border-gray-300 rounded focus:ring-[#F5B21B]"
+                                                checked={changeEmail}
+                                                onChange={(e) => setChangeEmail(e.target.checked)}
+                                            />
+                                            <span className="text-[14px] font-bold text-gray-700 group-hover:text-black transition-colors select-none">
+                                                Change Email
+                                            </span>
+                                        </label>
+                                    </div>
 
-                                <div className="space-y-1">
-                                    <label className={labelClass}>Business Model</label>
-                                    <input
-                                        type="text"
-                                        className={inputClass}
-                                        value={businessModel}
-                                        onChange={(e) => setBusinessModel(e.target.value)}
-                                    />
-                                </div>
-
-                                <div className="space-y-1 md:col-span-2">
-                                    <label className={labelClass}>Product/Service Offered</label>
-                                    <input
-                                        type="text"
-                                        className={inputClass}
-                                        value={productsOffered}
-                                        onChange={(e) => setProductsOffered(e.target.value)}
-                                    />
+                                    {/* Change Password Toggle */}
+                                    <div className="space-y-4">
+                                        <label className="flex items-center gap-3 cursor-pointer group">
+                                            <input
+                                                type="checkbox"
+                                                className="w-4 h-4 border-gray-300 rounded focus:ring-[#F5B21B]"
+                                                checked={changePassword}
+                                                onChange={(e) => setChangePassword(e.target.checked)}
+                                            />
+                                            <span className="text-[14px] font-bold text-gray-700 group-hover:text-black transition-colors select-none">
+                                                Change Password
+                                            </span>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        {/* DEDICATED CHANGE EMAIL SECTION - MATCHING NEW SCREENSHOT */}
+                        {changeEmail && (
+                            <div className="bg-white border border-gray-200 shadow-sm rounded-sm overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
+                                <div className={sectionHeader}>
+                                    CHANGE EMAIL
+                                </div>
+
+                                <div className="p-8 space-y-6">
+                                    <div className="space-y-2">
+                                        <label className={labelClass}>
+                                            Email <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="email"
+                                            className={inputClass}
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            placeholder="Enter new email address"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className={labelClass}>
+                                            Current Password <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="password"
+                                            className={inputClass}
+                                            placeholder="Enter current password"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* DEDICATED CHANGE PASSWORD SECTION - MATCHING NEW SCREENSHOT */}
+                        {changePassword && (
+                            <div className="bg-white border border-gray-200 shadow-sm rounded-sm overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
+                                <div className={sectionHeader}>
+                                    CHANGE PASSWORD
+                                </div>
+
+                                <div className="p-8 space-y-6">
+                                    <div className="space-y-2">
+                                        <label className={labelClass}>
+                                            Current Password <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="password"
+                                            className={inputClass}
+                                            placeholder="Enter current password"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className={labelClass}>
+                                            New Password <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="password"
+                                            className={inputClass}
+                                            placeholder="Enter new password"
+                                        />
+                                        <div className="bg-[#f4f4f4] px-4 py-2 text-[12px] font-bold text-gray-600 border border-gray-100 italic">
+                                            Password Strength: No Password
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className={labelClass}>
+                                            Confirm New Password <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="password"
+                                            className={inputClass}
+                                            placeholder="Confirm new password"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Save Button */}
                         <div className="pt-4">
                             <button
                                 onClick={handleSave}
                                 disabled={isSaving}
-                                className="bg-[#F5B21B] hover:bg-black hover:text-white text-black text-[14px] font-black px-12 py-3 uppercase transition-all rounded-sm shadow-md tracking-widest"
+                                className="bg-[#F5B21B] hover:bg-black hover:text-white text-black text-[15px] font-black px-12 py-3.5 uppercase transition-all rounded-sm shadow-md tracking-wider active:scale-95"
                             >
                                 {isSaving ? "Saving..." : "Save"}
                             </button>

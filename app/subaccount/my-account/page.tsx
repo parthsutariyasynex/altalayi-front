@@ -8,6 +8,7 @@ import { fetchCustomerInfo } from "@/store/actions/customerActions";
 import { useSession } from "next-auth/react";
 import Sidebar from "@/components/Sidebar";
 import Link from "next/link";
+import { redirectToLogin } from "@/utils/helpers";
 
 type CustomAttribute = {
     attribute_code: string;
@@ -70,7 +71,7 @@ export default function SubAccountMyAccountPage() {
     // Fetch parent account data (for company info)
     useEffect(() => {
         if (status === "unauthenticated") {
-            router.replace("/login");
+            redirectToLogin(router);
             return;
         }
 

@@ -55,21 +55,30 @@ export async function GET(request: NextRequest) {
         const page = searchParams.get("page") || "1";
         const pageSize = searchParams.get("pageSize") || "20";
 
+        // Group parameters: Magento's layered navigation uses key[0]=v1. 
+        // We want to group these into key=v1,v2 for the category-products JSON API.
+        const groupedParams: Record<string, string[]> = {};
+        searchParams.forEach((value, key) => {
+            const baseKey = key.includes("[") ? key.split("[")[0] : key;
+            if (!groupedParams[baseKey]) groupedParams[baseKey] = [];
+            if (!groupedParams[baseKey].includes(value)) groupedParams[baseKey].push(value);
+        });
+
         // Step 3: Construct Magento URL with simple params (matching live API format)
         const queryParts: string[] = [
             `categoryId=${encodeURIComponent(categoryId)}`,
             `currentPage=${encodeURIComponent(page)}`,
             `pageSize=${encodeURIComponent(pageSize)}`,
+            `is_ajax=1`,
         ];
 
-        // Filters: comma-separated values (e.g. year=2022,2023)
-        const reservedKeys = new Set(["categoryId", "page", "pageSize"]);
-        const uniqueKeys = Array.from(new Set(Array.from(searchParams.keys())));
+        // Filters: mapping and joining grouped values
+        const reservedKeys = new Set(["categoryId", "page", "pageSize", "sortBy", "is_ajax"]);
 
-        uniqueKeys.forEach((key) => {
+        Object.entries(groupedParams).forEach(([key, values]) => {
             if (reservedKeys.has(key)) return;
-            const rawValues = searchParams.getAll(key);
-            const combined = rawValues
+
+            const combined = values
                 .flatMap((v) => v.split(",").map((s) => s.trim()).filter(Boolean))
                 .filter((v, i, arr) => arr.indexOf(v) === i)
                 .join(",");

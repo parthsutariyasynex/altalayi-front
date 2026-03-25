@@ -8,6 +8,7 @@ import Sidebar from "@/components/Sidebar";
 import { Search, RotateCcw } from "lucide-react";
 import Pagination from "@/components/Pagination";
 import toast from "react-hot-toast";
+import { redirectToLogin } from "@/utils/helpers";
 
 // Fetcher with token
 const fetcher = async (url: string, token: string | null) => {
@@ -44,7 +45,7 @@ export default function OrderAttachmentsPage() {
     // Auth Guard
     useEffect(() => {
         if (authStatus === "unauthenticated") {
-            router.replace("/login");
+            redirectToLogin(router);
         }
     }, [authStatus, router]);
 

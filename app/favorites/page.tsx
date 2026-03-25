@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import FavouriteProducts from "@/app/components/FavouriteProducts";
+import { redirectToLogin } from "@/utils/helpers";
 
 /**
  * Global Favorites Page
@@ -16,7 +17,7 @@ export default function FavoritesPage() {
 
     useEffect(() => {
         if (authStatus === "unauthenticated") {
-            router.replace("/login");
+            redirectToLogin(router);
         }
     }, [authStatus, router]);
 

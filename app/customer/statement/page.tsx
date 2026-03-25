@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
+import { redirectToLogin } from "@/utils/helpers";
 
 export default function MyStatementPage() {
     const { data: session, status: authStatus } = useSession();
@@ -58,7 +59,7 @@ export default function MyStatementPage() {
 
     // Auth Guard
     if (authStatus === "unauthenticated") {
-        router.replace("/login");
+        redirectToLogin(router);
         return null;
     }
 

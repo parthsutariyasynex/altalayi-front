@@ -11,7 +11,7 @@ import SidebarFilter from "../components/SidebarFilter";
 import HorizontalFilter from "../components/HorizontalFilter";
 import Drawer from "../components/Drawer";
 import { api } from "@/lib/api/api-client";
-import { formatPrice } from "@/utils/helpers";
+import { formatPrice, redirectToLogin, formatMagentoQueryParams, parseMagentoQueryParams } from "@/utils/helpers";
 import { toast } from "react-hot-toast";
 
 const PAGE_SIZE = 20;
@@ -50,20 +50,29 @@ export default function ProductsPage() {
     const stored = localStorage.getItem("favourites");
     if (stored) setFavIds(JSON.parse(stored));
 
-    // Handle initial filters from URL params
+    // Handle initial filters from URL params (Magento format: key[0]=val)
     if (searchParams) {
-      const newFilters: Record<string, string[]> = {};
-      const reserved = ["categoryId", "page", "pageSize"];
-      searchParams.forEach((value, key) => {
-        if (!reserved.includes(key)) {
-          newFilters[key] = value.split(",").filter(Boolean);
-        }
-      });
-      if (Object.keys(newFilters).length > 0) {
-        setSelectedFilters(newFilters);
+      const { filters, page, sortBy } = parseMagentoQueryParams(searchParams);
+      if (Object.keys(filters).length > 0) {
+        setSelectedFilters(filters);
       }
+      setCurrentPage(page);
+      setSortBy(sortBy);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (!isMounted) return;
+
+    const newUrlParams = formatMagentoQueryParams(selectedFilters, currentPage, sortBy);
+    const currentUrlParams = searchParams.toString();
+
+    // Only update if the meaningful params have changed
+    if (newUrlParams !== currentUrlParams) {
+      const newUrl = `${window.location.pathname}${newUrlParams ? `?${newUrlParams}` : ""}`;
+      router.replace(newUrl, { scroll: false });
+    }
+  }, [selectedFilters, currentPage, sortBy, isMounted, router, searchParams]);
 
   const toggleFavorite = async (product: any) => {
     const { product_id: productId } = product;
@@ -128,34 +137,44 @@ export default function ProductsPage() {
 
         // If still no token, redirect to login
         if (!token) {
-          router.replace("/login");
+          redirectToLogin(router);
           return;
         }
 
         const headers: HeadersInit = { "Content-Type": "application/json" };
         headers["Authorization"] = `Bearer ${token}`;
 
-        const params = new URLSearchParams();
-        params.append("categoryId", "5");
-        params.append("page", String(currentPage));
-        params.append("pageSize", String(PAGE_SIZE));
+        const queryString = formatMagentoQueryParams(debouncedFilters, currentPage, sortBy);
+        // Ensure categoryId and pageSize are also in the query string
+        const finalQueryString = `${queryString}&categoryId=5&pageSize=${PAGE_SIZE}`;
 
-        Object.entries(debouncedFilters).forEach(([code, values]) => {
-          if (values.length > 0) {
-            params.append(code, values.join(","));
-          }
-        });
-
-        const url = `/api/category-products?${params.toString()}`;
+        const url = `/api/category-products?${finalQueryString}`;
         const res = await fetch(url, { headers, signal: abortController.signal });
 
         if (!res.ok) {
           if (res.status === 401) {
             localStorage.removeItem("token");
-            router.replace("/login");
+            redirectToLogin(router);
             return;
           }
-          throw new Error(`API Error: ${res.status}`);
+
+          let errorInfo = `API Error: ${res.status}`;
+          try {
+            // Clone the response to avoid "body stream already read" if json() fails
+            const resCopy = res.clone();
+            try {
+              const errorData = await resCopy.json();
+              errorInfo += ` - ${JSON.stringify(errorData)}`;
+              console.error("Direct API failure body:", errorData);
+            } catch {
+              const text = await res.text();
+              errorInfo += ` - ${text}`;
+              console.error("Direct API failure text:", text);
+            }
+          } catch (e) {
+            console.error("Critical error in error handling:", e);
+          }
+          throw new Error(errorInfo);
         }
 
         const data = await res.json();

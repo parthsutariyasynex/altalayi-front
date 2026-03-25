@@ -31,9 +31,10 @@ export default function LoginPage() {
   // Auto-redirect if already logged in
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace("/products");
+      const callbackUrl = searchParams.get("callbackUrl") || "/products";
+      router.replace(callbackUrl);
     }
-  }, [status, router]);
+  }, [status, router, searchParams]);
 
   // Form State
   const [email, setEmail] = useState("");
@@ -134,7 +135,10 @@ export default function LoginPage() {
         if (res?.ok) {
           console.log("[LOGIN] Success! localStorage token:", localStorage.getItem("token") ? "SET" : "MISSING");
           toast.success("Login Successful");
-          router.replace("/products");
+          // Use window.location for full page reload — ensures NextAuth JWT cookie
+          // is sent with the request so middleware sees authenticated state on Vercel
+          const callbackUrl = searchParams.get("callbackUrl") || "/products";
+          window.location.href = callbackUrl;
         } else {
           localStorage.removeItem("token");
           toast.error("Login failed. Please check your credentials.");
@@ -170,7 +174,8 @@ export default function LoginPage() {
 
         if (res?.ok) {
           toast.success("Login Successful");
-          router.replace("/products");
+          const callbackUrl = searchParams.get("callbackUrl") || "/products";
+          window.location.href = callbackUrl;
         } else {
           localStorage.removeItem("token");
           toast.error(res?.error || "Login Failed. Invalid OTP.");
