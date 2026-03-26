@@ -29,6 +29,7 @@ const Modal: React.FC<ModalProps> = ({
             document.body.style.overflow = "hidden";
             if (scrollBarWidth > 0) {
                 document.body.style.paddingRight = `${scrollBarWidth}px`;
+                document.documentElement.style.setProperty('--removed-body-scroll-bar-size', `${scrollBarWidth}px`);
             }
         } else {
             const timer = setTimeout(() => {
@@ -36,6 +37,7 @@ const Modal: React.FC<ModalProps> = ({
                 // 🟢 Restore Scroll when animation finishes
                 document.body.style.overflow = "";
                 document.body.style.paddingRight = "";
+                document.documentElement.style.setProperty('--removed-body-scroll-bar-size', '0px');
             }, 300);
             return () => clearTimeout(timer);
         }
@@ -44,6 +46,7 @@ const Modal: React.FC<ModalProps> = ({
         return () => {
             document.body.style.overflow = "";
             document.body.style.paddingRight = "";
+            document.documentElement.style.setProperty('--removed-body-scroll-bar-size', '0px');
         };
     }, [isOpen]);
 

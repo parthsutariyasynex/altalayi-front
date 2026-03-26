@@ -133,7 +133,7 @@ export default function Navbar() {
           {/* 2. Top-right Welcome Badge & Icons */}
           <div className="flex items-center gap-6">
             {isAuthenticated && !isLoadingName && (
-              <div className="flex items-center bg-white border border-gray-100 rounded-full pl-1 pr-5 py-1 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] md:flex hidden hover:shadow-md transition-all duration-300 group cursor-default">
+              <div className="flex items-center bg-white border border-gray-100 rounded-full pl-1 pr-5 py-1 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] md:flex hidden hover:shadow-md transition-all duration-300 group cursor-pointer">
                 <div className="w-8 h-8 bg-[#f5b21a] rounded-full flex items-center justify-center text-black mr-3 shadow-inner group-hover:scale-110 transition-transform">
                   <UserCircle size={20} strokeWidth={2.5} />
                 </div>
@@ -165,7 +165,7 @@ export default function Navbar() {
               )}
 
               {/* Language (Arabic) placeholder as styled text */}
-              <span className="text-black text-[14px] font-medium cursor-pointer hover:text-yellow-600 transition-colors tracking-tight">
+              <span className="text-black text-[14px] font-medium cursor-pointer transition-colors tracking-tight">
                 Arabic
               </span>
 

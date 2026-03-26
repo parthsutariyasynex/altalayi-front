@@ -146,6 +146,10 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
     );
 };
 
+const Skeleton = ({ className }: { className?: string }) => (
+    <div className={`animate-pulse bg-gray-200 rounded ${className}`}></div>
+);
+
 const HorizontalFilter: React.FC<HorizontalFilterProps> = ({ onSearch, initialValues }) => {
     const [widthList, setWidthList] = useState<Option[]>([]);
     const [heightList, setHeightList] = useState<Option[]>([]);
@@ -161,17 +165,24 @@ const HorizontalFilter: React.FC<HorizontalFilterProps> = ({ onSearch, initialVa
 
     const hasInitialized = useRef(false);
 
+    // Sync state with initialValues (important for external resets)
+    useEffect(() => {
+        if (initialValues) {
+            setWidth(initialValues.width || "");
+            setHeight(initialValues.height || "");
+            setRim(initialValues.rim || "");
+        }
+    }, [initialValues?.width, initialValues?.height, initialValues?.rim]);
+
     // Parse items to always use Label as Value (Request from senior dev)
     const parseOptions = (data: any, type: string): Option[] => {
         let rawItems: any[] = [];
         if (Array.isArray(data)) {
             rawItems = data;
         } else if (typeof data === "object" && data !== null) {
-            // Check common keys
             rawItems = data.options || data.items || data.data || data.sizes
                 || data.heights || data.height || data.rims || data.rim || data.widths || data.width || [];
 
-            // Fallback: If still empty, look for ANY property that is an array
             if (rawItems.length === 0) {
                 const firstArrayKey = Object.keys(data).find(key => Array.isArray(data[key]));
                 if (firstArrayKey) {
@@ -180,11 +191,8 @@ const HorizontalFilter: React.FC<HorizontalFilterProps> = ({ onSearch, initialVa
             }
         }
 
-        console.log(`[HorizontalFilter] Parsed ${type} data:`, rawItems);
-
         return rawItems
             .map((item: any) => {
-                // Return Label as both Value and Label for API search compatibility
                 const label = String(item.label ?? item.size ?? item.value ?? (typeof item === 'string' ? item : ""));
                 return { value: label, label };
             })
@@ -199,10 +207,8 @@ const HorizontalFilter: React.FC<HorizontalFilterProps> = ({ onSearch, initialVa
     ) => {
         if (!endpoint) return;
         loadingSetter(true);
-        console.log(`[HorizontalFilter] Fetching ${type} from:`, endpoint);
         try {
             const data = await api.get(endpoint);
-            console.log(`[HorizontalFilter] ${type} response:`, data);
             setter(parseOptions(data, type));
         } catch (err) {
             console.error(`[HorizontalFilter] ${endpoint} error:`, err);
@@ -212,56 +218,42 @@ const HorizontalFilter: React.FC<HorizontalFilterProps> = ({ onSearch, initialVa
         }
     };
 
-    // 1. Initial Load - Fetch Initial Options
+    // 1. Initial Load
     useEffect(() => {
         fetchList("/tyre-size/width", setWidthList, setLoadingWidth, "Width");
-        fetchList("/tyre-size/height", setHeightList, setLoadingHeight, "All Heights");
-        fetchList("/tyre-size/rim", setRimList, setLoadingRim, "All Rims");
+        fetchList("/tyre-size/height", setHeightList, setLoadingHeight, "Heights");
+        fetchList("/tyre-size/rim", setRimList, setLoadingRim, "Rims");
     }, []);
 
-    // 2. Cascade: Width Selection -> Fetch Restricted Height
+    // 2. Cascade Height
     useEffect(() => {
         if (!hasInitialized.current) return;
-
-        console.log("Width selected:", width);
         if (width) {
-            // Fetch height list restricted by width
             fetchList(`/tyre-size/height?width=${width}`, setHeightList, setLoadingHeight, "Height");
             setHeight("");
             setRim("");
         } else {
-            // Re-fetch all heights if width is cleared
             fetchList("/tyre-size/height", setHeightList, setLoadingHeight, "All Heights");
             setRimList([]);
         }
         onSearch(width, "", "");
     }, [width]);
 
-    // 3. Cascade or Independent Rim Fetch
+    // 3. Cascade Rim
     useEffect(() => {
         if (!hasInitialized.current) return;
-
-        console.log("Height/Width updated for Rim fetch:", { width, height });
-
-        // Fetch specific rims if both width and height are selected
         if (width && height) {
             fetchList(`/tyre-size/rim?width=${width}&height=${height}`, setRimList, setLoadingRim, "Rim");
-        }
-        // OR fetch ALL rims if we're starting fresh or width/height are cleared
-        else {
+        } else {
             fetchList("/tyre-size/rim", setRimList, setLoadingRim, "All Rims");
         }
-
-        if (width && height) {
-            setRim("");
-        }
+        if (width && height) setRim("");
         onSearch(width, height, "");
     }, [width, height]);
 
-    // 4. Rim Selection
+    // 4. Rim
     useEffect(() => {
         if (hasInitialized.current && rim) {
-            console.log("Rim selected:", rim);
             onSearch(width, height, rim);
         }
     }, [rim]);
@@ -274,74 +266,89 @@ const HorizontalFilter: React.FC<HorizontalFilterProps> = ({ onSearch, initialVa
         setWidth("");
         setHeight("");
         setRim("");
-        // Re-fetch all heights and rims on reset
         fetchList("/tyre-size/height", setHeightList, setLoadingHeight, "All Heights");
         fetchList("/tyre-size/rim", setRimList, setLoadingRim, "All Rims");
         onSearch("", "", "");
     };
 
-
     return (
-        <div className="w-full bg-white h-[80px] px-6 border-b border-gray-100 flex items-center justify-center gap-4 flex-nowrap overflow-visible relative z-30">
+        <div className="w-full bg-white h-full px-6 flex items-center justify-center gap-4 flex-nowrap overflow-visible relative">
             {/* Label */}
-            <div className="bg-[#f5a623] px-6 py-2.5 rounded shadow-sm">
+            <div className="bg-[#f5a623] px-6 py-2.5 rounded shadow-sm flex-shrink-0">
                 <span className="text-black font-[900] italic uppercase text-[15px] tracking-tight whitespace-nowrap">
                     Search by Size
                 </span>
             </div>
 
-            {/* width Dropdown */}
-            <SearchableDropdown
-                label="Width Options"
-                placeholder="Width"
-                options={widthList}
-                value={width}
-                onChange={setWidth}
-                loading={loadingWidth}
-            />
+            {/* Dropdowns with skeletons to prevent jump */}
+            <div className="flex-1 max-w-[200px] h-[45px]">
+                {loadingWidth ? (
+                    <Skeleton className="w-full h-full" />
+                ) : (
+                    <SearchableDropdown
+                        label="Width"
+                        placeholder="Width"
+                        options={widthList}
+                        value={width}
+                        onChange={setWidth}
+                        loading={loadingWidth}
+                    />
+                )}
+            </div>
 
-            {/* height Dropdown */}
-            <SearchableDropdown
-                label="Height Options"
-                placeholder="Height"
-                options={heightList}
-                value={height}
-                onChange={setHeight}
-                loading={loadingHeight}
-                emptyMessage="No heights available"
-            />
+            <div className="flex-1 max-w-[200px] h-[45px]">
+                {loadingHeight ? (
+                    <Skeleton className="w-full h-full" />
+                ) : (
+                    <SearchableDropdown
+                        label="Height"
+                        placeholder="Height"
+                        options={heightList}
+                        value={height}
+                        onChange={setHeight}
+                        loading={loadingHeight}
+                        emptyMessage="No heights available"
+                    />
+                )}
+            </div>
 
-            {/* rim Dropdown */}
-            <SearchableDropdown
-                label="Rim Options"
-                placeholder="Rim"
-                options={rimList}
-                value={rim}
-                onChange={setRim}
-                loading={loadingRim}
-                emptyMessage="No rims available"
-            />
+            <div className="flex-1 max-w-[200px] h-[45px]">
+                {loadingRim ? (
+                    <Skeleton className="w-full h-full" />
+                ) : (
+                    <SearchableDropdown
+                        label="Rim"
+                        placeholder="Rim"
+                        options={rimList}
+                        value={rim}
+                        onChange={setRim}
+                        loading={loadingRim}
+                        emptyMessage="No rims available"
+                    />
+                )}
+            </div>
 
-            {/* Search Button */}
             <button
                 onClick={handleSearchClick}
-                className="bg-[#f5a623] hover:bg-black hover:text-white px-10 py-2.5 rounded shadow-sm transition-all text-black font-[900] italic uppercase text-[15px] tracking-tight ml-2 active:scale-95"
+                className="bg-[#f5a623] hover:bg-black hover:text-white px-10 py-2.5 h-[45px] rounded border-none shadow-sm transition-all text-black font-[900] italic uppercase text-[15px] tracking-tight ml-2 active:scale-95 cursor-pointer flex-shrink-0 flex items-center justify-center"
             >
                 Search
             </button>
 
-            {/* Reset Button */}
-            {(width || height || rim) && (
-                <button
-                    onClick={handleReset}
-                    className="p-2.5 rounded border border-gray-300 bg-white text-gray-500 hover:bg-red-50 hover:text-red-500 hover:border-red-300 transition-all active:scale-95 flex items-center justify-center"
-                    title="Clear filter"
-                >
-                    <RotateCcw className="w-4 h-4" />
-                </button>
-            )}
+            <div className="w-[45px] h-[45px] flex-shrink-0">
+                {(width || height || rim) && (
+                    <button
+                        onClick={handleReset}
+                        className="w-full h-full rounded border border-gray-300 bg-white text-gray-500 hover:bg-red-50 hover:text-red-500 hover:border-red-300 transition-all active:scale-95 flex items-center justify-center cursor-pointer"
+                        title="Clear filter"
+                    >
+                        <RotateCcw className="w-4 h-4" />
+                    </button>
+                )}
+            </div>
         </div>
     );
 };
+
 
 export default HorizontalFilter;

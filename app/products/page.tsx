@@ -201,6 +201,23 @@ export default function ProductsPage() {
   const clearAllFilters = () => {
     setSelectedFilters({});
     setSelectedFilterLabels({});
+    setIsFavorite(false);
+    setCurrentPage(1);
+  };
+
+  const removeSpecificFilter = (code: string, value: string) => {
+    const nextFilters = { ...selectedFilters };
+    nextFilters[code] = (nextFilters[code] || []).filter(v => v !== value);
+    if (nextFilters[code].length === 0) delete nextFilters[code];
+
+    const nextLabels = { ...selectedFilterLabels };
+    if (nextLabels[code]) {
+      nextLabels[code] = nextLabels[code].filter(l => l.value !== value);
+      if (nextLabels[code].length === 0) delete nextLabels[code];
+    }
+
+    setSelectedFilters(nextFilters);
+    setSelectedFilterLabels(nextLabels);
     setCurrentPage(1);
   };
 
@@ -300,12 +317,35 @@ export default function ProductsPage() {
   if (!isMounted) return null;
 
   const handleHorizontalSearch = (width: string, height: string, rim: string) => {
-    const newFilters = { ...selectedFilters };
-    if (width) newFilters["width"] = [width]; else delete newFilters["width"];
-    if (height) newFilters["height"] = [height]; else delete newFilters["height"];
-    if (rim) newFilters["rim"] = [rim]; else delete newFilters["rim"];
+    const nextFilters = { ...selectedFilters };
+    const nextLabels = { ...selectedFilterLabels };
 
-    setSelectedFilters(newFilters);
+    if (width) {
+      nextFilters["width"] = [width];
+      nextLabels["width"] = [{ value: width, label: width }];
+    } else {
+      delete nextFilters["width"];
+      delete nextLabels["width"];
+    }
+
+    if (height) {
+      nextFilters["height"] = [height];
+      nextLabels["height"] = [{ value: height, label: height }];
+    } else {
+      delete nextFilters["height"];
+      delete nextLabels["height"];
+    }
+
+    if (rim) {
+      nextFilters["rim"] = [rim];
+      nextLabels["rim"] = [{ value: rim, label: rim }];
+    } else {
+      delete nextFilters["rim"];
+      delete nextLabels["rim"];
+    }
+
+    setSelectedFilters(nextFilters);
+    setSelectedFilterLabels(nextLabels);
     setCurrentPage(1);
   };
 
@@ -327,14 +367,41 @@ export default function ProductsPage() {
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center gap-4 flex-shrink-0">
               <div className="flex items-center gap-4">
                 <button
-                  onClick={() => router.push("/favorites")}
-                  className="bg-gray-50 px-4 py-2 rounded-xl border border-gray-200 text-xs font-medium text-gray-800 outline-none cursor-pointer focus:ring-2 focus:ring-yellow-400 focus:bg-white transition-all flex items-center gap-2 shadow-sm"
+                  onClick={() => setIsFavorite(!isFavorite)}
+                  className={`px-4 py-2 rounded-xl border transition-all flex items-center gap-2 shadow-sm text-xs font-medium outline-none cursor-pointer ${isFavorite ? "bg-yellow-400 border-yellow-500 text-black" : "bg-gray-50 border-gray-200 text-gray-800"}`}
                 >
-                  <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+                  <Star className={`w-5 h-5 ${isFavorite ? "text-black fill-black" : "text-yellow-500 fill-yellow-500"}`} />
                   Favorite products
                 </button>
+
+                {/* Horizontal Filter Chips (Restored following user request) */}
+                <div className="flex flex-1 items-center gap-2 overflow-x-auto custom-scrollbar-hide max-w-[800px]">
+                  {isFavorite && (
+                    <div className="flex items-center gap-1.5 bg-yellow-400 border border-yellow-500 px-3 py-1.5 rounded-full text-[12px] font-bold text-black shadow-sm flex-shrink-0 animate-in fade-in zoom-in duration-300">
+                      Favorites
+                      <button onClick={() => setIsFavorite(false)} className="hover:text-red-700"><X size={14} /></button>
+                    </div>
+                  )}
+                  {Object.entries(selectedFilterLabels).flatMap(([code, items]) =>
+                    items.map((item) => (
+                      <div
+                        key={`${code}-${item.value}`}
+                        className="flex items-center gap-1 bg-white border border-gray-200 px-4 py-2 rounded-full text-[12px] font-bold text-gray-700 shadow-sm whitespace-nowrap flex-shrink-0"
+                      >
+                        {item.label}
+                        <button
+                          onClick={() => removeSpecificFilter(code, item.value)}
+                          className="hover:text-red-500 text-gray-400"
+                        >
+                          <X size={14} strokeWidth={2.5} />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+
                 {Object.keys(selectedFilters).length > 0 && (
-                  <button onClick={clearAllFilters} className="text-[10px] font-black text-red-500 hover:text-red-700 uppercase flex items-center gap-1.5 bg-red-50 px-2.5 py-1 rounded-full transition-colors">
+                  <button onClick={clearAllFilters} className="text-[10px] font-black text-red-500 hover:text-red-700 uppercase flex items-center gap-1.5 bg-red-50 px-2.5 py-1 rounded-full transition-colors flex-shrink-0">
                     <X size={12} strokeWidth={3} /> Clear Filters
                   </button>
                 )}
@@ -550,11 +617,14 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        {/* STICKY BOTTOM SIZE SEARCH BAR - ENHANCED WITH LOGO */}
-        <div className={`fixed bottom-0 left-0 right-0 z-[40] transition-all bg-white border-t-[4px] border-[#f5a623] shadow-[0_-10px_30px_rgba(0,0,0,0.12)] py-1.5`}>
-          <div className={`transition-all duration-300 ${isSidebarCollapsed ? "pl-[50px]" : "pl-[300px]"}`}>
+        {/* STICKY BOTTOM SIZE SEARCH BAR - STABILIZED */}
+        <div
+          className="fixed bottom-0 left-0 right-0 z-[40] bg-white border-t-[4px] border-[#f5a623] shadow-[0_-10px_30px_rgba(0,0,0,0.12)] h-[100px] flex items-center"
+          style={{ paddingRight: 'var(--removed-body-scroll-bar-size, 0px)' }}
+        >
+          <div className={`w-full transition-all duration-300 ${isSidebarCollapsed ? "pl-[50px]" : "pl-[300px]"}`}>
             {/* Search Content */}
-            <div className="flex-1">
+            <div className="w-full max-w-[1400px] mx-auto px-4">
               <HorizontalFilter
                 onSearch={handleHorizontalSearch}
                 initialValues={{

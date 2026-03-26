@@ -59,6 +59,15 @@ body {
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #D1D5DB;
   }
+
+  .custom-scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .custom-scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* --- Retro DatePicker (Grid Style) --- */

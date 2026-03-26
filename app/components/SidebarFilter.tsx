@@ -306,34 +306,7 @@ export default function SidebarFilter({
 
             {!isCollapsed && (
                 <>
-                    {/* Selected Filter Area (Screenshot Matched: Grey background, White Chips) */}
-                    {isAnyFilterSelected && (
-                        <div className="bg-[#f2f2f2] px-6 py-6 border-b border-gray-200 relative animate-in fade-in duration-300">
-                            <div className="flex flex-wrap gap-2 mb-10">
-                                {selectedChips.map((chip, idx) => (
-                                    <div
-                                        key={`${chip.code}-${chip.value}-${idx}`}
-                                        className="flex items-center gap-1.5 bg-white border border-gray-200 px-4 py-2 rounded-full text-[13px] font-semibold text-gray-700 shadow-sm"
-                                    >
-                                        <span className="truncate max-w-[150px]">{chip.label}</span>
-                                        <button
-                                            onClick={() => removeFilter(chip.code, chip.value)}
-                                            className="hover:text-red-500 text-gray-400 transition-colors"
-                                        >
-                                            <X className="w-3.5 h-3.5" strokeWidth={2.5} />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <button
-                                onClick={clearFilters}
-                                className="absolute bottom-5 right-6 text-[15px] font-bold text-gray-900 hover:text-black transition-all"
-                            >
-                                Clear All
-                            </button>
-                        </div>
-                    )}
+                    {/* Selected Filter Area Moved to Horizontal Layout */}
 
                     <div className="flex-1 overflow-y-auto w-full custom-scrollbar bg-white">
                         {loading && (
