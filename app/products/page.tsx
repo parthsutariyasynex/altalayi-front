@@ -367,10 +367,10 @@ export default function ProductsPage() {
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center gap-4 flex-shrink-0">
               <div className="flex items-center gap-4">
                 <button
-                  onClick={() => setIsFavorite(!isFavorite)}
-                  className={`px-4 py-2 rounded-xl border transition-all flex items-center gap-2 shadow-sm text-xs font-medium outline-none cursor-pointer ${isFavorite ? "bg-yellow-400 border-yellow-500 text-black" : "bg-gray-50 border-gray-200 text-gray-800"}`}
+                  onClick={() => router.push("/favorites")}
+                  className="bg-gray-50 border border-gray-200 text-black px-4 py-2 rounded-xl flex items-center gap-2 shadow-sm text-xs font-bold transition-all active:scale-95 cursor-pointer uppercase tracking-wider"
                 >
-                  <Star className={`w-5 h-5 ${isFavorite ? "text-black fill-black" : "text-yellow-500 fill-yellow-500"}`} />
+                  <Star className="w-5 h-5 fill-black text-black" />
                   Favorite products
                 </button>
 
