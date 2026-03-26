@@ -471,33 +471,36 @@ export default function ProductsPage() {
                                   <button
                                     onClick={() => handleAddToCart(product.sku)}
                                     disabled={addingToCart === product.sku}
-                                    className={`w-9 h-9 rounded-lg flex items-center justify-center shadow-md hover:-translate-y-0.5 transition-all ${justAdded === product.sku ? "bg-green-500 text-white" : "bg-yellow-400 text-black hover:bg-yellow-500"}`}
+                                    className={`w-10 h-10 rounded-lg flex items-center justify-center shadow-md hover:-translate-y-0.5 transition-all cursor-pointer ${justAdded === product.sku ? "bg-green-500 text-white" : "bg-yellow-400 text-black hover:bg-yellow-500"}`}
                                     title={justAdded === product.sku ? "Added!" : "Add to Cart"}
                                   >
                                     {addingToCart === product.sku ? (
                                       <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
                                     ) : justAdded === product.sku ? (
-                                      <Check size={16} strokeWidth={3} />
+                                      <Check size={18} strokeWidth={3} />
                                     ) : (
-                                      <ShoppingCart size={16} strokeWidth={2.5} />
+                                      <ShoppingCart size={18} strokeWidth={2.5} />
                                     )}
                                   </button>
                                 ) : (
                                   <button
-                                    onClick={() => { setInquiryProduct(product); setIsInquiryModalOpen(true); }}
-                                    className="w-9 h-9 bg-yellow-400 text-black rounded-lg flex items-center justify-center shadow-md hover:bg-yellow-500 hover:-translate-y-0.5 transition-all"
+                                    onClick={() => {
+                                      setInquiryProduct(product);
+                                      setIsInquiryModalOpen(true);
+                                    }}
+                                    className="w-10 h-10 bg-yellow-400 hover:bg-yellow-500 text-black rounded-lg flex items-center justify-center shadow-md transition-all active:scale-95 cursor-pointer"
                                     title="Make Inquiry"
                                   >
-                                    <Info size={16} strokeWidth={2.5} />
+                                    <Info size={18} strokeWidth={2.5} />
                                   </button>
                                 )}
 
                                 <button
                                   onClick={() => toggleFavorite(product)}
-                                  className="w-9 h-9 rounded-lg flex items-center justify-center shadow-md hover:-translate-y-0.5 transition-all bg-yellow-400 text-black hover:bg-yellow-500"
+                                  className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all shadow-md active:scale-95 cursor-pointer ${favIds.includes(product.product_id) ? "bg-yellow-400 text-black" : "bg-white text-gray-400 border border-gray-100 hover:border-yellow-200"}`}
                                   title={favIds.includes(product.product_id) ? "Remove from Favourites" : "Add to Favourites"}
                                 >
-                                  <Star size={16} strokeWidth={2.5} fill={favIds.includes(product.product_id) ? "currentColor" : "none"} />
+                                  <Star size={18} fill={favIds.includes(product.product_id) ? "currentColor" : "none"} strokeWidth={2.5} />
                                 </button>
                               </div>
                             </div>
