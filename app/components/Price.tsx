@@ -6,7 +6,7 @@ interface PriceProps {
     symbolClassName?: string;
 }
 
-export default function Price({ amount, className = "price currency-riyal", symbolClassName = "" }: PriceProps) {
+export default function Price({ amount, className = "price", symbolClassName = "" }: PriceProps) {
     const formatted = formatPrice(amount);
 
     // The formatPrice utility returns "SAR 1,234.56"

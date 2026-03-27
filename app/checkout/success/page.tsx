@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, Package, ArrowRight, Home, ShoppingBag, Loader2 } from "lucide-react";
@@ -8,6 +8,14 @@ import { useCheckout } from "@/modules/checkout/hooks/useCheckout";
 import { toast } from "react-hot-toast";
 
 const CheckoutSuccessPage = () => {
+    return (
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-[#f5a623]"></div></div>}>
+            <CheckoutSuccessContent />
+        </Suspense>
+    );
+};
+
+const CheckoutSuccessContent = () => {
     const searchParams = useSearchParams();
     const router = useRouter();
     const orderId = searchParams.get("order_id");

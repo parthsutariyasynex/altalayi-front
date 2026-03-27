@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { X } from "lucide-react";
 
 interface DrawerProps {
@@ -10,9 +10,23 @@ interface DrawerProps {
     title?: string;
 }
 
+function lockScroll() {
+    const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    document.body.style.paddingRight = `${scrollBarWidth}px`;
+    document.documentElement.style.setProperty('--removed-body-scroll-bar-size', `${scrollBarWidth}px`);
+}
+
+function unlockScroll() {
+    document.documentElement.style.overflow = "";
+    document.body.style.overflow = "";
+    document.body.style.paddingRight = "";
+    document.documentElement.style.setProperty('--removed-body-scroll-bar-size', '0px');
+}
+
 /**
  * Reusable Side Drawer component that slides in from the right.
- * Replaces traditional centered modals.
  */
 export default function Drawer({ isOpen, onClose, children, title }: DrawerProps) {
     const [isRendered, setIsRendered] = useState(false);
@@ -20,43 +34,25 @@ export default function Drawer({ isOpen, onClose, children, title }: DrawerProps
     useEffect(() => {
         if (isOpen) {
             setIsRendered(true);
-
-            // 🛑 Prevent Background Scroll + Layout Shift
-            const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
-            document.body.style.overflow = "hidden";
-            if (scrollBarWidth > 0) {
-                document.body.style.paddingRight = `${scrollBarWidth}px`;
-                document.documentElement.style.setProperty('--removed-body-scroll-bar-size', `${scrollBarWidth}px`);
-            }
+            lockScroll();
+            return () => unlockScroll();
         } else {
-            const timer = setTimeout(() => {
-                setIsRendered(false);
-                // 🟢 Restore Scroll when animation finishes
-                document.body.style.overflow = "";
-                document.body.style.paddingRight = "";
-                document.documentElement.style.setProperty('--removed-body-scroll-bar-size', '0px');
-            }, 300);
+            // Keep rendered for exit animation, then remove
+            const timer = setTimeout(() => setIsRendered(false), 300);
+            unlockScroll();
             return () => clearTimeout(timer);
         }
-
-        // Cleanup on unmount
-        return () => {
-            document.body.style.overflow = "";
-            document.body.style.paddingRight = "";
-            document.documentElement.style.setProperty('--removed-body-scroll-bar-size', '0px');
-        };
     }, [isOpen]);
 
-    useEffect(() => {
-        const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
-        };
-        window.addEventListener("keydown", handleEsc);
-        return () => {
-            window.removeEventListener("keydown", handleEsc);
-            document.body.style.overflow = "";
-        };
+    // ESC key
+    const handleEsc = useCallback((e: KeyboardEvent) => {
+        if (e.key === "Escape") onClose();
     }, [onClose]);
+
+    useEffect(() => {
+        window.addEventListener("keydown", handleEsc);
+        return () => window.removeEventListener("keydown", handleEsc);
+    }, [handleEsc]);
 
     if (!isRendered && !isOpen) return null;
 
@@ -72,7 +68,7 @@ export default function Drawer({ isOpen, onClose, children, title }: DrawerProps
             <div
                 className={`relative w-full sm:w-[480px] h-full bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-in-out transform ${isOpen ? "translate-x-0" : "translate-x-full"}`}
             >
-                {/* Close Button (X) - Always available at top right */}
+                {/* Close Button */}
                 <button
                     onClick={onClose}
                     className="absolute right-4 top-4 z-[110] p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm hover:bg-gray-100 transition-colors text-gray-500 hover:text-black"

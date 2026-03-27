@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, memo, useMemo } from "react";
 import Link from "next/link";
 import { ChevronDown, ChevronLeft, Filter, X, FileText } from "lucide-react";
 
@@ -16,7 +16,117 @@ export interface FilterGroupData {
     options: FilterOption[];
 }
 
-export default function SidebarFilter({
+const FilterItem = memo(({
+    option,
+    groupCode,
+    isChecked,
+    onCheckboxChange
+}: {
+    option: FilterOption;
+    groupCode: string;
+    isChecked: boolean;
+    onCheckboxChange: (code: string, value: string, checked: boolean) => void
+}) => (
+    <label className="flex items-center justify-between cursor-pointer group/label">
+        <div className="flex items-center gap-3">
+            <div className="relative flex items-center justify-center">
+                <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={(e) => onCheckboxChange(groupCode, option.value, e.target.checked)}
+                    className="peer appearance-none w-4 h-4 border-2 border-gray-300 rounded-[3px] checked:bg-yellow-400 checked:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 focus:ring-offset-1 transition-all cursor-pointer"
+                />
+                <svg className="absolute w-3 h-3 text-black pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 14 10" fill="none">
+                    <path d="M1 5L4.5 8.5L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+            </div>
+            <span className={`text-[13px] transition-colors leading-tight ${isChecked ? 'text-black font-bold' : 'text-gray-600 font-medium group-hover/label:text-black'}`}>
+                {option.label}
+            </span>
+        </div>
+        <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100 group-hover/label:bg-gray-100 transition-colors">
+            {option.count ?? 0}
+        </span>
+    </label>
+));
+
+FilterItem.displayName = "FilterItem";
+
+const FilterGroup = memo(({
+    group,
+    isExpanded,
+    onToggle,
+    selectedValues,
+    onCheckboxChange
+}: {
+    group: FilterGroupData;
+    isExpanded: boolean;
+    onToggle: () => void;
+    selectedValues: string[];
+    onCheckboxChange: (code: string, value: string, checked: boolean) => void;
+}) => {
+    const [searchTerm, setSearchTerm] = useState("");
+
+    const filteredOptions = useMemo(() =>
+        group.options.filter(opt =>
+            opt.label.toLowerCase().includes(searchTerm.toLowerCase())
+        ), [group.options, searchTerm]
+    );
+
+    return (
+        <div className="border-b border-gray-100 last:border-b-0">
+            <button
+                onClick={onToggle}
+                className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors focus:outline-none focus:bg-gray-50 group-btn cursor-pointer"
+                aria-expanded={isExpanded}
+            >
+                <div className="flex items-center gap-2">
+                    <span className="font-bold text-gray-900 text-[15px]">{group.label}</span>
+                </div>
+                <div className={`text-gray-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+                    <ChevronDown className="w-4 h-4" strokeWidth={2.5} />
+                </div>
+            </button>
+
+            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                <div className="px-6 pb-5 flex flex-col gap-3">
+                    {group.options.length > 5 && (
+                        <div className="relative mb-1">
+                            <input
+                                type="text"
+                                placeholder={`Search ${group.label}...`}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-md outline-none"
+                            />
+                            <X className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 cursor-pointer" onClick={() => setSearchTerm("")} />
+                        </div>
+                    )}
+
+                    <div className="overflow-y-auto max-h-[300px] custom-scrollbar pr-1 flex flex-col gap-2.5">
+                        {filteredOptions.length > 0 ? (
+                            filteredOptions.map((option) => (
+                                <FilterItem
+                                    key={option.value}
+                                    option={option}
+                                    groupCode={group.code}
+                                    isChecked={selectedValues.includes(option.value)}
+                                    onCheckboxChange={onCheckboxChange}
+                                />
+                            ))
+                        ) : (
+                            <div className="text-[11px] text-gray-400 italic py-2 text-center">No matches found</div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+});
+
+FilterGroup.displayName = "FilterGroup";
+
+function SidebarFilter({
     categoryId = "5",
     selectedFilters = {},
     onFilterChange,
@@ -34,86 +144,47 @@ export default function SidebarFilter({
     const [filterGroups, setFilterGroups] = useState<FilterGroupData[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
-    // Sync filters if they come from parent (e.g. ProductsPage API response)
-    useEffect(() => {
-        if (initialFilters && Array.isArray(initialFilters)) {
-            const mappedFilters: FilterGroupData[] = initialFilters.map((g: any) => ({
-                code: g.code || g.attribute_code || "",
-                label: g.label || g.name || "",
-                options: (g.options || []).map((o: any) => ({
-                    value: String(o.value ?? ""),
-                    label: String(o.label ?? o.value ?? ""),
-                    count: Number(o.count ?? 0),
-                })),
-            }));
-
-            // Deduplicate by label (case-insensitive)
-            const uniqueFilters: FilterGroupData[] = [];
-            const labelToIndexMapping = new Map<string, number>();
-
-            mappedFilters.forEach(g => {
-                const label = (g.label || "").toLowerCase().trim();
-                if (!label) return;
-
-                if (labelToIndexMapping.has(label)) {
-                    const existingIdx = labelToIndexMapping.get(label)!;
-                    const existingGroup = uniqueFilters[existingIdx];
-
-                    // Preference rule: prioritize 'manufacturer' over 'origin' for Magento
-                    if (g.code === "manufacturer" && existingGroup.code === "origin") {
-                        uniqueFilters[existingIdx] = g;
-                    }
-                } else {
-                    labelToIndexMapping.set(label, uniqueFilters.length);
-                    uniqueFilters.push(g);
-                }
-            });
-
-            setFilterGroups(uniqueFilters);
-        }
-    }, [initialFilters]);
-
-    // INTERNAL sync if props not provided (fallback)
     const [internalIsCollapsed, setInternalIsCollapsed] = useState(false);
     const isCollapsed = externalIsCollapsed !== undefined ? externalIsCollapsed : internalIsCollapsed;
     const setIsCollapsed = setExternalIsCollapsed !== undefined ? setExternalIsCollapsed : setInternalIsCollapsed;
 
-    const filtersRef = useRef(selectedFilters);
-    filtersRef.current = selectedFilters;
-
-    const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
-
+    // ✅ Sync filterGroups from initialFilters prop immediately
     useEffect(() => {
+        if (!initialFilters || !Array.isArray(initialFilters)) return;
+
+        const mapped = initialFilters.map((g: any) => ({
+            code: g.code || g.attribute_code || "",
+            label: g.label || g.name || "",
+            options: (g.options || []).map((o: any) => ({
+                value: String(o.value ?? ""),
+                label: String(o.label ?? o.value ?? ""),
+                count: Number(o.count ?? 0),
+            })),
+        }));
+
+        setFilterGroups(mapped);
+        setLoading(false);
+    }, [initialFilters]);
+
+    // ✅ Fetch filters only if initialFilters not provided
+    useEffect(() => {
+        if (initialFilters) return;
+
         const fetchFilters = async () => {
             try {
                 setLoading(true);
-                setError(null);
-
                 const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-                const headers: Record<string, string> = {
-                    'Content-Type': 'application/json'
-                };
+                const headers: any = { 'Content-Type': 'application/json' };
                 if (token) headers['Authorization'] = `Bearer ${token}`;
 
-                const res = await fetch(`/api/filters?categoryId=${categoryId}`, {
-                    headers,
-                    cache: 'no-store',
-                });
-
-                if (!res.ok) {
-                    const errData = await res.json().catch(() => ({}));
-                    throw new Error(errData.message || errData.error || `Failed to load filters (${res.status})`);
-                }
-
+                const res = await fetch(`/api/filters?categoryId=${categoryId}`, { headers });
+                if (!res.ok) throw new Error("Failed to load filters");
                 const data = await res.json();
-                // Handle all possible API response formats
-                const rawFilters = Array.isArray(data)
-                    ? data
-                    : (data.filters || data.data || data.items || []);
 
-                // Normalize: API may return attribute_code instead of code
-                const fetchedFilters: FilterGroupData[] = rawFilters.map((g: any) => ({
+                const raw = Array.isArray(data) ? data : (data.filters || data.items || []);
+                const mapped: FilterGroupData[] = raw.map((g: any) => ({
                     code: g.code || g.attribute_code || "",
                     label: g.label || g.name || "",
                     options: (g.options || []).map((o: any) => ({
@@ -123,79 +194,34 @@ export default function SidebarFilter({
                     })),
                 }));
 
-                // Deduplicate by label (case-insensitive) - fix for duplicate "Origin"
-                const uniqueFetchedFilters: FilterGroupData[] = [];
-                const labelToIndexMapping = new Map<string, number>();
+                setFilterGroups(mapped);
 
-                fetchedFilters.forEach(g => {
-                    const label = (g.label || "").toLowerCase().trim();
-                    if (!label) return;
-
-                    if (labelToIndexMapping.has(label)) {
-                        const existingIdx = labelToIndexMapping.get(label)!;
-                        const existingGroup = uniqueFetchedFilters[existingIdx];
-
-                        // Preference rule: if new group is 'manufacturer' but existing is 'origin'
-                        // Magento often uses 'manufacturer' for actual Origin/Country filtering.
-                        if (g.code === "manufacturer" && existingGroup.code === "origin") {
-                            uniqueFetchedFilters[existingIdx] = g;
-                        }
-                        // Otherwise keep the first one found
-                    } else {
-                        labelToIndexMapping.set(label, uniqueFetchedFilters.length);
-                        uniqueFetchedFilters.push(g);
-                    }
-                });
-
-                // DEBUG: Log final unique filter group labels
-                console.log("[SidebarFilter] Unique filter groups:",
-                    uniqueFetchedFilters.map((g) => ({ code: g.code, label: g.label }))
-                );
-
-                setFilterGroups(uniqueFetchedFilters);
-
-                if (fetchedFilters.length > 0) {
-                    const initialExpanded: Record<string, boolean> = {};
-                    fetchedFilters.slice(0, 3).forEach((group: FilterGroupData) => {
-                        initialExpanded[group.code] = true;
-                    });
-                    setExpandedGroups(prev => Object.keys(prev).length === 0 ? initialExpanded : prev);
-                }
+                // Expand first 3 groups by default
+                const initialExpanded: Record<string, boolean> = {};
+                mapped.slice(0, 3).forEach(g => initialExpanded[g.code] = true);
+                setExpandedGroups(initialExpanded);
             } catch (err: any) {
-                console.error("Filter fetch error:", err);
-                setError(err.message || "Could not load filters");
+                setError(err.message);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchFilters();
-    }, [categoryId]);
-
-    const toggleGroup = (code: string) => {
-        setExpandedGroups((prev) => ({
-            ...prev,
-            [code]: !prev[code],
-        }));
-    };
+    }, [categoryId, initialFilters]);
 
     const handleCheckboxChange = useCallback((code: string, value: string, checked: boolean) => {
-        const prev = filtersRef.current;
-        const currentValues = prev[code] || [];
+        const currentValues = selectedFilters[code] || [];
         let newValues: string[];
 
         if (checked) {
-            newValues = currentValues.includes(value)
-                ? currentValues
-                : [...currentValues, value];
+            newValues = currentValues.includes(value) ? currentValues : [...currentValues, value];
         } else {
             newValues = currentValues.filter((v) => v !== value);
         }
 
-        const nextState = { ...prev, [code]: newValues };
-        if (newValues.length === 0) {
-            delete nextState[code];
-        }
+        const nextState = { ...selectedFilters, [code]: newValues };
+        if (newValues.length === 0) delete nextState[code];
 
         const nextLabels: Record<string, { value: string; label: string }[]> = {};
         Object.entries(nextState).forEach(([c, vals]) => {
@@ -209,259 +235,73 @@ export default function SidebarFilter({
         });
 
         onFilterChange?.(nextState, nextLabels);
-    }, [onFilterChange, filterGroups]);
+    }, [onFilterChange, filterGroups, selectedFilters]);
 
-    const isAnyFilterSelected = Object.keys(selectedFilters).length > 0;
+    const toggleGroup = useCallback((code: string) => {
+        setExpandedGroups(prev => ({ ...prev, [code]: !prev[code] }));
+    }, []);
 
-    // Match live site: when a filter is selected, show relevant groups
-    // Actual API codes are camelCase: itemCode, brand, productGroup, tyreSize, pattern,
-    // warrantyPeriod, year, origin, types, oemMarking, newArrivals, offers
-    const RELEVANT_CODES = new Set([
-        // camelCase (from Magento API)
-        "itemCode", "itemcode", "item_code",
-        "offers", "promotions_and_offers", "promotions", "pormotion_and_offers",
-        "year",
-        "origin",
-        "manufacturer",
-        "types",
-        "brand",
-        "productGroup", "product_group",
-        "tyreSize", "tyre_size",
-        "pattern",
-        "warrantyPeriod", "warranty_period",
-        "oemMarking", "oem_marking",
-        "newArrivals", "new_arrivals",
-    ]);
-    const RELEVANT_LABELS = [
-        "item code",
-        "promotions and offers", "promotion", "offer", "pormotion",
-        "year",
-        "origin",
-        "types",
-        "brand",
-        "product group",
-        "tyre size",
-        "pattern",
-        "warranty",
-        "oem",
-        "new arrivals",
-    ];
+    // Matches logic we had before for relevant codes
+    const RELEVANT_CODES = useMemo(() => new Set([
+        "brand", "tyre_size", "pattern", "year", "origin", "manufacturer", "manufacturer_label", "offers", "new_arrivals"
+    ]), []);
 
-    const visibleFilterGroups = !isAnyFilterSelected
-        ? filterGroups
-        : filterGroups.filter(g => {
-            const label = (g.label || "").toLowerCase().trim();
-            const code = (g.code || "").toLowerCase().trim();
-
-            // Always show groups that have active selections
-            if (selectedFilters[g.code]?.length > 0) return true;
-
-            // Match by exact code (case-sensitive check first, then lowercase)
-            if (RELEVANT_CODES.has(g.code) || RELEVANT_CODES.has(code)) return true;
-
-            // Match by label (includes for partial matches)
-            return RELEVANT_LABELS.some(rg => label === rg || label.includes(rg));
-        });
-
-    // Flatten selected filters for chips
-    const selectedChips = Object.entries(selectedFilters).flatMap(([code, values]) => {
-        const group = filterGroups.find(g => g.code === code);
-        return values.map(val => {
-            const opt = group?.options.find(o => o.value === val);
-            return {
-                code,
-                value: val,
-                label: opt ? opt.label : val
-            };
-        });
-    });
-
-    const removeFilter = (code: string, value: string) => {
-        handleCheckboxChange(code, value, false);
-    };
-
-    const clearFilters = () => {
-        onFilterChange?.({}, {});
-    };
-
+    const visibleFilterGroups = useMemo(() => {
+        if (Object.keys(selectedFilters).length === 0) return filterGroups;
+        return filterGroups.filter(g =>
+            selectedFilters[g.code] || RELEVANT_CODES.has(g.code.toLowerCase())
+        );
+    }, [filterGroups, selectedFilters, RELEVANT_CODES]);
 
     return (
-        <aside className={`${isCollapsed ? "w-[50px]" : "w-[300px]"} flex-shrink-0 bg-white border-r border-gray-200 h-[calc(100vh-64px)] overflow-hidden flex flex-col sticky top-16 z-20 transition-all duration-300 ease-in-out`}>
-            {/* Sidebar Header */}
+        <aside className={`${isCollapsed ? "w-[50px]" : "w-[300px]"} bg-white border-r border-gray-200 h-full flex flex-col transition-all duration-300`}>
             <div className="flex border-b border-gray-200 h-[60px] flex-shrink-0">
                 {!isCollapsed && (
-                    <div className="flex-1 px-6 flex items-center overflow-hidden whitespace-nowrap">
-                        <h2 className="font-bold text-gray-900 text-[16px]">
-                            Filter Options
-                        </h2>
+                    <div className="flex-1 px-6 flex items-center overflow-hidden">
+                        <h2 className="font-bold text-gray-900 text-[16px]">Filter Options</h2>
                     </div>
                 )}
                 <div
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className={`${isCollapsed ? "w-full" : "w-[50px]"} flex items-center justify-center bg-gray-50 border-l border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors`}
+                    className={`${isCollapsed ? "w-full" : "w-[50px]"} flex items-center justify-center bg-gray-50 border-l border-gray-200 cursor-pointer`}
                 >
-                    <ChevronLeft className={`w-[18px] h-[18px] text-gray-500 transition-transform duration-300 ${isCollapsed ? "rotate-180" : ""}`} />
+                    <ChevronLeft className={`w-[18px] h-[18px] transition-transform ${isCollapsed ? "rotate-180" : ""}`} />
                 </div>
             </div>
 
             {!isCollapsed && (
-                <>
-                    {/* Selected Filter Area Moved to Horizontal Layout */}
-
-                    <div className="flex-1 overflow-y-auto w-full custom-scrollbar bg-white">
-                        {loading && (
-                            <div className="p-10 flex flex-col gap-3 justify-center items-center">
-                                <div className="w-8 h-8 border-[3px] border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
-                                <span className="text-xs font-semibold text-gray-400">Loading Filters...</span>
-                            </div>
-                        )}
-
-                        {error && (
-                            <div className="p-5 m-5 bg-red-50 border-l-4 border-red-500 text-red-700 text-xs font-medium">
-                                {error}
-                            </div>
-                        )}
-
-                        <div className="flex flex-col">
-                            {!loading && !error && visibleFilterGroups.map((group) => (
+                <div className="flex-1 flex flex-col min-h-0">
+                    <div className="flex-1 overflow-y-auto w-full custom-scrollbar">
+                        {loading ? (
+                            <div className="p-10 flex flex-col gap-3 items-center"><div className="w-6 h-6 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div></div>
+                        ) : error ? (
+                            <div className="p-5 text-red-500 text-xs">{error}</div>
+                        ) : (
+                            visibleFilterGroups.map((group) => (
                                 <FilterGroup
                                     key={group.code}
                                     group={group}
-                                    isExpanded={expandedGroups[group.code] || false}
+                                    isExpanded={!!expandedGroups[group.code]}
                                     onToggle={() => toggleGroup(group.code)}
                                     selectedValues={selectedFilters[group.code] || []}
                                     onCheckboxChange={handleCheckboxChange}
                                 />
-                            ))}
-                        </div>
+                            ))
+                        )}
                     </div>
-                </>
-            )}
 
-
-            {/* User Guides Section at the bottom */}
-            {!isCollapsed && (
-                <div className="p-4 border-t border-gray-100 flex-shrink-0">
-                    <Link href="/guides">
-                        <div className="bg-[#f5a623] rounded-sm p-4 flex items-center gap-4 cursor-pointer hover:bg-black group transition-all duration-300 shadow-sm border border-yellow-600/10">
-                            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-[#f5a623] flex-shrink-0 shadow-inner group-hover:scale-110 transition-transform">
-                                <FileText size={22} strokeWidth={2.5} />
+                    <div className="p-4 border-t border-gray-100 mt-auto">
+                        <Link href="/guides">
+                            <div className="bg-[#f5a623] rounded-sm p-4 flex items-center gap-4 cursor-pointer hover:bg-black group transition-all">
+                                <FileText size={20} className="text-white group-hover:scale-110 transition-transform" />
+                                <span className="font-black text-black group-hover:text-white text-xs uppercase">USER GUIDES</span>
                             </div>
-                            <span className="font-[900] text-black group-hover:text-white text-[16px] uppercase tracking-tighter leading-none transition-colors">
-                                USER GUIDES
-                            </span>
-                        </div>
-                    </Link>
+                        </Link>
+                    </div>
                 </div>
             )}
         </aside>
     );
 }
 
-function FilterGroup({
-    group,
-    isExpanded,
-    onToggle,
-    selectedValues,
-    onCheckboxChange
-}: {
-    group: FilterGroupData;
-    isExpanded: boolean;
-    onToggle: () => void;
-    selectedValues: string[];
-    onCheckboxChange: (code: string, value: string, checked: boolean) => void;
-}) {
-    const [searchTerm, setSearchTerm] = useState("");
-
-    const filteredOptions = group.options.filter(opt =>
-        opt.label.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    const selectedInGroup = selectedValues.length;
-
-    return (
-        <div className="border-b border-gray-100 last:border-b-0">
-            <button
-                onClick={onToggle}
-                className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors focus:outline-none focus:bg-gray-50 group-btn cursor-pointer"
-                aria-expanded={isExpanded}
-            >
-                <div className="flex items-center gap-2">
-                    <span className="font-bold text-gray-900 text-[15px]">
-                        {group.label}
-                    </span>
-                </div>
-
-                <div className={`text-gray-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
-                    <ChevronDown className="w-4 h-4" strokeWidth={2.5} />
-                </div>
-            </button>
-
-            <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isExpanded ? 'max-h-[450px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                <div className="px-6 pb-5 flex flex-col gap-3">
-                    {group.options.length > 5 && (
-                        <div className="relative mb-1">
-                            <input
-                                type="text"
-                                placeholder={`Search ${group.label}...`}
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-md focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all"
-                            />
-                            <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                            {searchTerm && (
-                                <button
-                                    onClick={() => setSearchTerm("")}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                >
-                                    <X className="w-3 h-3" />
-                                </button>
-                            )}
-                        </div>
-                    )}
-
-                    <div className="overflow-y-auto max-h-[300px] custom-scrollbar pr-2 flex flex-col gap-2.5">
-                        {(group.options?.length ?? 0) === 0 ? (
-                            <div className="text-[11px] text-gray-400 italic py-2 text-center">No options available</div>
-                        ) : filteredOptions.length > 0 ? (
-                            filteredOptions.map((option) => {
-                                const isChecked = selectedValues.includes(option.value);
-
-                                return (
-                                    <label
-                                        key={option.value}
-                                        className="flex items-center justify-between cursor-pointer group/label"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="relative flex items-center justify-center">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isChecked}
-                                                    onChange={(e) => onCheckboxChange(group.code, option.value, e.target.checked)}
-                                                    className="peer appearance-none w-4 h-4 border-2 border-gray-300 rounded-[3px] checked:bg-yellow-400 checked:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 focus:ring-offset-1 transition-all cursor-pointer"
-                                                />
-                                                <svg className="absolute w-3 h-3 text-black pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 14 10" fill="none">
-                                                    <path d="M1 5L4.5 8.5L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                </svg>
-                                            </div>
-                                            <span className={`text-[13px] transition-colors leading-tight ${isChecked ? 'text-black font-bold' : 'text-gray-600 font-medium group-hover/label:text-black'}`}>
-                                                {option.label}
-                                            </span>
-                                        </div>
-                                        <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100 group-hover/label:bg-gray-100 transition-colors">
-                                            {option.count ?? 0}
-                                        </span>
-                                    </label>
-                                );
-                            })
-                        ) : (
-                            <div className="text-[11px] text-gray-400 italic py-2 text-center">No matches found</div>
-                        )}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
+export default memo(SidebarFilter);

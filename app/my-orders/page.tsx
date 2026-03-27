@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { Suspense, useState, useEffect, useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { redirectToLogin } from "@/utils/helpers";
 import Price from "@/app/components/Price";
@@ -52,6 +52,14 @@ function mapOrder(item: any): Order {
 }
 
 export default function MyOrdersPage() {
+    return (
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-[#f5a623]"></div></div>}>
+            <MyOrdersPageContent />
+        </Suspense>
+    );
+}
+
+function MyOrdersPageContent() {
     const { data: session, status: authStatus } = useSession();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -316,7 +324,7 @@ export default function MyOrdersPage() {
 
     return (
         <>
-            <div className="flex max-w-[1440px] mx-auto mt-[80px]">
+            <div className="flex flex-col md:flex-row max-w-[1440px] mx-auto mt-4 md:mt-[80px] px-2 sm:px-4 md:px-0">
                 <Sidebar />
 
                 <main className="flex-1 p-8 min-h-screen">

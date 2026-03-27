@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import Sidebar from "@/components/Sidebar";
 import { api } from "@/lib/api/api-client";
 
 export default function EditAddressPage() {
+    return (
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-[#f5a623]"></div></div>}>
+            <EditAddressPageContent />
+        </Suspense>
+    );
+}
+
+function EditAddressPageContent() {
     const { addressId } = useParams();
     const router = useRouter();
     const searchParams = useSearchParams();

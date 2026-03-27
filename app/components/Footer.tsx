@@ -7,7 +7,7 @@ import { Mail, Share2, Facebook, Instagram, Twitter, Linkedin } from "lucide-rea
 const Footer: React.FC = () => {
     return (
         <footer className="bg-black text-white py-14">
-            <div className="w-full px-6 md:px-12 grid grid-cols-1 md:grid-cols-2 gap-12 text-center pb-12 border-b border-gray-800">
+            <div className="w-full px-6 md:px-12 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 text-center pb-8 md:pb-12 border-b border-gray-800">
 
                 {/* Send us an email */}
                 <div className="flex flex-col items-center group">
@@ -47,7 +47,7 @@ const Footer: React.FC = () => {
             </div>
 
             {/* Bottom Copyright Section */}
-            <div className="w-full px-6 md:px-12 pt-10 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 text-[13px] font-medium text-gray-500 tracking-wide text-center">
+            <div className="w-full px-6 md:px-12 pt-6 md:pt-10 flex flex-col md:flex-row items-center justify-center gap-4 md:gap-12 text-[12px] md:text-[13px] font-medium text-gray-500 tracking-wide text-center">
                 <p className="whitespace-nowrap">Copyright @ 2025 Altalayi.com. All rights reserved.</p>
 
                 <div className="flex flex-wrap justify-center gap-6 md:gap-12 text-white">

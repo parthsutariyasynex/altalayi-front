@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { X } from "lucide-react";
 
 interface ModalProps {
@@ -9,6 +9,21 @@ interface ModalProps {
     title?: string;
     children: React.ReactNode;
     maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "full";
+}
+
+function lockScroll() {
+    const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    document.body.style.paddingRight = `${scrollBarWidth}px`;
+    document.documentElement.style.setProperty('--removed-body-scroll-bar-size', `${scrollBarWidth}px`);
+}
+
+function unlockScroll() {
+    document.documentElement.style.overflow = "";
+    document.body.style.overflow = "";
+    document.body.style.paddingRight = "";
+    document.documentElement.style.setProperty('--removed-body-scroll-bar-size', '0px');
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -23,47 +38,29 @@ const Modal: React.FC<ModalProps> = ({
     useEffect(() => {
         if (isOpen) {
             setIsRendered(true);
-
-            // 🛑 Prevent Background Scroll + Layout Shift
-            const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
-            document.body.style.overflow = "hidden";
-            if (scrollBarWidth > 0) {
-                document.body.style.paddingRight = `${scrollBarWidth}px`;
-                document.documentElement.style.setProperty('--removed-body-scroll-bar-size', `${scrollBarWidth}px`);
-            }
+            lockScroll();
+            return () => unlockScroll();
         } else {
-            const timer = setTimeout(() => {
-                setIsRendered(false);
-                // 🟢 Restore Scroll when animation finishes
-                document.body.style.overflow = "";
-                document.body.style.paddingRight = "";
-                document.documentElement.style.setProperty('--removed-body-scroll-bar-size', '0px');
-            }, 300);
+            // Keep rendered for exit animation, then remove
+            const timer = setTimeout(() => setIsRendered(false), 300);
+            unlockScroll();
             return () => clearTimeout(timer);
         }
-
-        // Cleanup on unmount
-        return () => {
-            document.body.style.overflow = "";
-            document.body.style.paddingRight = "";
-            document.documentElement.style.setProperty('--removed-body-scroll-bar-size', '0px');
-        };
     }, [isOpen]);
 
-    // Handle ESC key
+    // ESC key
+    const handleKeyDown = useCallback((e: KeyboardEvent) => {
+        if (e.key === "Escape" && isOpen) onClose();
+    }, [isOpen, onClose]);
+
     useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape" && isOpen) {
-                onClose();
-            }
-        };
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [isOpen, onClose]);
+    }, [handleKeyDown]);
 
     if (!isRendered) return null;
 
-    const maxWidthClasses = {
+    const maxWidthClasses: Record<string, string> = {
         sm: "max-w-sm",
         md: "max-w-md",
         lg: "max-w-lg",
@@ -77,7 +74,7 @@ const Modal: React.FC<ModalProps> = ({
 
     return (
         <div
-            className={`fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 transition-all duration-300 ${isOpen ? "opacity-100" : "opacity-0"}`}
+            className={`fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 transition-all duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
             role="dialog"
             aria-modal="true"
         >

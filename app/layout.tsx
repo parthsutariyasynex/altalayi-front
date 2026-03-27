@@ -13,6 +13,9 @@ import { NextAuthProvider } from "@/components/providers/NextAuthProvider";
 const rubik = Rubik({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+  display: "swap",
+  fallback: ["system-ui", "Arial", "sans-serif"],
+  adjustFontFallback: true,
 });
 
 export const metadata: Metadata = {

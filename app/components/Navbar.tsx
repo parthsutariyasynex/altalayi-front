@@ -2,19 +2,17 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store/store";
 import { useState, useRef, useEffect } from "react";
 import {
   ShoppingCart,
-  LogOut,
-  Package,
   UserCircle,
   Bell,
-  ChevronDown,
   Menu,
-  X
+  X,
+  LogOut,
 } from "lucide-react";
 import CartDrawer from "./CartDrawer";
 import NotificationDrawer from "./NotificationDrawer";
@@ -22,14 +20,20 @@ import { useCart } from "@/modules/cart/hooks/useCart";
 import { useNotifications } from "@/modules/notifications/hooks/useNotifications";
 import { fetchCustomerInfo } from "@/store/actions/customerActions";
 
+const NAV_LINKS = [
+  { label: "All Tyres", href: "/products" },
+  { label: "About Us", href: "/about" },
+  { label: "Branch Locations", href: "/locations" },
+  { label: "User Guides", href: "/guides" },
+  { label: "Product Catalogue", href: "/catalogue" },
+];
+
 export default function Navbar() {
   const { data: session, status } = useSession();
   const pathname = usePathname();
   const isAuthenticated = status === "authenticated";
   const { cart, refetchCart } = useCart();
 
-  // Requirement: Dynamic Username from a variable
-  // Requirement: Dynamic Username/Email from session
   const { data: customerData } = useSelector((state: RootState) => state.customer);
   const dispatch = useDispatch();
 
@@ -38,7 +42,7 @@ export default function Navbar() {
     ? ""
     : (customerData as any)?.firstname
       ? `${(customerData as any).firstname} ${(customerData as any).lastname}`
-      : (session?.user?.name || session?.user?.email);
+      : session?.user?.name || session?.user?.email;
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -52,280 +56,268 @@ export default function Navbar() {
   const cartCount = cart?.items_count || 0;
 
   const handleLogout = async () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
     await signOut({ callbackUrl: "/login" });
   };
 
-  // Check for persistent subaccount name
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const storedName = localStorage.getItem("subAccountName");
-      const subFlag = localStorage.getItem("isSubAccount") === "true";
-      setSubAccountName(storedName);
-      setIsSubAccount(subFlag);
+      setSubAccountName(localStorage.getItem("subAccountName"));
+      setIsSubAccount(localStorage.getItem("isSubAccount") === "true");
     }
   }, [pathname]);
 
-  // Fetch Notifications and Customer Info
   useEffect(() => {
     if (isAuthenticated) {
       pullNotifications();
-      if (!customerData) {
-        dispatch(fetchCustomerInfo() as any);
-      }
+      if (!customerData) dispatch(fetchCustomerInfo() as any);
     }
   }, [isAuthenticated, pullNotifications, customerData, dispatch]);
 
-  // Listen for notification updates
   useEffect(() => {
-    const handleNotificationUpdate = () => pullNotifications();
-    window.addEventListener("notifications-updated", handleNotificationUpdate);
-    return () => window.removeEventListener("notifications-updated", handleNotificationUpdate);
+    const fn = () => pullNotifications();
+    window.addEventListener("notifications-updated", fn);
+    return () => window.removeEventListener("notifications-updated", fn);
   }, [pullNotifications]);
 
-  // Listen for cart updates from other components
   useEffect(() => {
-    const handleCartUpdate = () => refetchCart();
-    window.addEventListener("cart-updated", handleCartUpdate);
-    return () => window.removeEventListener("cart-updated", handleCartUpdate);
+    const fn = () => refetchCart();
+    window.addEventListener("cart-updated", fn);
+    return () => window.removeEventListener("cart-updated", fn);
   }, [refetchCart]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node))
         setIsProfileOpen(false);
-      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
-    <div className="w-full sticky top-0 z-50 flex flex-col">
-      {/* 1. Header Section */}
-      <header className="bg-white border-b border-gray-100 px-4 md:px-8 lg:px-12 relative shadow-sm min-h-[100px] flex items-center">
-        <div className="w-full flex items-center justify-between">
+    <div className="w-full fixed top-0 left-0 right-0 z-50 flex flex-col" style={{ paddingRight: 'var(--removed-body-scroll-bar-size, 0px)' }}>
 
-          {/* Logo Area */}
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center gap-2">
-              <img
-                src="/logo/btire-logo-horizontal.svg"
-                alt="BTIRE Logo"
-                className="h-14 w-auto"
-              />
-            </Link>
+      {/* ── HEADER ── */}
+      <header className="bg-white border-b border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+        <div className="relative flex items-center justify-between h-[64px] md:h-[72px] px-3 sm:px-5 md:px-8 lg:px-14">
 
-          </div>
+          {/* LEFT: BTIRE logo */}
+          <Link href="/" className="flex items-center flex-shrink-0 z-10">
+            <img
+              src="/logo/btire-logo-horizontal.svg"
+              alt="BTIRE Logo"
+              width={120}
+              height={40}
+              className="h-6 sm:h-8 md:h-10 w-auto object-contain"
+            />
+          </Link>
 
-          {/* Secondary Brand Logo - ABSOLUTE CENTERED */}
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center h-full">
-            <Link href="/" className="cursor-pointer">
+          {/* CENTER: Bridgestone logo (absolute centered) */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-4">
+            <Link href="/" className="pointer-events-auto flex-shrink-0">
               <img
                 src="/logo/atcl-bridgestone-logo-v1.jpg"
-                alt="Bridgestone Logo"
-                className="h-16 w-auto max-w-[300px] object-contain"
+                alt="AL TALAYI KSA"
+                width={300}
+                height={57}
+                className="h-[28px] sm:h-[36px] md:h-[50px] w-auto max-w-[100px] sm:max-w-[180px] md:max-w-[280px] object-contain"
               />
             </Link>
           </div>
 
-          {/* 2. Top-right Welcome Badge & Icons */}
-          <div className="flex items-center gap-6">
-            {isAuthenticated && !isLoadingName && (
-              <div className="flex items-center bg-white border border-gray-100 rounded-full pl-1 pr-5 py-1 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] md:flex hidden hover:shadow-md transition-all duration-300 group cursor-pointer">
-                <div className="w-8 h-8 bg-[#f5b21a] rounded-full flex items-center justify-center text-black mr-3 shadow-inner group-hover:scale-110 transition-transform">
-                  <UserCircle size={20} strokeWidth={2.5} />
+          {/* RIGHT: Actions */}
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-5 flex-shrink-0 z-10">
+
+            {/* Language */}
+            <span className="hidden sm:inline text-black text-[12px] font-medium cursor-pointer hover:opacity-70 transition-opacity tracking-tight">
+              Arabic
+            </span>
+
+            {/* Welcome badge & Account Dropdown — md+ */}
+            {isAuthenticated && !isLoadingName && pathname !== "/login" && (
+              <div className="relative hidden md:block" ref={dropdownRef}>
+                <div
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center bg-white border border-gray-100 rounded-full pl-1 pr-4 py-1 shadow-[0_2px_8px_-3px_rgba(0,0,0,0.12)] hover:shadow-md transition-shadow group cursor-pointer"
+                >
+                  <div className="w-7 h-7 bg-[#f5b21a] rounded-full flex items-center justify-center mr-2 flex-shrink-0 group-hover:scale-110 transition-transform">
+                    <UserCircle size={16} strokeWidth={2.5} />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[8px] text-gray-400 font-bold uppercase tracking-widest leading-none">Welcome Back</span>
+                    <span className="text-[12px] text-black font-black uppercase tracking-tighter leading-snug mt-0.5 truncate max-w-[120px] lg:max-w-[140px]">
+                      {isSubAccount && subAccountName ? subAccountName : displayUser}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest leading-none">Welcome Back</span>
-                  <span className="text-[13px] text-black font-black uppercase tracking-tighter leading-tight mt-0.5">
-                    {isSubAccount && subAccountName ? subAccountName : displayUser}
+
+                {isProfileOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-sm shadow-2xl border border-gray-200 py-1 z-[100]">
+                    <Link
+                      href="/my-account"
+                      className="block px-4 py-2.5 text-[12px] font-bold text-gray-800 hover:bg-gray-50 transition-colors"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      My Account
+                    </Link>
+                    {isSubAccount && (
+                      <Link
+                        href="/my-account"
+                        className="block px-4 py-2.5 text-[12px] font-bold text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
+                        onClick={() => {
+                          setIsProfileOpen(false);
+                          localStorage.removeItem("subAccountName");
+                          localStorage.removeItem("isSubAccount");
+                          setSubAccountName(null);
+                          setIsSubAccount(false);
+                        }}
+                      >
+                        Back to Main Account
+                      </Link>
+                    )}
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-gray-800 hover:bg-gray-50 transition-colors cursor-pointer border-t border-gray-100"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Notification Bell */}
+            {isAuthenticated && pathname !== "/login" && (
+              <button
+                className="hidden sm:flex relative cursor-pointer hover:opacity-70 transition-opacity items-center justify-center"
+                onClick={() => setIsNotificationOpen(true)}
+                aria-label="Notifications"
+              >
+                <Bell size={20} fill="black" stroke="black" strokeWidth={1} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-[#f5af02] text-black text-[8px] font-black w-4 h-4 flex items-center justify-center rounded-full border border-white">
+                    {unreadCount}
                   </span>
+                )}
+              </button>
+            )}
+
+            {/* Cart */}
+            {isAuthenticated && pathname !== "/login" && (
+              <button
+                onClick={() => setIsCartOpen(true)}
+                className="relative text-black hover:opacity-70 transition-opacity cursor-pointer"
+                aria-label="Shopping Cart"
+              >
+                <ShoppingCart size={20} strokeWidth={1.5} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 bg-[#f5af02] text-black text-[8px] font-black w-4 h-4 flex items-center justify-center rounded-full border border-white">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden text-black hover:opacity-70 transition-opacity cursor-pointer"
+              aria-label="Toggle Menu"
+            >
+              {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* ── YELLOW NAV BAR — desktop only ── */}
+      <nav className="bg-[#f5b21a] border-b border-yellow-600/10 w-full hidden md:block">
+        <div className="flex items-center justify-center h-9 max-w-[1280px] mx-auto px-4">
+          {NAV_LINKS.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex items-center h-full px-4 lg:px-7 text-[12px] font-semibold uppercase tracking-wider text-black hover:bg-black hover:text-white transition-all duration-200 whitespace-nowrap"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </nav>
+
+      {/* ── MOBILE DRAWER ── */}
+      {isMenuOpen && (
+        <div className="md:hidden absolute top-[64px] left-0 w-full bg-white shadow-2xl z-40 border-t border-gray-100 animate-in slide-in-from-top duration-200">
+          <div className="flex flex-col py-2">
+
+            {/* User info */}
+            {isAuthenticated && pathname !== "/login" && (
+              <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 mb-1">
+                <div className="flex items-center gap-3">
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest leading-none">Logged in as</span>
+                    <span className="text-[12px] text-black font-black uppercase truncate tracking-tight">
+                      {isSubAccount && subAccountName ? subAccountName : displayUser}
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
 
-            <div className="flex items-center gap-8">
-              {/* Notification Bell */}
-              {isAuthenticated && (
-                <div
-                  className="relative cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => setIsNotificationOpen(true)}
+            {/* Nav links */}
+            <div className="px-4 py-2">
+              <span className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em] block mb-2">Navigation</span>
+              {NAV_LINKS.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="py-2.5 text-[12px] font-bold uppercase tracking-wide text-black hover:text-[#f5b21a] flex items-center justify-between group"
+                  onClick={() => setIsMenuOpen(false)}
                 >
-                  <div className="text-black">
-                    <Bell size={26} fill="black" stroke="black" strokeWidth={1} />
-                  </div>
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1.5 -right-2.5 bg-[#f5af02] text-black text-[11px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm">
-                      {unreadCount}
-                    </span>
-                  )}
-                </div>
-              )}
+                  {item.label}
+                  <span className="text-gray-300 group-hover:text-[#f5b21a] transition-colors text-[10px]">→</span>
+                </Link>
+              ))}
+            </div>
 
-              {/* Language (Arabic) placeholder as styled text */}
-              <span className="text-black text-[14px] font-medium cursor-pointer transition-colors tracking-tight">
-                Arabic
-              </span>
+            {/* Quick actions */}
+            <div className="px-4 py-3 mt-1 border-t border-gray-100">
+              <span className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em] block mb-2">Quick Actions</span>
 
-              {/* Profile Avatar & Dropdown */}
-              {isAuthenticated && (
-                <div className="relative" ref={dropdownRef}>
+              {isAuthenticated && pathname !== "/login" && (
+                <>
                   <button
-                    onClick={() => setIsProfileOpen(!isProfileOpen)}
-                    className="text-black transition-colors cursor-pointer flex items-center"
-                    aria-label="User Profile"
+                    onClick={() => { setIsNotificationOpen(true); setIsMenuOpen(false); }}
+                    className="py-2.5 text-[12px] font-bold text-gray-700 flex items-center gap-3 w-full"
                   >
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.33 4 18V20H20V18C20 15.33 14.67 14 12 14Z" />
-                    </svg>
+                    <Bell size={16} /> Notifications ({unreadCount})
                   </button>
-
-                  {isProfileOpen && (
-                    <div className="absolute right-0 mt-3 w-56 bg-white rounded-sm shadow-2xl border border-gray-200 py-1 z-[100]">
-                      <Link
-                        href="/my-account"
-                        className="block px-5 py-3 text-[14px] font-bold text-gray-800 hover:bg-gray-50 transition-colors"
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        My Account
-                      </Link>
-
-                      {isSubAccount && (
-                        <Link
-                          href="/my-account"
-                          className="block px-5 py-3 text-[14px] font-bold text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
-                          onClick={() => {
-                            setIsProfileOpen(false);
-                            if (typeof window !== "undefined") {
-                              localStorage.removeItem("subAccountName");
-                              localStorage.removeItem("isSubAccount");
-                            }
-                            setSubAccountName(null);
-                            setIsSubAccount(false);
-                          }}
-                        >
-                          Back to Main Account
-                        </Link>
-                      )}
-
-                      <button
-                        onClick={handleLogout}
-                        className="w-full text-left px-5 py-3 text-[14px] font-bold text-gray-800 hover:bg-gray-50 transition-colors cursor-pointer border-t border-gray-100"
-                      >
-                        Sign Out
-                      </button>
-                    </div>
-                  )}
-                </div>
+                  <Link href="/my-account" className="py-2.5 text-[12px] font-bold text-gray-700 flex items-center gap-3" onClick={() => setIsMenuOpen(false)}>
+                    <UserCircle size={16} /> My Account
+                  </Link>
+                </>
               )}
 
-              {/* Cart Icon */}
-              {isAuthenticated && (
+              <button className="py-2.5 text-[12px] font-bold text-gray-700 flex items-center gap-3 w-full">
+                <span className="w-4 text-center font-black text-[10px]">AR</span> Arabic
+              </button>
+
+              {isAuthenticated && pathname !== "/login" && (
                 <button
-                  onClick={() => setIsCartOpen(true)}
-                  className="relative text-black hover:opacity-80 transition-opacity cursor-pointer"
-                  aria-label="Shopping Cart"
+                  onClick={handleLogout}
+                  className="py-2.5 mt-2 text-[12px] font-bold text-red-600 flex items-center gap-3 border-t border-gray-100 w-full pt-3"
                 >
-                  <ShoppingCart size={28} strokeWidth={1.5} />
-                  {cartCount > 0 && (
-                    <span className="absolute -top-2.5 -right-3 bg-[#f5af02] text-black text-[11px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm">
-                      {cartCount}
-                    </span>
-                  )}
+                  <LogOut size={16} /> Sign Out
                 </button>
               )}
             </div>
           </div>
         </div>
-      </header>
+      )}
 
-      {/* Cart Drawer */}
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-
-      {/* Notification Drawer */}
       <NotificationDrawer isOpen={isNotificationOpen} onClose={() => setIsNotificationOpen(false)} />
-
-      {/* Secondary Navigation Section */}
-      <nav className="bg-[#f5b21a] border-b border-yellow-600/10 w-full relative h-[50px]">
-        <div className="w-full flex items-center justify-center h-full">
-
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center h-full text-[14px] lg:text-[15px] text-black font-medium uppercase tracking-wider">
-            {[
-              { label: 'All Tyres', href: '/products' },
-              { label: 'About Us', href: '/about' },
-              { label: 'Branch Locations', href: '/locations' },
-              { label: 'User Guides', href: '/guides' },
-              { label: 'Product Catalogue', href: '/catalogue' },
-            ].map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex items-center px-8 lg:px-12 relative transition-all duration-200 cursor-pointer h-full whitespace-nowrap text-black hover:bg-black hover:text-white"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </div>
-
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex w-full justify-between items-center">
-            <span className="text-sm font-bold uppercase tracking-widest text-black/60">Menu</span>
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 text-black hover:bg-black/5 rounded-md transition-colors cursor-pointer"
-              aria-label="Toggle Navigation"
-            >
-              {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Sidebar/Drawer Menu */}
-        {isMenuOpen && (
-          <div className="absolute top-full left-0 w-full bg-[#f5b21a] border-t border-yellow-600/10 shadow-xl md:hidden animate-in slide-in-from-top duration-300 z-40">
-            <div className="flex flex-col py-2">
-              <Link
-                href="/products"
-                className="px-8 py-4 text-black font-semibold uppercase tracking-wide hover:bg-black hover:text-white transition-all"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                All Tyres
-              </Link>
-              <Link
-                href="/about"
-                className="px-8 py-4 text-black font-semibold uppercase tracking-wide hover:bg-black hover:text-white transition-all"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                About Us
-              </Link>
-              <Link
-                href="/locations"
-                className="px-8 py-4 text-black font-semibold uppercase tracking-wide hover:bg-black hover:text-white transition-all"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Branch Locations
-              </Link>
-              <Link
-                href="/guides"
-                className="px-8 py-4 text-black font-semibold uppercase tracking-wide hover:bg-black hover:text-white transition-all"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                User Guides
-              </Link>
-              <Link
-                href="/catalogue"
-                className="px-8 py-4 text-black font-semibold uppercase tracking-wide hover:bg-black hover:text-white transition-all"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Product Catalogue
-              </Link>
-            </div>
-          </div>
-        )}
-      </nav>
-    </div >
+    </div>
   );
 }

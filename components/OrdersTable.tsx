@@ -21,8 +21,8 @@ interface OrdersTableProps {
 
 const OrdersTable: React.FC<OrdersTableProps> = ({ orders, onViewOrder, onReorder }) => {
     return (
-        <div className="w-full overflow-x-auto">
-            <table className="w-full text-[13px] text-left border-collapse">
+        <div className="w-full overflow-x-auto -mx-0">
+            <table className="w-full text-[13px] text-left border-collapse min-w-[700px]">
                 <thead>
                     <tr className="bg-[#f5a623] text-black text-[12px] uppercase font-bold tracking-wide">
                         <th className="px-4 py-3 border border-[#e6950f]/30">Order #</th>
