@@ -73,8 +73,8 @@ const Pagination: React.FC<PaginationProps> = ({
                             key={p}
                             onClick={() => onPageChange(p as number)}
                             className={`w-8 h-8 flex items-center justify-center text-[13px] rounded-full transition-all duration-200 ${currentPage === p
-                                    ? "bg-[#f5a623] text-black font-bold shadow-sm"
-                                    : "bg-white text-gray-700 hover:bg-gray-200 border border-gray-200"
+                                ? "bg-[#f5a623] text-black font-bold shadow-sm"
+                                : "bg-white text-gray-700 hover:bg-gray-200 border border-gray-200"
                                 }`}
                         >
                             {p}

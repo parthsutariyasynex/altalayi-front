@@ -323,13 +323,13 @@ function MyOrdersPageContent() {
     }
 
     return (
-        <>
-            <div className="flex flex-col md:flex-row max-w-[1440px] mx-auto mt-4 md:mt-[80px] px-2 sm:px-4 md:px-0">
+        <div className="min-h-screen flex flex-col w-full bg-[#fcfcfc] font-rubik">
+            <div className="flex flex-1 w-full">
                 <Sidebar />
 
-                <main className="flex-1 p-8 min-h-screen">
+                <main className="flex-1 w-full px-4 md:px-6 lg:px-8 py-10">
                     <div className="flex justify-between items-center mb-8">
-                        <h1 className="text-[24px] font-bold text-black uppercase">
+                        <h1 className="text-[26px] font-black text-black mb-10 uppercase tracking-wide">
                             MY ORDERS
                         </h1>
                         <button
@@ -338,13 +338,18 @@ function MyOrdersPageContent() {
                             className={`flex items-center gap-2 border-2 border-[#f5a623] text-black text-[12px] font-bold px-5 py-2 uppercase tracking-wide hover:bg-[#f5a623] transition-colors ${isExporting ? 'opacity-70 cursor-not-allowed' : ''}`}
                         >
                             {isExporting ? (
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black"></div>
+                                <>
+                                    <div className="animate-spin h-3.5 w-3.5 border-2 border-black border-t-transparent rounded-full"></div>
+                                    Exporting...
+                                </>
                             ) : (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
+                                <>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                    Export Orders
+                                </>
                             )}
-                            {isExporting ? 'Exporting...' : 'Export Orders'}
                         </button>
                     </div>
 
@@ -359,24 +364,17 @@ function MyOrdersPageContent() {
                         statusCounts={statusCounts}
                     />
 
-                    {isLoading && !hasFetched ? (
-                        <div className="py-10">
-                            {[...Array(5)].map((_, i) => (
-                                <div key={i} className="h-16 bg-gray-50 mb-2 animate-pulse rounded-lg"></div>
-                            ))}
+                    {/* Standard Magento Check: If totalCount=0 and searched, show nothing or reset.
+                        But here we just show no orders.
+                    */}
+                    {!isLoading && !hasFetched && orders.length === 0 && (
+                        <div className="text-gray-500 py-20 text-center animate-pulse">
+                            Initializing orders dashboard...
                         </div>
-                    ) : error ? (
-                        <div className="text-center py-16 text-red-500">
-                            <p className="text-[14px] font-medium mb-3">{error}</p>
-                            <button
-                                onClick={() => fetchOrders(searchInput, statusInput, currentPage, pageSize, companyInput)}
-                                className="h-[45px] px-8 bg-black text-white text-[13px] font-bold uppercase tracking-wider hover:bg-gray-800 transition-all rounded-[2px]"
-                            >
-                                Try Again
-                            </button>
-                        </div>
-                    ) : orders.length === 0 ? (
-                        <div className="w-full">
+                    )}
+
+                    {hasFetched && orders.length === 0 && !isLoading ? (
+                        <div className="py-12 bg-white border border-gray-100 rounded-lg shadow-sm px-10">
                             <div className="mb-4">
                                 <button
                                     onClick={handleResetClick}
@@ -413,6 +411,6 @@ function MyOrdersPageContent() {
                     )}
                 </main>
             </div>
-        </>
+        </div>
     );
 }

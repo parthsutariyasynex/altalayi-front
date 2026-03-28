@@ -3,39 +3,49 @@
 import React, { useState, useEffect } from "react";
 import { ArrowUp } from "lucide-react";
 
+/**
+ * ScrollToTop Component
+ * Listens to the main layout scroll container instead of window.
+ */
 export default function ScrollToTop() {
     const [isVisible, setIsVisible] = useState(false);
 
-    const toggleVisibility = () => {
-        if (window.scrollY > 300) {
-            setIsVisible(true);
-        } else {
-            setIsVisible(false);
-        }
-    };
+    useEffect(() => {
+        const container = document.getElementById('main-scroll-container');
+        if (!container) return;
+
+        const handleScroll = () => {
+            if (container.scrollTop > 300) {
+                setIsVisible(true);
+            } else {
+                setIsVisible(false);
+            }
+        };
+
+        container.addEventListener("scroll", handleScroll);
+        return () => container.removeEventListener("scroll", handleScroll);
+    }, []);
 
     const scrollToTop = () => {
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth",
-        });
+        const container = document.getElementById('main-scroll-container');
+        if (container) {
+            container.scrollTo({
+                top: 0,
+                behavior: "smooth",
+            });
+        }
     };
-
-    useEffect(() => {
-        window.addEventListener("scroll", toggleVisibility);
-        return () => window.removeEventListener("scroll", toggleVisibility);
-    }, []);
 
     if (!isVisible) return null;
 
     return (
-        <div className="fixed bottom-10 right-10 z-[100] animate-fade-in group pointer-events-none">
+        <div className="fixed bottom-24 right-8 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-300">
             <button
                 onClick={scrollToTop}
-                className="bg-[#f5a623] hover:bg-black text-black hover:text-white p-3 md:p-4 rounded-full shadow-2xl transition-all duration-500 transform group-hover:scale-110 active:scale-95 border-2 border-white/40 pointer-events-auto"
+                className="w-12 h-12 bg-white border border-gray-200 rounded-full shadow-lg flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-all group active:scale-90"
                 aria-label="Scroll to top"
             >
-                <ArrowUp className="w-5 h-5 md:w-6 md:h-6 stroke-[3px]" />
+                <ArrowUp size={24} strokeWidth={1.5} className="group-hover:-translate-y-1 transition-transform" />
             </button>
         </div>
     );

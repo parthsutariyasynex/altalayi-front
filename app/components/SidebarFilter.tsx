@@ -254,52 +254,57 @@ function SidebarFilter({
     }, [filterGroups, selectedFilters, RELEVANT_CODES]);
 
     return (
-        <aside className={`${isCollapsed ? "w-[50px]" : "w-[300px]"} bg-white border-r border-gray-200 h-full flex flex-col transition-all duration-300`}>
-            <div className="flex border-b border-gray-200 h-[60px] flex-shrink-0">
+        <aside
+            style={{ width: isCollapsed ? 50 : 300, minWidth: isCollapsed ? 50 : 300 }}
+            className="flex-shrink-0 bg-white border-r border-gray-200 self-stretch flex flex-col"
+        >
+            <div className="sticky top-[80px] h-full flex flex-col bg-white">
+                <div className="flex border-b border-gray-200 h-[60px] flex-shrink-0 bg-white shadow-sm">
+                    {!isCollapsed && (
+                        <div className="flex-1 px-6 flex items-center overflow-hidden">
+                            <h2 className="font-bold text-gray-900 text-[16px]">Filter Options</h2>
+                        </div>
+                    )}
+                    <div
+                        onClick={() => setIsCollapsed(!isCollapsed)}
+                        className={`${isCollapsed ? "w-full" : "w-[50px]"} flex items-center justify-center bg-gray-50 border-l border-gray-200 cursor-pointer`}
+                    >
+                        <ChevronLeft className={`w-[18px] h-[18px] transition-transform ${isCollapsed ? "rotate-180" : ""}`} />
+                    </div>
+                </div>
+
                 {!isCollapsed && (
-                    <div className="flex-1 px-6 flex items-center overflow-hidden">
-                        <h2 className="font-bold text-gray-900 text-[16px]">Filter Options</h2>
+                    <div className="flex-1 flex flex-col bg-white">
+                        <div className="w-full">
+                            {loading ? (
+                                <div className="p-10 flex flex-col gap-3 items-center"><div className="w-6 h-6 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div></div>
+                            ) : error ? (
+                                <div className="p-5 text-red-500 text-xs">{error}</div>
+                            ) : (
+                                visibleFilterGroups.map((group) => (
+                                    <FilterGroup
+                                        key={group.code}
+                                        group={group}
+                                        isExpanded={!!expandedGroups[group.code]}
+                                        onToggle={() => toggleGroup(group.code)}
+                                        selectedValues={selectedFilters[group.code] || []}
+                                        onCheckboxChange={handleCheckboxChange}
+                                    />
+                                ))
+                            )}
+                        </div>
+
+                        <div className="p-4 border-t border-gray-100 bg-white">
+                            <Link href="/guides">
+                                <div className="bg-[#f5a623] rounded-sm p-4 flex items-center gap-4 cursor-pointer hover:bg-black group transition-all">
+                                    <FileText size={20} className="text-white group-hover:scale-110 transition-transform" />
+                                    <span className="font-black text-black group-hover:text-white text-xs uppercase">USER GUIDES</span>
+                                </div>
+                            </Link>
+                        </div>
                     </div>
                 )}
-                <div
-                    onClick={() => setIsCollapsed(!isCollapsed)}
-                    className={`${isCollapsed ? "w-full" : "w-[50px]"} flex items-center justify-center bg-gray-50 border-l border-gray-200 cursor-pointer`}
-                >
-                    <ChevronLeft className={`w-[18px] h-[18px] transition-transform ${isCollapsed ? "rotate-180" : ""}`} />
-                </div>
             </div>
-
-            {!isCollapsed && (
-                <div className="flex-1 flex flex-col min-h-0">
-                    <div className="flex-1 overflow-y-auto w-full custom-scrollbar">
-                        {loading ? (
-                            <div className="p-10 flex flex-col gap-3 items-center"><div className="w-6 h-6 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div></div>
-                        ) : error ? (
-                            <div className="p-5 text-red-500 text-xs">{error}</div>
-                        ) : (
-                            visibleFilterGroups.map((group) => (
-                                <FilterGroup
-                                    key={group.code}
-                                    group={group}
-                                    isExpanded={!!expandedGroups[group.code]}
-                                    onToggle={() => toggleGroup(group.code)}
-                                    selectedValues={selectedFilters[group.code] || []}
-                                    onCheckboxChange={handleCheckboxChange}
-                                />
-                            ))
-                        )}
-                    </div>
-
-                    <div className="p-4 border-t border-gray-100 mt-auto">
-                        <Link href="/guides">
-                            <div className="bg-[#f5a623] rounded-sm p-4 flex items-center gap-4 cursor-pointer hover:bg-black group transition-all">
-                                <FileText size={20} className="text-white group-hover:scale-110 transition-transform" />
-                                <span className="font-black text-black group-hover:text-white text-xs uppercase">USER GUIDES</span>
-                            </div>
-                        </Link>
-                    </div>
-                </div>
-            )}
         </aside>
     );
 }

@@ -133,11 +133,11 @@ export default function DashboardPage() {
     const value = dashboardData?.total_order_value || { year: '0.00', quarter: '0.00', months: '0.00' };
 
     return (
-        <div className="flex flex-col md:flex-row min-h-screen">
+        <div className="flex-1 flex flex-col md:flex-row min-h-0">
             <Sidebar />
 
             {/* Right Content Area */}
-            <main className="flex-1 p-8 bg-[#f9f9f9] min-h-screen font-['Rubik',sans-serif]">
+            <main className="flex-1 p-8 bg-[#f9f9f9] min-h-0 font-['Rubik',sans-serif]">
                 <div className="max-w-[1240px] mx-auto">
 
                     {/* Sub-account Identity Banner */}

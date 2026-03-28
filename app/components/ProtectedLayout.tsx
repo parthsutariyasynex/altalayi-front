@@ -42,22 +42,31 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
   const showContent = isPublicPage || isAuthenticated;
 
   // Always render children in the DOM to preserve layout dimensions.
-  // Use opacity instead of invisible to avoid any reflow.
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      {/* pt offsets the fixed navbar: 64px header on mobile, 64+36=100px on desktop (header+yellow nav) */}
-      <main className="flex-1 flex flex-col pt-[64px] md:pt-[100px]">
-        <div className="flex-1 flex flex-col" style={{ opacity: showContent ? 1 : 0 }}>
+    <div className="flex flex-col min-h-screen bg-white">
+      {/* 🧭 Sticky Navbar */}
+      <div className="sticky top-0 z-[60] flex-shrink-0 bg-white shadow-sm">
+        <Navbar />
+      </div>
+
+      {/* 🚀 Main Content Wrapper */}
+      <main className="flex-1 flex flex-col min-h-0 w-full relative">
+        <div className="flex-1 flex flex-col w-full">
           {children}
         </div>
+
+        {/* 🧱 Footer */}
+        {!hideFooter && <Footer />}
+
+        {/* ⏲ Global Loading State (Fixed overlay only when not ready) */}
         {!showContent && (
-          <div className="fixed inset-0 flex items-center justify-center bg-white/80 z-30" style={{ top: '64px' }}>
-            <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-[#f5a623]"></div>
+          <div className="fixed inset-0 flex items-center justify-center bg-white z-[70] transition-opacity duration-300">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-100 border-t-[#f5a623]"></div>
           </div>
         )}
       </main>
-      {!hideFooter && <Footer />}
+
+      {/* 🔝 Scroll To Top */}
       <ScrollToTop />
     </div>
   );

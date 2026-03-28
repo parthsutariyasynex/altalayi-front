@@ -96,7 +96,7 @@ export default function Navbar() {
   }, []);
 
   return (
-    <div className="w-full fixed top-0 left-0 right-0 z-50 flex flex-col" style={{ paddingRight: 'var(--removed-body-scroll-bar-size, 0px)' }}>
+    <div className="w-full sticky top-0 z-50 flex flex-col">
 
       {/* ── HEADER ── */}
       <header className="bg-white border-b border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">

@@ -273,12 +273,11 @@ export default function OrderDetailsPage() {
 
     if (authStatus === "loading" || (isLoading && !order)) {
         return (
-            <div className="min-h-screen bg-white">
-
-                <div className="flex max-w-[1440px] mx-auto mt-[100px]">
+            <div className="min-h-screen flex flex-col w-full bg-[#fcfcfc] font-rubik">
+                <div className="flex flex-1 w-full">
                     <Sidebar />
-                    <main className="flex-1 p-8 bg-[#fcfcfc] flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#f5a623]"></div>
+                    <main className="flex-1 w-full flex items-center justify-center p-8">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-yellow-400"></div>
                     </main>
                 </div>
             </div>
@@ -287,17 +286,16 @@ export default function OrderDetailsPage() {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-white">
-
-                <div className="flex max-w-[1440px] mx-auto mt-[100px]">
+            <div className="min-h-screen flex flex-col w-full bg-[#fcfcfc] font-rubik">
+                <div className="flex flex-1 w-full">
                     <Sidebar />
-                    <main className="flex-1 p-8 bg-[#fcfcfc]">
-                        <div className="bg-red-50 border border-red-100 text-red-600 p-8 rounded-lg text-center">
-                            <p className="font-bold text-[16px] mb-2">Error Loading Order</p>
-                            <p className="text-[14px]">{error}</p>
+                    <main className="flex-1 w-full px-4 md:px-6 lg:px-8 py-10">
+                        <div className="bg-red-50 border border-red-100 text-red-600 p-8 rounded-lg text-center shadow-sm">
+                            <p className="font-bold text-[14px] uppercase tracking-widest mb-2">Error Loading Order</p>
+                            <p className="text-xs">{error}</p>
                             <button
                                 onClick={fetchOrderDetails}
-                                className="mt-4 px-6 py-2 bg-red-600 text-white rounded font-bold text-[12px] uppercase"
+                                className="mt-6 px-8 py-2.5 bg-red-600 text-white rounded-md font-black text-[10px] uppercase tracking-widest hover:bg-red-700 transition-all active:scale-95"
                             >
                                 Try Again
                             </button>
@@ -315,49 +313,49 @@ export default function OrderDetailsPage() {
     const paymentMethod = order.payment?.additional_information?.[0] || order.payment?.method || "N/A";
 
     return (
-        <div className="min-h-screen bg-white">
-
-
-            <div className="flex max-w-[1440px] mx-auto mt-[100px]">
+        <div className="min-h-screen flex flex-col w-full bg-[#fcfcfc] font-rubik">
+            <div className="flex flex-1 w-full">
                 {/* Left Sidebar */}
                 <Sidebar />
 
                 {/* Right Content */}
-                <main className="flex-1 p-8 bg-[#fcfcfc] min-h-screen">
+                <main className="flex-1 w-full px-4 md:px-6 lg:px-8 py-10 min-w-0 text-xs">
                     {/* Header Section */}
-                    <div className="flex flex-col mb-8">
-                        <div className="flex justify-between items-start mb-6">
-                            <div>
-                                <div className="flex items-center gap-4 mb-1">
-                                    <h1 className="text-[26px] font-black text-black tracking-tighter uppercase leading-none">
-                                        ORDER # {order.increment_id}
-                                    </h1>
-                                    <div className="px-5 py-1.5 bg-white border border-gray-300 text-black text-[12px] font-bold uppercase rounded-sm shadow-sm">
-                                        {formatStatus(order.status)}
-                                    </div>
-                                </div>
-                                <p className="text-gray-900 text-[14px] font-medium">
-                                    {formatDate(order.created_at)}
-                                </p>
+                    <div className="flex flex-col mb-10">
+                        <div className="flex justify-between items-center mb-10 border-b-2 border-yellow-400 pb-2">
+                            <div className="flex items-center gap-4">
+                                <h1 className="text-[26px] font-black text-black uppercase tracking-tight">
+                                    ORDER # {order.increment_id}
+                                </h1>
+                                <span className={`inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${order.status?.toLowerCase().includes('pending') ? 'bg-yellow-100 text-yellow-700' :
+                                    order.status?.toLowerCase().includes('complete') ? 'bg-green-100 text-green-700' :
+                                        order.status?.toLowerCase().includes('cancel') ? 'bg-red-100 text-red-700' :
+                                            'bg-gray-100 text-gray-700'
+                                    }`}>
+                                    {formatStatus(order.status)}
+                                </span>
+                            </div>
+                            <div className="text-gray-500 font-bold uppercase tracking-widest text-[11px]">
+                                {formatDate(order.created_at)}
                             </div>
                         </div>
 
-                        <div className="flex justify-between items-center w-full mt-4">
+                        <div className="flex justify-start items-center gap-3 w-full">
                             <button
                                 onClick={handleReorder}
-                                className="bg-[#f4b400] hover:bg-[#d9a000] text-black font-bold py-3 px-10 rounded-sm text-[13px] uppercase tracking-wide transition-colors shadow-sm"
+                                className="bg-yellow-400 hover:bg-yellow-500 text-black font-black py-2.5 px-8 rounded-md text-[11px] uppercase tracking-widest transition-all shadow-sm active:scale-95 border border-yellow-500"
                             >
                                 REORDER
                             </button>
                             <button
                                 onClick={handlePrintOrder}
                                 disabled={isPrinting}
-                                className={`bg-[#f4b400] hover:bg-[#d9a000] text-black font-bold py-3 px-8 rounded-sm text-[13px] uppercase tracking-wide transition-colors shadow-sm flex items-center gap-2 no-print ${isPrinting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                className={`bg-white hover:bg-gray-50 text-black font-black py-2.5 px-8 rounded-md text-[11px] uppercase tracking-widest transition-all border border-[#ebebeb] shadow-sm flex items-center gap-2 no-print active:scale-95 ${isPrinting ? 'opacity-70 cursor-not-allowed' : ''}`}
                             >
                                 {isPrinting ? (
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black"></div>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-black border-t-transparent"></div>
                                 ) : (
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                                         <polyline points="6 9 6 2 18 2 18 9"></polyline>
                                         <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
                                         <rect x="6" y="14" width="12" height="8"></rect>
@@ -369,41 +367,39 @@ export default function OrderDetailsPage() {
                     </div>
 
                     {/* Items Ordered Table */}
-                    <div className="bg-white rounded-md border border-gray-200 overflow-hidden mb-10 shadow-sm">
-                        <div className="border-b border-gray-200 px-6 py-4 bg-[#f8f8f8]">
-                            <h2 className="text-[14px] font-bold text-gray-900 uppercase tracking-tight">
+                    <div className="bg-white rounded-md border border-[#ebebeb] overflow-hidden mb-10 shadow-sm">
+                        <div className="border-b border-[#ebebeb] px-6 py-4 bg-gray-50">
+                            <h2 className="text-xs font-black text-black uppercase tracking-widest">
                                 Items Ordered
                             </h2>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
-                                <thead className="bg-[#fcfcfc] text-[11px] font-bold text-black uppercase border-b border-gray-200">
+                                <thead className="bg-gray-50/50 text-[11px] font-black text-black uppercase border-b border-[#ebebeb]">
                                     <tr>
-                                        <th className="px-6 py-4 font-black">PRODUCT NAME</th>
-                                        <th className="px-6 py-4 font-black">SKU</th>
-                                        <th className="px-6 py-4 font-black text-right">PRICE</th>
-                                        <th className="px-6 py-4 font-black text-center">QTY</th>
-                                        <th className="px-6 py-4 font-black text-right">ITEM TOTAL</th>
+                                        <th className="px-6 py-4 tracking-widest">Product Name</th>
+                                        <th className="px-6 py-4 tracking-widest text-center">SKU</th>
+                                        <th className="px-6 py-4 tracking-widest text-center">Price</th>
+                                        <th className="px-6 py-4 tracking-widest text-center">Qty</th>
+                                        <th className="px-6 py-4 tracking-widest text-right">Subtotal</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {order.items?.map((item: any) => (
-                                        <tr key={item.item_id || item.id} className="text-[13px] hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-5 text-gray-900 font-bold">
+                                <tbody className="divide-y divide-[#ebebeb]">
+                                    {order.items?.map((item: any, idx: number) => (
+                                        <tr key={item.item_id || item.id} className={`text-xs hover:bg-yellow-50/30 transition-colors ${idx % 2 !== 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                                            <td className="px-6 py-5 text-black font-bold">
                                                 {item.name}
                                             </td>
-                                            <td className="px-6 py-5 text-gray-600">
+                                            <td className="px-6 py-5 text-gray-400 font-bold text-center">
                                                 {item.sku}
                                             </td>
-                                            <td className=" currency-riyal">
-
+                                            <td className="px-6 py-5 text-black font-bold text-center">
                                                 {formatCurrency(item.price)}
                                             </td>
-                                            <td className="px-6 py-5 text-center text-gray-700">
-                                                Ordered: {Math.round(item.qty_ordered)}
+                                            <td className="px-6 py-5 text-center text-gray-500 font-bold uppercase">
+                                                {Math.round(item.qty_ordered)}
                                             </td>
-                                            <td className="px-6 py-5 text-right font-black text-black price currency-riyal">
-
+                                            <td className="px-6 py-5 text-right font-black text-black">
                                                 {formatCurrency(item.row_total)}
                                             </td>
                                         </tr>
@@ -413,35 +409,32 @@ export default function OrderDetailsPage() {
                         </div>
 
                         {/* Order Summary */}
-                        <div className="flex justify-end p-8 bg-white border-t border-gray-50">
-                            <div className="w-full max-w-[340px] space-y-4">
-                                <div className="flex justify-between items-center text-[14px]">
-                                    <span className="text-gray-900 font-bold uppercase text-right flex-1 mr-10">Items Total</span>
-                                    <span className="font-bold text-gray-900 w-[110px] text-right price currency-riyal">
-
+                        <div className="flex justify-end p-8 bg-gray-50/30 border-t border-[#ebebeb]">
+                            <div className="w-full max-w-[340px] space-y-3">
+                                <div className="flex justify-between items-center text-xs">
+                                    <span className="text-gray-400 font-bold uppercase tracking-widest flex-1 text-right mr-10">Items Total</span>
+                                    <span className="font-black text-black w-[110px] text-right">
                                         {formatCurrency(order.subtotal)}
                                     </span>
                                 </div>
 
-                                <div className="flex justify-between items-center text-[14px]">
-                                    <span className="text-gray-900 font-bold uppercase text-right flex-1 mr-10">VAT (15%)</span>
-                                    <span className="font-bold text-gray-900 w-[110px] text-right price currency-riyal">
-
+                                <div className="flex justify-between items-center text-xs">
+                                    <span className="text-gray-400 font-bold uppercase tracking-widest flex-1 text-right mr-10">VAT (15%)</span>
+                                    <span className="font-black text-black w-[110px] text-right">
                                         {formatCurrency(order.tax_amount)}
                                     </span>
                                 </div>
 
-                                <div className="flex justify-between items-center text-black pt-2">
-                                    <span className="font-black uppercase text-right flex-1 mr-10 text-[18px]">Grand Total</span>
-                                    <span className="font-black w-[110px] text-right text-[18px] price currency-riyal">
-
+                                <div className="flex justify-between items-center text-black pt-4 border-t border-gray-200">
+                                    <span className="font-black uppercase tracking-tighter flex-1 text-right mr-10 text-[18px]">Grand Total</span>
+                                    <span className="font-black w-[110px] text-right text-[18px]">
                                         {formatCurrency(order.grand_total)}
                                     </span>
                                 </div>
 
-                                <div className="flex justify-between items-center text-[14px] pt-1">
-                                    <span className="text-gray-900 font-bold uppercase text-right flex-1 mr-10">Total Qty</span>
-                                    <span className="font-bold text-black w-[110px] text-right">
+                                <div className="flex justify-between items-center text-[11px] pt-1 pt-4 opacity-50">
+                                    <span className="text-gray-500 font-black uppercase tracking-widest flex-1 text-right mr-10">Total Qty</span>
+                                    <span className="font-black text-black w-[110px] text-right">
                                         {Math.round(order.total_item_count || order.items?.reduce((acc: number, item: any) => acc + (item.qty_ordered || 0), 0))}
                                     </span>
                                 </div>
@@ -451,27 +444,27 @@ export default function OrderDetailsPage() {
 
                     {/* Order Information Section */}
                     <div className="mb-10">
-                        <div className="border-b border-gray-200 pb-2 mb-6">
-                            <h2 className="text-[18px] font-bold text-black uppercase tracking-tight">
+                        <div className="border-b-2 border-yellow-400 inline-block pb-1 mb-10">
+                            <h2 className="text-[18px] font-black text-black uppercase tracking-tight">
                                 Order Information
                             </h2>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {/* Shipping Address */}
-                            <div className="bg-white border border-gray-200 rounded-sm shadow-sm">
-                                <div className="bg-[#f8f8f8] px-5 py-3 border-b border-gray-200">
-                                    <h3 className="text-[14px] font-bold text-black uppercase tracking-tight">Shipping Address</h3>
+                            <div className="bg-white border border-[#ebebeb] rounded-md shadow-sm overflow-hidden">
+                                <div className="bg-gray-50 px-5 py-3 border-b border-[#ebebeb]">
+                                    <h3 className="text-xs font-black text-black uppercase tracking-widest">Shipping Address</h3>
                                 </div>
-                                <div className="p-6 text-[14px] text-gray-700 leading-relaxed min-h-[140px]">
+                                <div className="p-6 text-xs text-gray-600 leading-relaxed min-h-[140px]">
                                     {shippingAddress ? (
-                                        <div className="space-y-0.5">
-                                            <p>{shippingAddress.firstname} {shippingAddress.lastname}</p>
-                                            {shippingAddress.company && <p>{shippingAddress.company}</p>}
-                                            <p>{shippingAddress.street?.join(", ")}</p>
-                                            <p>{shippingAddress.city}, {shippingAddress.postcode}</p>
-                                            <p>{shippingAddress.country_id === "SA" ? "Saudi Arabia" : shippingAddress.country_id}</p>
-                                            <p className="pt-1">T: {shippingAddress.telephone}</p>
+                                        <div className="space-y-1">
+                                            <p className="font-black text-black uppercase mb-2">{shippingAddress.firstname} {shippingAddress.lastname}</p>
+                                            {shippingAddress.company && <p className="font-medium">{shippingAddress.company}</p>}
+                                            <p className="font-medium">{shippingAddress.street?.join(", ")}</p>
+                                            <p className="font-medium">{shippingAddress.city}, {shippingAddress.postcode}</p>
+                                            <p className="font-medium">{shippingAddress.country_id === "SA" ? "Saudi Arabia" : shippingAddress.country_id}</p>
+                                            <p className="pt-2 text-black font-black">T: <span className="text-gray-600 font-medium">{shippingAddress.telephone}</span></p>
                                         </div>
                                     ) : (
                                         <p className="text-gray-400 italic">No shipping address available</p>
@@ -480,30 +473,33 @@ export default function OrderDetailsPage() {
                             </div>
 
                             {/* Shipping Method */}
-                            <div className="bg-white border border-gray-200 rounded-sm shadow-sm">
-                                <div className="bg-[#f8f8f8] px-5 py-3 border-b border-gray-200">
-                                    <h3 className="text-[14px] font-bold text-black uppercase tracking-tight">Shipping Method</h3>
+                            <div className="bg-white border border-[#ebebeb] rounded-md shadow-sm overflow-hidden">
+                                <div className="bg-gray-50 px-5 py-3 border-b border-[#ebebeb]">
+                                    <h3 className="text-xs font-black text-black uppercase tracking-widest">Shipping Method</h3>
                                 </div>
-                                <div className="p-6 text-[14px] text-gray-700 leading-relaxed min-h-[140px]">
-                                    <p>{order.shipping_description || "Pickup from Warehouse"}</p>
-                                    <p className="mt-2"><span className="font-bold">Delivery Date</span> N/A</p>
+                                <div className="p-6 text-xs text-gray-600 leading-relaxed min-h-[140px]">
+                                    <p className="font-black text-black uppercase mb-2">{order.shipping_description || "Pickup from Warehouse"}</p>
+                                    <div className="mt-4 pt-4 border-t border-gray-100">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Expected Delivery</p>
+                                        <p className="font-bold text-black">N/A</p>
+                                    </div>
                                 </div>
                             </div>
 
                             {/* Billing Address */}
-                            <div className="bg-white border border-gray-200 rounded-sm shadow-sm">
-                                <div className="bg-[#f8f8f8] px-5 py-3 border-b border-gray-200">
-                                    <h3 className="text-[14px] font-bold text-black uppercase tracking-tight">Billing Address</h3>
+                            <div className="bg-white border border-[#ebebeb] rounded-md shadow-sm overflow-hidden">
+                                <div className="bg-gray-50 px-5 py-3 border-b border-[#ebebeb]">
+                                    <h3 className="text-xs font-black text-black uppercase tracking-widest">Billing Address</h3>
                                 </div>
-                                <div className="p-6 text-[14px] text-gray-700 leading-relaxed min-h-[140px]">
+                                <div className="p-6 text-xs text-gray-600 leading-relaxed min-h-[140px]">
                                     {billingAddress ? (
-                                        <div className="space-y-0.5">
-                                            <p>{billingAddress.firstname} {billingAddress.lastname}</p>
-                                            {billingAddress.company && <p>{billingAddress.company}</p>}
-                                            <p>{billingAddress.street?.join(", ")}</p>
-                                            <p>{billingAddress.city}, {billingAddress.postcode}</p>
-                                            <p>{billingAddress.country_id === "SA" ? "Saudi Arabia" : billingAddress.country_id}</p>
-                                            <p className="pt-1">T: {billingAddress.telephone}</p>
+                                        <div className="space-y-1">
+                                            <p className="font-black text-black uppercase mb-2">{billingAddress.firstname} {billingAddress.lastname}</p>
+                                            {billingAddress.company && <p className="font-medium">{billingAddress.company}</p>}
+                                            <p className="font-medium">{billingAddress.street?.join(", ")}</p>
+                                            <p className="font-medium">{billingAddress.city}, {billingAddress.postcode}</p>
+                                            <p className="font-medium">{billingAddress.country_id === "SA" ? "Saudi Arabia" : billingAddress.country_id}</p>
+                                            <p className="pt-2 text-black font-black">T: <span className="text-gray-600 font-medium">{billingAddress.telephone}</span></p>
                                         </div>
                                     ) : (
                                         <p className="text-gray-400 italic">No billing address available</p>
@@ -512,12 +508,16 @@ export default function OrderDetailsPage() {
                             </div>
 
                             {/* Payment Method */}
-                            <div className="bg-white border border-gray-200 rounded-sm shadow-sm">
-                                <div className="bg-[#f8f8f8] px-5 py-3 border-b border-gray-200">
-                                    <h3 className="text-[14px] font-bold text-black uppercase tracking-tight">Payment Method</h3>
+                            <div className="bg-white border border-[#ebebeb] rounded-md shadow-sm overflow-hidden">
+                                <div className="bg-gray-50 px-5 py-3 border-b border-[#ebebeb]">
+                                    <h3 className="text-xs font-black text-black uppercase tracking-widest">Payment Method</h3>
                                 </div>
-                                <div className="p-6 text-[14px] text-gray-700 leading-relaxed min-h-[140px]">
-                                    <p>{order.payment?.method_title || paymentMethod}</p>
+                                <div className="p-6 text-xs text-gray-600 leading-relaxed min-h-[140px]">
+                                    <p className="font-black text-black uppercase mb-1">{order.payment?.method_title || paymentMethod}</p>
+                                    <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Payment Confirmed</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -525,35 +525,35 @@ export default function OrderDetailsPage() {
 
                     {/* Order Attachments Section */}
                     <div className="mb-12">
-                        <div className="flex items-center gap-4 mb-4">
-                            <h2 className="text-[18px] font-black text-black uppercase tracking-tighter">
+                        <div className="border-b-2 border-yellow-400 inline-block pb-1 mb-10">
+                            <h2 className="text-[18px] font-black text-black uppercase tracking-tight">
                                 Order Attachments
                             </h2>
                         </div>
-                        <div className="h-[1px] bg-gray-200 w-full mb-6"></div>
 
                         {attachmentsError ? (
-                            <div className="bg-red-50 border border-red-100 text-red-600 p-6 rounded-md text-center">
-                                <p className="text-[14px]">{attachmentsError}</p>
+                            <div className="bg-red-50 border border-red-100 text-red-600 p-8 rounded-md text-center shadow-sm">
+                                <p className="text-xs font-bold uppercase tracking-widest mb-2">Error Loading Attachments</p>
+                                <p className="text-xs">{attachmentsError}</p>
                             </div>
                         ) : isAttachmentsLoading ? (
-                            <div className="bg-white rounded-md border border-gray-200 p-8 flex justify-center items-center">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#f5a623]"></div>
+                            <div className="bg-white rounded-md border border-[#ebebeb] p-20 flex justify-center items-center shadow-sm">
+                                <div className="animate-spin rounded-full h-10 w-10 border-b-4 border-yellow-400"></div>
                             </div>
                         ) : attachments.length > 0 ? (
-                            <div className="bg-white border border-gray-200 rounded-sm overflow-hidden shadow-sm">
+                            <div className="bg-white border border-[#ebebeb] rounded-md overflow-hidden shadow-sm">
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-[13px] border-collapse">
-                                        <thead>
-                                            <tr className="border-b border-gray-200">
-                                                <th className="px-6 py-4 font-black text-black text-left border-r border-gray-100 last:border-r-0 whitespace-nowrap">File Name</th>
-                                                <th className="px-6 py-4 font-black text-black text-center border-r border-gray-100 last:border-r-0 whitespace-nowrap">Document Type</th>
-                                                <th className="px-6 py-4 font-black text-black text-center border-r border-gray-100 last:border-r-0 whitespace-nowrap">Created On</th>
-                                                <th className="px-6 py-4 font-black text-black text-center border-r border-gray-100 last:border-r-0 whitespace-nowrap">Invoice Due</th>
-                                                <th className="px-6 py-4 font-black text-black text-center border-r border-gray-100 last:border-r-0 whitespace-nowrap">Payment</th>
+                                    <table className="w-full text-xs border-collapse">
+                                        <thead className="bg-gray-50 border-b border-[#ebebeb]">
+                                            <tr className="h-[50px]">
+                                                <th className="px-6 py-4 font-black text-black text-left tracking-widest uppercase">File Name</th>
+                                                <th className="px-6 py-4 font-black text-black text-center tracking-widest uppercase">Type</th>
+                                                <th className="px-6 py-4 font-black text-black text-center tracking-widest uppercase">Created On</th>
+                                                <th className="px-6 py-4 font-black text-black text-center tracking-widest uppercase">Due Date</th>
+                                                <th className="px-6 py-4 font-black text-black text-center tracking-widest uppercase">Payment</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-gray-100">
+                                        <tbody className="divide-y divide-[#ebebeb]">
                                             {attachments.map((attachment: any, idx: number) => {
                                                 const formatDateDDMMYYYY = (dateStr: string | undefined | null) => {
                                                     if (!dateStr) return "-";
@@ -573,30 +573,32 @@ export default function OrderDetailsPage() {
                                                 const isOpening = openingAttachmentId === String(currentAttachmentId);
 
                                                 return (
-                                                    <tr key={currentAttachmentId} className="hover:bg-gray-50 transition-colors">
-                                                        <td className="px-6 py-4 text-left border-r border-gray-100 last:border-r-0">
+                                                    <tr key={currentAttachmentId} className={`hover:bg-yellow-50/30 transition-colors ${idx % 2 !== 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                                                        <td className="px-6 py-5 text-left">
                                                             <button
                                                                 onClick={() => handleOpenAttachment(attachment)}
                                                                 disabled={isOpening}
-                                                                className="text-[#2980B9] hover:text-[#1a5276] hover:underline font-bold break-all text-left cursor-pointer inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-wait"
+                                                                className="text-yellow-600 hover:text-black font-black break-all text-left cursor-pointer inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-wait underline underline-offset-4"
                                                             >
                                                                 {isOpening && (
-                                                                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-[#2980B9] border-t-transparent flex-shrink-0"></span>
+                                                                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-yellow-500 border-t-transparent flex-shrink-0"></span>
                                                                 )}
                                                                 {attachment.file_name || "-"}
                                                             </button>
                                                         </td>
-                                                        <td className="px-6 py-4 text-center text-gray-800 border-r border-gray-100 last:border-r-0">
+                                                        <td className="px-6 py-5 text-center text-gray-500 font-bold uppercase">
                                                             {attachment.document_type || attachment.attachment_type || "-"}
                                                         </td>
-                                                        <td className="px-6 py-4 text-center text-gray-800 border-r border-gray-100 last:border-r-0">
+                                                        <td className="px-6 py-5 text-center text-gray-500 font-bold uppercase">
                                                             {formatDateDDMMYYYY(attachment.upload_date)}
                                                         </td>
-                                                        <td className="px-6 py-4 text-center text-gray-800 border-r border-gray-100 last:border-r-0">
+                                                        <td className="px-6 py-5 text-center text-gray-400 font-bold uppercase">
                                                             {attachment.invoice_due ? formatDateDDMMYYYY(attachment.invoice_due) : "-"}
                                                         </td>
-                                                        <td className="px-6 py-4 text-center text-gray-800 border-r border-gray-100 last:border-r-0">
-                                                            {attachment.payment || attachment.payment_status || "-"}
+                                                        <td className="px-6 py-5 text-center">
+                                                            <span className="inline-flex px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+                                                                {attachment.payment || attachment.payment_status || "-"}
+                                                            </span>
                                                         </td>
                                                     </tr>
                                                 );
@@ -606,7 +608,7 @@ export default function OrderDetailsPage() {
                                 </div>
                             </div>
                         ) : (
-                            <div className="bg-white border border-gray-200 p-10 text-center text-gray-400 italic rounded-sm">
+                            <div className="bg-white border border-[#ebebeb] p-20 text-center text-gray-400 italic rounded-md shadow-sm text-xs font-bold uppercase tracking-widest">
                                 No attachments available for this order
                             </div>
                         )}

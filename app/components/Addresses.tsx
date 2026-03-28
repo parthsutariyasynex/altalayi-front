@@ -34,30 +34,30 @@ type AddressCardProps = {
 
 function AddressCard({ title, address, onEdit, buttonLabel }: AddressCardProps) {
   return (
-    <div className="bg-white border border-[#e5e7eb] rounded-sm shadow-sm overflow-hidden flex flex-col h-full font-['Rubik']">
-      <div className="bg-[#f0f2f5] px-4 py-2 border-b border-[#e5e7eb] uppercase text-[14px] font-bold text-black tracking-tight">
+    <div className="bg-white border border-[#ebebeb] rounded-md shadow-sm overflow-hidden flex flex-col h-full font-rubik">
+      <div className="bg-gray-50 px-4 py-3 border-b border-[#ebebeb] uppercase text-xs font-black text-black tracking-tight">
         {title}
       </div>
       <div className="p-6 flex-grow">
         {address ? (
-          <div className="space-y-1 text-sm text-gray-600">
-            <p className="font-bold text-gray-900">
+          <div className="space-y-1 text-xs text-gray-600">
+            <p className="font-black text-black uppercase mb-2">
               {address.firstname} {address.lastname}
             </p>
-            {address.company && <p>{address.company}</p>}
-            <p>{address.street?.[0] || address.street}</p>
-            <p>
+            {address.company && <p className="font-medium">{address.company}</p>}
+            <p className="font-medium">{address.street?.[0] || address.street}</p>
+            <p className="font-medium">
               {address.city}, {address.postcode}
             </p>
-            <p>{address.country_id === 'SA' ? 'Saudi Arabia' : address.country_id}</p>
-            <p className="pt-2 text-gray-700">T: <span className="text-gray-600 hover:text-[#ffb12b] cursor-pointer transition-colors duration-200 hover:font-bold">
+            <p className="font-medium">{address.country_id === 'SA' ? 'Saudi Arabia' : address.country_id}</p>
+            <p className="pt-2 text-black font-black">T: <span className="text-gray-600 font-medium hover:text-yellow-500 cursor-pointer transition-colors duration-200">
               {address.telephone}
             </span></p>
             {buttonLabel && (
               <div className="pt-6">
                 <button
                   type="button"
-                  className="bg-[#ffb12b] hover:bg-[#e5a026] text-black text-[13px] font-bold px-8 py-3 uppercase transition-colors rounded-[2px] shadow-sm tracking-wide"
+                  className="bg-yellow-400 hover:bg-yellow-500 text-black text-xs font-black px-8 py-3 uppercase transition-all rounded-md shadow-sm tracking-widest active:scale-95"
                   onClick={() => onEdit?.(address.id)}
                 >
                   {buttonLabel}
@@ -66,7 +66,7 @@ function AddressCard({ title, address, onEdit, buttonLabel }: AddressCardProps) 
             )}
           </div>
         ) : (
-          <p className="text-gray-400 italic text-sm">No default address set</p>
+          <p className="text-gray-400 italic text-xs">No default address set</p>
         )}
       </div>
     </div>
@@ -147,21 +147,17 @@ export default function Addresses() {
 
   if (loading && addresses.length === 0) {
     return (
-      <div className="p-6 flex justify-center items-center min-h-[300px] font-['Rubik']">
+      <div className="p-6 flex justify-center items-center min-h-[300px] font-rubik">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400"></div>
-        <p className="ml-3 text-gray-500 text-sm">Loading addresses...</p>
+        <p className="ml-3 text-gray-400 text-xs italic">Loading addresses...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto font-['Rubik']">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 pt-4">
-        <h1 className="text-[24px] font-bold text-black uppercase tracking-tight">ADDRESS BOOK</h1>
-      </div>
-
-      <div className="border-b border-gray-300 pb-2 mb-8">
-        <h2 className="text-[18px] font-bold text-black uppercase tracking-tight">DEFAULT ADDRESSES</h2>
+    <div className="w-full font-rubik">
+      <div className="border-b-2 border-yellow-400 inline-block pb-1 mb-8">
+        <h2 className="text-lg font-black text-black uppercase tracking-tight">DEFAULT ADDRESSES</h2>
       </div>
 
       <div className="grid md:grid-cols-2 gap-8 mb-12">
@@ -169,6 +165,7 @@ export default function Addresses() {
           title="DEFAULT BILLING ADDRESS"
           address={defaultBilling}
           onEdit={(id) => handleAddressAction("edit", id)}
+          buttonLabel="EDIT BILLING ADDRESS"
         />
         <AddressCard
           title="DEFAULT SHIPPING ADDRESS"
@@ -178,51 +175,51 @@ export default function Addresses() {
         />
       </div>
 
-      <div className="bg-white rounded-[3px] shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-white px-2 py-6">
-          <div className="text-[17px] font-bold text-[#333] uppercase tracking-wide">
+      <div className="bg-white border border-[#ebebeb] rounded-md shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-[#ebebeb] flex items-center justify-between bg-gray-50 px-6 py-4">
+          <div className="text-xs font-black text-black uppercase tracking-widest">
             ADDITIONAL ADDRESS ENTRIES
           </div>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-white text-gray-900 text-[13px] font-bold border-b border-gray-200">
-                <th className="p-4 text-left whitespace-nowrap">First Name</th>
-                <th className="p-4 text-left whitespace-nowrap">Last Name</th>
-                <th className="p-4 text-left whitespace-nowrap">Street Address</th>
-                <th className="p-4 text-left whitespace-nowrap">City</th>
-                <th className="p-4 text-left whitespace-nowrap">Zip Code</th>
-                <th className="p-4 text-left whitespace-nowrap">Phone</th>
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-gray-50 border-b border-[#ebebeb]">
+              <tr className="text-black text-xs font-black uppercase tracking-wider h-[50px]">
+                <th className="px-6 py-4">First Name</th>
+                <th className="px-6 py-4">Last Name</th>
+                <th className="px-6 py-4">Street Address</th>
+                <th className="px-6 py-4">City</th>
+                <th className="px-6 py-4">Zip Code</th>
+                <th className="px-6 py-4">Phone</th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-gray-100 text-[13px] text-gray-700">
+            <tbody className="bg-white">
               {error && (
                 <tr>
-                  <td colSpan={6} className="p-6 text-center text-red-500 font-medium">
+                  <td colSpan={6} className="px-6 py-20 text-center text-red-500 text-xs font-black uppercase tracking-widest">
                     Error: {error}
                   </td>
                 </tr>
               )}
               {filteredAddresses.length === 0 && !loading && !error && (
                 <tr>
-                  <td colSpan={6} className="p-12 text-center text-gray-400 text-sm font-medium">
-                    No address found
+                  <td colSpan={6} className="px-6 py-20 text-center text-gray-400 text-xs italic tracking-widest uppercase font-bold">
+                    No additional addresses found.
                   </td>
                 </tr>
               )}
 
-              {filteredAddresses.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((address: any) => (
-                <tr key={address.id} className="hover:bg-neutral-50 transition-colors border-b border-gray-100">
-                  <td className="p-4">{address.firstname}</td>
-                  <td className="p-4">{address.lastname}</td>
-                  <td className="p-4">{Array.isArray(address.street) ? address.street.join(", ") : address.street || "-"}</td>
-                  <td className="p-4">{address.city}</td>
-                  <td className="p-4">{address.postcode}</td>
-                  <td className="p-4">
-                    <span className="text-gray-700 hover:text-[#ffb12b] cursor-pointer transition-colors duration-200 hover:font-bold">
+              {filteredAddresses.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((address: any, idx: number) => (
+                <tr key={address.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} border-b border-[#ebebeb] hover:bg-yellow-50/30 transition-colors text-xs font-medium text-gray-600`}>
+                  <td className="px-6 py-5 font-bold text-black uppercase">{address.firstname}</td>
+                  <td className="px-6 py-5 font-bold text-black uppercase">{address.lastname}</td>
+                  <td className="px-6 py-5">{Array.isArray(address.street) ? address.street.join(", ") : address.street || "-"}</td>
+                  <td className="px-6 py-5 uppercase font-bold text-gray-800">{address.city}</td>
+                  <td className="px-6 py-5 font-bold">{address.postcode}</td>
+                  <td className="px-6 py-5">
+                    <span className="text-gray-600 hover:text-yellow-500 cursor-pointer transition-colors duration-200">
                       {address.telephone}
                     </span>
                   </td>
@@ -234,48 +231,40 @@ export default function Addresses() {
 
         {
           filteredAddresses.length > 0 && (
-            <div className="p-4 bg-[#f4f4f4] flex flex-col md:flex-row items-center justify-between border-t border-gray-200">
+            <div className="px-6 py-6 bg-gray-50/50 flex flex-col md:flex-row items-center justify-between border-t border-[#ebebeb]">
               {/* Left side: Item count */}
-              <div className="text-[12px] text-gray-500 font-medium">
+              <div className="text-[11px] text-gray-400 font-bold uppercase tracking-widest">
                 Items {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, filteredAddresses.length)} of {filteredAddresses.length} total
               </div>
 
               {/* Center: Pagination buttons */}
-              <div className="flex items-center gap-1 my-4 md:my-0">
+              <div className="flex items-center gap-1.5 my-4 md:my-0">
                 {Array.from({ length: Math.ceil(filteredAddresses.length / pageSize) }, (_, i) => i + 1).map((p) => (
                   <button
                     key={p}
                     onClick={() => setCurrentPage(p)}
-                    className={`w-7 h-7 flex items-center justify-center text-[12px] rounded-full transition-all duration-200 ${currentPage === p
-                      ? "bg-[#f5a623] text-black font-bold"
-                      : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                    className={`w-8 h-8 flex items-center justify-center text-[11px] font-black rounded-md transition-all duration-200 shadow-sm border active:scale-95 ${currentPage === p
+                      ? "bg-yellow-400 border-yellow-500 text-black"
+                      : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
                       }`}
                   >
                     {p}
                   </button>
                 ))}
-                <button
-                  disabled={currentPage >= Math.ceil(filteredAddresses.length / pageSize)}
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                  className="w-7 h-7 flex items-center justify-center bg-white text-gray-600 rounded-full border border-gray-200 disabled:opacity-50"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="9 5l7 7-7 7" />
-                  </svg>
-                </button>
               </div>
 
               {/* Right side: Show per page */}
-              <div className="flex items-center gap-2 text-[12px] text-gray-600">
+              <div className="flex items-center gap-2 text-[11px] text-gray-400 font-bold uppercase tracking-wider">
                 <span>Show</span>
-                <div className="relative group">
-                  <input
-                    type="text"
-                    readOnly
-                    value={pageSize}
-                    className="w-12 h-8 border border-gray-300 bg-white text-center rounded-[2px] transition-all"
-                  />
-                </div>
+                <select
+                  value={pageSize}
+                  onChange={() => { }} // Placeholder or implement if needed
+                  className="h-8 border border-gray-200 bg-white text-center rounded-md px-2 text-black focus:outline-none focus:border-yellow-400"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
                 <span>per page</span>
               </div>
             </div>

@@ -10,14 +10,16 @@
 
 /* Rubik is loaded via next/font in layout.tsx — no @import needed */
 
-/* Prevent scrollbar-caused layout shift */
-html {
-  overflow-y: scroll;
-  overflow-x: hidden;
-}
+@layer base {
 
-body {
-  overflow-x: hidden;
+  /* Prevent scrollbar-caused layout shift — must be in @layer base to override preflight */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    min-width: 320px;
+  }
 }
 
 @layer utilities {

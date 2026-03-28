@@ -198,41 +198,41 @@ export default function OrderAttachmentsPage() {
         <>
 
 
-            <div className="flex max-w-[1440px] mx-auto mt-4 md:mt-8">
-                {/* Left Sidebar */}
-                <Sidebar />
+            <div className="min-h-screen flex flex-col w-full bg-[#fcfcfc] font-rubik">
+                <div className="flex flex-1 w-full">
+                    {/* Left Sidebar */}
+                    <Sidebar />
 
-                {/* Right Content */}
-                <main className="flex-1 p-8 bg-white min-h-screen">
-                    <div className="max-w-[1200px]">
-                        <h1 className="text-[24px] font-bold text-black uppercase mb-8">
+                    {/* Right Content */}
+                    <main className="flex-1 w-full px-4 md:px-6 lg:px-8 py-10 min-w-0">
+                        <h1 className="text-[26px] font-black text-black mb-10 uppercase tracking-wide">
                             MY ORDER ATTACHMENTS
                         </h1>
 
                         {/* Search Section */}
-                        <div className="flex items-center gap-4 mb-8">
-                            <div className="w-[300px]">
+                        <div className="flex items-center gap-2 mb-8">
+                            <div className="w-[200px]">
                                 <input
                                     type="text"
                                     value={searchText}
                                     onChange={(e) => setSearchText(e.target.value)}
                                     placeholder="Search Order..."
-                                    className="w-full bg-white border border-gray-300 rounded-sm px-4 py-2 text-[14px] focus:outline-none focus:border-gray-400 placeholder:text-gray-400"
+                                    className="w-full bg-white border border-[#ebebeb] rounded-md px-4 py-2.5 text-xs text-black focus:outline-none focus:border-yellow-400 placeholder:text-gray-400 font-bold shadow-sm"
                                 />
                             </div>
                             <button
                                 onClick={handleSearch}
-                                className="bg-black text-white font-bold py-2 px-8 rounded-sm text-[14px] uppercase tracking-wide transition-colors"
+                                className="bg-yellow-400 hover:bg-yellow-500 text-black font-black py-2.5 px-6 rounded-md text-xs uppercase tracking-widest transition-all shadow-sm active:scale-95"
                             >
                                 SEARCH
                             </button>
                         </div>
 
                         {/* Filters Section */}
-                        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end mb-10">
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end mb-10 bg-white p-6 border border-[#ebebeb] rounded-md shadow-sm">
                             {/* Document Type */}
                             <div className="md:col-span-3">
-                                <label className="block text-[16px] font-normal text-black mb-3">
+                                <label className="block text-xs font-black text-black mb-3 uppercase tracking-wider">
                                     Document
                                 </label>
                                 <div className="relative">
@@ -242,7 +242,7 @@ export default function OrderAttachmentsPage() {
                                             setDocumentType(e.target.value);
                                             setCurrentPage(1);
                                         }}
-                                        className="w-full bg-[#f4b400] text-black font-medium border-none rounded-sm px-4 py-3 text-[14px] focus:outline-none appearance-none cursor-pointer"
+                                        className="w-full h-[40px] bg-white text-black font-bold border border-gray-300 rounded-md px-4 py-2 text-xs focus:outline-none focus:border-yellow-400 appearance-none cursor-pointer"
                                     >
                                         {finalDocTypes.map((opt: any, idx: number) => {
                                             const label = typeof opt === 'string' ? opt : (opt.label || opt.name || opt.status || String(idx));
@@ -254,9 +254,9 @@ export default function OrderAttachmentsPage() {
                                             );
                                         })}
                                     </select>
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                                        <svg width="12" height="8" viewBox="0 0 12 8" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <path d="M1 1L6 6L11 1" />
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+                                            <path d="M5 7.5L0 2.5H10L5 7.5Z" />
                                         </svg>
                                     </div>
                                 </div>
@@ -264,7 +264,7 @@ export default function OrderAttachmentsPage() {
 
                             {/* Invoice Due */}
                             <div className="md:col-span-3">
-                                <label className="block text-[16px] font-normal text-black mb-3">
+                                <label className="block text-xs font-black text-black mb-3 uppercase tracking-wider">
                                     Invoice Due
                                 </label>
                                 <div className="relative">
@@ -274,7 +274,7 @@ export default function OrderAttachmentsPage() {
                                             setInvoiceDue(e.target.value);
                                             setCurrentPage(1);
                                         }}
-                                        className="w-full bg-[#f4b400] text-black font-medium border-none rounded-sm px-4 py-3 text-[14px] focus:outline-none appearance-none cursor-pointer"
+                                        className="w-full h-[40px] bg-white text-black font-bold border border-gray-300 rounded-md px-4 py-2 text-xs focus:outline-none focus:border-yellow-400 appearance-none cursor-pointer"
                                     >
                                         {finalInvoiceDues.map((opt: any, idx: number) => {
                                             const label = typeof opt === 'string' ? opt : (opt.label || opt.name || opt.status || String(idx));
@@ -286,9 +286,9 @@ export default function OrderAttachmentsPage() {
                                             );
                                         })}
                                     </select>
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                                        <svg width="12" height="8" viewBox="0 0 12 8" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <path d="M1 1L6 6L11 1" />
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+                                            <path d="M5 7.5L0 2.5H10L5 7.5Z" />
                                         </svg>
                                     </div>
                                 </div>
@@ -298,7 +298,7 @@ export default function OrderAttachmentsPage() {
                             <div className="md:col-span-2">
                                 <button
                                     onClick={handleReset}
-                                    className="bg-black hover:bg-gray-800 text-white font-bold py-3 px-10 rounded-sm text-[14px] uppercase tracking-wide transition-colors shadow-sm"
+                                    className="bg-black hover:bg-gray-800 text-white font-black h-[40px] px-8 rounded-md text-xs uppercase tracking-widest transition-all shadow-md active:scale-95"
                                 >
                                     RESET
                                 </button>
@@ -307,48 +307,48 @@ export default function OrderAttachmentsPage() {
 
                         {/* Table Section */}
                         {error ? (
-                            <div className="bg-red-50 border border-red-100 text-red-600 p-8 rounded-sm text-center">
-                                <p className="font-bold text-[14px] mb-2">Error Loading Attachments</p>
-                                <p className="text-[13px]">{error.message}</p>
+                            <div className="bg-red-50 border border-red-100 text-red-600 p-8 rounded-md text-center">
+                                <p className="font-black text-xs uppercase mb-2">Error Loading Attachments</p>
+                                <p className="text-xs">{error.message}</p>
                                 <button
                                     onClick={() => mutate()}
-                                    className="mt-4 px-6 py-2 bg-red-600 text-white rounded font-bold text-[11px] uppercase"
+                                    className="mt-6 px-10 py-3 bg-red-600 text-white rounded-md font-black text-xs uppercase tracking-widest shadow-md active:scale-95"
                                 >
                                     Try Again
                                 </button>
                             </div>
                         ) : isLoading ? (
-                            <div className="bg-white p-12 flex flex-col items-center justify-center">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#f4b400] mb-4"></div>
-                                <span className="text-[14px] text-gray-600">Loading...</span>
+                            <div className="bg-white p-16 flex flex-col items-center justify-center border border-[#ebebeb] rounded-md shadow-sm">
+                                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-400 mb-4"></div>
+                                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Loading...</span>
                             </div>
                         ) : attachments.length > 0 ? (
                             <>
-                                <div className="overflow-x-auto w-full border border-gray-200 rounded-sm shadow-sm">
-                                    <table className="w-full border-collapse bg-white border border-gray-200 text-black">
-                                        <thead>
-                                            <tr className="bg-white border-b border-gray-200">
-                                                <th className="px-4 py-3 font-bold text-[14px] text-center border-r border-gray-200 whitespace-nowrap">
+                                <div className="overflow-x-auto w-full border border-[#ebebeb] rounded-md shadow-sm">
+                                    <table className="w-full text-left border-collapse bg-white">
+                                        <thead className="bg-gray-50 border-b border-[#ebebeb]">
+                                            <tr className="h-[50px]">
+                                                <th className="px-6 py-3 font-black text-xs text-black uppercase tracking-wider text-center">
                                                     # Order
                                                 </th>
-                                                <th className="px-4 py-3 font-bold text-[14px] text-left border-r border-gray-200 whitespace-nowrap">
+                                                <th className="px-6 py-3 font-black text-xs text-black uppercase tracking-wider">
                                                     File Name
                                                 </th>
-                                                <th className="px-4 py-3 font-bold text-[14px] text-center border-r border-gray-200 whitespace-nowrap">
+                                                <th className="px-6 py-3 font-black text-xs text-black uppercase tracking-wider text-center">
                                                     Document Type
                                                 </th>
-                                                <th className="px-4 py-3 font-bold text-[14px] text-left border-r border-gray-200 whitespace-nowrap">
+                                                <th className="px-6 py-3 font-black text-xs text-black uppercase tracking-wider">
                                                     Created On
                                                 </th>
-                                                <th className="px-4 py-3 font-bold text-[14px] text-left border-r border-gray-200 whitespace-nowrap">
+                                                <th className="px-6 py-3 font-black text-xs text-black uppercase tracking-wider">
                                                     Invoice Due
                                                 </th>
-                                                <th className="px-4 py-3 font-bold text-[14px] text-left whitespace-nowrap">
+                                                <th className="px-6 py-3 font-black text-xs text-black uppercase tracking-wider">
                                                     Payment
                                                 </th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-gray-200">
+                                        <tbody>
                                             {attachments.map((attachment: any, idx: number) => {
                                                 const attId = attachment.id || attachment.attachment_id || String(idx);
                                                 const isOpening = openingFileId === String(attId);
@@ -362,17 +362,17 @@ export default function OrderAttachmentsPage() {
                                                 const paymentStatus = attachment.payment || attachment.payment_status || "";
 
                                                 return (
-                                                    <tr key={attId} className="hover:bg-gray-50 transition-colors border-b border-gray-200 last:border-0 text-[14px]">
-                                                        <td className="px-4 py-3 text-center border-r border-gray-200 font-bold whitespace-nowrap">
+                                                    <tr key={attId} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} border-b border-[#ebebeb] hover:bg-yellow-50/30 transition-colors text-xs`}>
+                                                        <td className="px-6 py-4 text-center font-black">
                                                             <button
                                                                 onClick={() => handleViewOrder(attachment.order_id)}
-                                                                className="text-black hover:text-[#f5a623] hover:underline transition-color cursor-pointer focus:outline-none"
+                                                                className="text-black hover:text-yellow-600 hover:underline transition-all cursor-pointer focus:outline-none"
                                                             >
                                                                 {orderDisplay}
                                                             </button>
                                                         </td>
-                                                        <td className="px-4 py-3 text-left border-r border-gray-200">
-                                                            <div className="flex items-center gap-2">
+                                                        <td className="px-6 py-4 text-left font-medium">
+                                                            <div className="flex items-center gap-3">
                                                                 <button
                                                                     onClick={() => {
                                                                         // Use file_path if file_url is missing
@@ -380,26 +380,28 @@ export default function OrderAttachmentsPage() {
                                                                         handleViewFile({ ...attachment, file_url: useUrl, attachment_id: attId });
                                                                     }}
                                                                     disabled={isOpening}
-                                                                    className={`text-black hover:underline inline-block break-all text-left focus:outline-none ${isOpening ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                    className={`text-black hover:underline inline-block break-all text-left focus:outline-none font-bold ${isOpening ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                                                 >
                                                                     {fileName}
                                                                 </button>
                                                                 {isOpening && (
-                                                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[#f4b400]"></div>
+                                                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-yellow-400"></div>
                                                                 )}
                                                             </div>
                                                         </td>
-                                                        <td className="px-4 py-3 text-center border-r border-gray-200">
+                                                        <td className="px-6 py-4 text-center font-bold text-gray-600 uppercase">
                                                             {docTypeLabel}
                                                         </td>
-                                                        <td className="px-4 py-3 text-left border-r border-gray-200">
+                                                        <td className="px-6 py-4 text-left font-bold text-gray-500">
                                                             {createdAt}
                                                         </td>
-                                                        <td className="px-4 py-3 text-left border-r border-gray-200">
+                                                        <td className="px-6 py-4 text-left font-bold text-gray-500">
                                                             {invoiceDue}
                                                         </td>
-                                                        <td className="px-4 py-3 text-left">
-                                                            {paymentStatus}
+                                                        <td className="px-6 py-4 text-left">
+                                                            <span className={`px-2 py-1 rounded-md font-black uppercase text-[10px] ${paymentStatus.toLowerCase().includes('paid') ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                                                {paymentStatus || "-"}
+                                                            </span>
                                                         </td>
                                                     </tr>
                                                 );
@@ -410,24 +412,27 @@ export default function OrderAttachmentsPage() {
 
                                 {/* Pagination */}
                                 {totalItems > 0 && (
-                                    <Pagination
-                                        currentPage={currentPage}
-                                        totalPages={totalPages}
-                                        totalItems={totalItems}
-                                        pageSize={pageSize}
-                                        onPageChange={handlePageChange}
-                                        onPageSizeChange={handlePageSizeChange}
-                                    />
+                                    <div className="mt-8 flex justify-center">
+                                        <Pagination
+                                            currentPage={currentPage}
+                                            totalPages={totalPages}
+                                            totalItems={totalItems}
+                                            pageSize={pageSize}
+                                            onPageChange={handlePageChange}
+                                            onPageSizeChange={handlePageSizeChange}
+                                        />
+                                    </div>
                                 )}
                             </>
                         ) : (
-                            <div className="border border-gray-100 p-16 text-center rounded-sm">
-                                <p className="text-gray-400 italic text-[14px]">No attachments found</p>
+                            <div className="border border-[#ebebeb] p-24 text-center rounded-md bg-white shadow-sm">
+                                <p className="text-gray-400 italic text-xs uppercase tracking-widest">No order attachments found.</p>
                             </div>
                         )}
-                    </div>
-                </main>
+                    </main>
+                </div>
             </div>
+
         </>
     );
 }

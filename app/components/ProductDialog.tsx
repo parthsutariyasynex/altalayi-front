@@ -55,7 +55,7 @@ export default function ProductDialog({ product, isOpen, onClose }: ProductDialo
         </div>
 
         {/* 🔘 Body Section */}
-        <div className="bg-white px-8 py-8 font-sans flex-1 overflow-y-auto">
+        <div className="bg-white px-8 py-8 font-sans flex-1">
           <div className="space-y-1">
             {details.map((row, index) => (
               <div

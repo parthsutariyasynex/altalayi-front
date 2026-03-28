@@ -20,8 +20,17 @@ import { toast } from "react-hot-toast";
 const PAGE_SIZE = 20;
 
 const TABLE_HEADERS = ['Brand', 'Size', 'Pattern', 'Year', 'Origin', 'Image', 'Offer', 'Stock', 'Price', 'Action'] as const;
+const COL_WIDTHS = ['9%', '10%', '14%', '6%', '9%', '7%', '10%', '10%', '10%', '15%'] as const;
 const SHIMMER_ROWS = 10;
 const ROW_HEIGHT = 'h-[52px]';
+
+function TableColGroup() {
+  return (
+    <colgroup>
+      {COL_WIDTHS.map((w, i) => <col key={i} style={{ width: w }} />)}
+    </colgroup>
+  );
+}
 
 function ShimmerRows() {
   return (
@@ -29,7 +38,7 @@ function ShimmerRows() {
       {Array.from({ length: SHIMMER_ROWS }).map((_, i) => (
         <tr key={`shimmer-${i}`} className={`animate-pulse ${ROW_HEIGHT}`}>
           {TABLE_HEADERS.map((_, j) => (
-            <td key={j} className="px-5">
+            <td key={j} className="px-4">
               <div className="h-3 bg-gray-100 rounded w-full"></div>
             </td>
           ))}
@@ -37,6 +46,13 @@ function ShimmerRows() {
       ))}
     </>
   );
+}
+
+// Tiny wrapper to satisfy Next.js Suspense requirement for useSearchParams
+function SearchParamsReader({ onParams }: { onParams: (sp: URLSearchParams) => void }) {
+  const sp = useSearchParams();
+  useEffect(() => { onParams(sp); }, [sp, onParams]);
+  return null;
 }
 
 function MobileCardShimmer() {
@@ -66,79 +82,10 @@ function MobileCardShimmer() {
   );
 }
 
-function ProductsShimmer() {
-  return (
-    <div className="flex flex-1">
-      {/* Desktop sidebar shimmer */}
-      <aside className="hidden md:flex w-[300px] flex-shrink-0 bg-white border-r border-gray-200 h-screen sticky top-0 overflow-hidden flex-col">
-        <div className="flex border-b border-gray-200 h-[64px] md:h-[108px] flex-shrink-0 items-center px-6">
-          <div className="h-4 bg-gray-100 rounded w-32 animate-pulse"></div>
-        </div>
-        <div className="p-6 space-y-4 flex-1 overflow-y-auto">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="space-y-2 animate-pulse">
-              <div className="h-3 bg-gray-100 rounded w-24"></div>
-              <div className="h-8 bg-gray-50 rounded w-full"></div>
-            </div>
-          ))}
-        </div>
-      </aside>
-      <div className="flex-1 flex flex-col p-2 md:pt-4 md:pr-4 md:pb-28 md:pl-0">
-        {/* Mobile shimmer */}
-        <div className="md:hidden flex flex-col gap-2.5">
-          <div className="grid grid-cols-2 gap-2">
-            <div className="h-[42px] bg-gray-100 rounded-xl animate-pulse"></div>
-            <div className="h-[42px] bg-gray-100 rounded-xl animate-pulse"></div>
-          </div>
-          <div className="grid grid-cols-2 gap-2 mb-3">
-            <div className="h-[42px] bg-gray-100 rounded-xl animate-pulse"></div>
-            <div className="h-[42px] bg-gray-100 rounded-xl animate-pulse"></div>
-          </div>
-          <MobileCardShimmer />
-        </div>
-        {/* Desktop shimmer */}
-        <div className="hidden md:flex flex-col flex-1 bg-white md:rounded-r-2xl shadow-sm border border-gray-200 border-l-0 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center gap-4 min-h-[60px]">
-            <div className="h-8 bg-gray-100 rounded-xl w-40 animate-pulse"></div>
-            <div className="h-8 bg-gray-50 rounded-xl w-28 animate-pulse"></div>
-          </div>
-          <div className="flex-1 overflow-auto">
-            <table className="w-full border-separate border-spacing-0 table-fixed min-w-[900px]">
-              <thead className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm">
-                <tr>
-                  {TABLE_HEADERS.map(h => (
-                    <th key={h} className="px-5 py-3 text-[11px] font-bold text-black uppercase tracking-wider text-center border-b border-gray-100">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody><ShimmerRows /></tbody>
-            </table>
-          </div>
-          <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/30 h-[52px]">
-            <div className="h-3 bg-gray-100 rounded w-32 animate-pulse"></div>
-            <div className="flex gap-1.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="w-9 h-9 bg-gray-100 rounded-xl animate-pulse"></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function ProductsPage() {
-  return (
-    <Suspense fallback={<ProductsShimmer />}>
-      <ProductsPageContent />
-    </Suspense>
-  );
-}
-
-function ProductsPageContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const [searchParams, setSearchParamsState] = useState<URLSearchParams | null>(null);
+  const handleParams = useCallback((sp: URLSearchParams) => setSearchParamsState(sp), []);
   const { cart, addToCart } = useCart();
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
   const [justAdded, setJustAdded] = useState<string | null>(null);
@@ -183,7 +130,7 @@ function ProductsPageContent() {
   useEffect(() => {
     if (!isMounted) return;
     const newUrlParams = formatMagentoQueryParams(selectedFilters, currentPage, sortBy);
-    const currentUrlParams = searchParams.toString();
+    const currentUrlParams = searchParams?.toString() || "";
     if (newUrlParams !== currentUrlParams) {
       const newUrl = `${window.location.pathname}${newUrlParams ? `?${newUrlParams}` : ""}`;
       router.replace(newUrl, { scroll: false });
@@ -379,17 +326,39 @@ function ProductsPageContent() {
           </div>
         </div>
         {/* Bottom: price left + actions right */}
-        <div className="flex items-center justify-between border-t border-gray-100 pt-2 mt-1">
-          <span className="text-[14px] font-black text-black rubik-sans"><Price amount={product?.final_price || 0} /></span>
-          <div className="flex items-center gap-1.5">
+        <div className="flex items-center justify-between border-t border-gray-100 pt-3 mt-1 gap-2">
+          <div className="flex flex-col min-w-0">
+            <span className="text-[13px] font-black text-black rubik-sans truncate">
+              <Price amount={product?.final_price || 0} />
+            </span>
+          </div>
+          <div className="flex items-center gap-1 flex-shrink-0">
             {!isOutOfStock ? (
-              <button onClick={() => handleAddToCart(product.sku)} disabled={addingToCart === product.sku} className={`h-9 px-4 rounded-lg flex items-center gap-1.5 text-[11px] font-black uppercase shadow-sm active:scale-95 cursor-pointer ${justAdded === product.sku ? "bg-green-500 text-white" : "bg-[#f5b21a] text-black"}`}>
-                {addingToCart === product.sku ? <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> : justAdded === product.sku ? <><Check size={14} strokeWidth={3} /> Added</> : <><ShoppingCart size={14} strokeWidth={2.5} /> Buy Now</>}
+              <button
+                onClick={() => handleAddToCart(product.sku)}
+                disabled={addingToCart === product.sku}
+                className={`h-9 px-3 rounded-lg flex items-center gap-1.5 text-[11px] font-black uppercase shadow-sm active:scale-95 cursor-pointer flex-shrink-0 ${justAdded === product.sku ? "bg-green-500 text-white" : "bg-[#f5b21a] text-black"}`}
+              >
+                {addingToCart === product.sku ? (
+                  <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                ) : justAdded === product.sku ? (
+                  <><Check size={14} strokeWidth={3} /> Added</>
+                ) : (
+                  <><ShoppingCart size={14} strokeWidth={2.5} /> Buy Now</>
+                )}
               </button>
             ) : (
-              <button onClick={() => { setInquiryProduct(product); setIsInquiryModalOpen(true); }} className="h-9 px-4 bg-[#f5b21a] text-black rounded-lg flex items-center gap-1.5 text-[11px] font-black uppercase shadow-sm active:scale-95 cursor-pointer"><Info size={14} strokeWidth={2.5} /> Enquiry</button>
+              <button
+                onClick={() => { setInquiryProduct(product); setIsInquiryModalOpen(true); }}
+                className="h-9 px-3 bg-[#f5b21a] text-black rounded-lg flex items-center gap-1.5 text-[11px] font-black uppercase shadow-sm active:scale-95 cursor-pointer flex-shrink-0"
+              >
+                <Info size={14} strokeWidth={2.5} /> Enquiry
+              </button>
             )}
-            <button onClick={() => toggleFavorite(product)} className={`w-9 h-9 rounded-lg flex items-center justify-center active:scale-95 cursor-pointer ${favIds.includes(product.product_id) ? "bg-[#f5b21a] text-black" : "bg-gray-100 text-gray-400"}`}>
+            <button
+              onClick={() => toggleFavorite(product)}
+              className={`w-9 h-9 rounded-lg flex items-center justify-center active:scale-95 cursor-pointer flex-shrink-0 ${favIds.includes(product.product_id) ? "bg-[#f5b21a] text-black" : "bg-gray-100 text-gray-400"}`}
+            >
               <Star size={16} fill={favIds.includes(product.product_id) ? "currentColor" : "none"} strokeWidth={2.5} />
             </button>
           </div>
@@ -424,9 +393,10 @@ function ProductsPageContent() {
   ══════════════════════════════════════════════════════════════ */
   return (
     <>
-      <div className="flex flex-1 min-h-screen">
+      <Suspense fallback={null}><SearchParamsReader onParams={handleParams} /></Suspense>
+      <div className="flex">
         {/* Desktop Sidebar */}
-        <div className="hidden md:block flex-shrink-0 sticky top-0 h-screen">
+        <div className="hidden lg:flex flex-col flex-shrink-0 self-stretch min-h-full">
           <SidebarFilter
             onFilterChange={handleFilterChange}
             selectedFilters={selectedFilters}
@@ -471,10 +441,10 @@ function ProductsPageContent() {
           </div>
         </Drawer>
 
-        <div className="flex-1 flex flex-col p-2 md:pt-4 md:pr-4 md:pb-28 md:pl-0">
+        <div className="flex flex-col p-2 lg:p-0">
 
           {/* ── MOBILE CONTROLS ── */}
-          <div className="md:hidden flex flex-col gap-2 mb-3">
+          <div className="lg:hidden flex flex-col gap-2 mb-3">
             {/* Row 1: Favourites + Search */}
             <div className="grid grid-cols-2 gap-2">
               <button onClick={() => router.push("/favorites")} className="h-[44px] bg-white border border-gray-200 rounded-xl flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider shadow-sm active:scale-95 cursor-pointer">
@@ -510,7 +480,7 @@ function ProductsPageContent() {
 
           {/* Mobile Sort Bottom Sheet */}
           {isMobileSortOpen && (
-            <div className="md:hidden fixed inset-0 z-[100]">
+            <div className="lg:hidden fixed inset-0 z-[100]">
               <div className="absolute inset-0 bg-black/40" onClick={() => setIsMobileSortOpen(false)} />
               <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl animate-in slide-in-from-bottom duration-300">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
@@ -539,15 +509,15 @@ function ProductsPageContent() {
           )}
 
           {/* ── MOBILE CARD LIST ── */}
-          <div className="md:hidden flex-1 flex flex-col gap-2.5 overflow-y-auto">
+          <div className="lg:hidden flex-1 flex flex-col gap-2.5 overflow-y-auto">
             {loading ? <MobileCardShimmer /> : sortedProducts.length === 0 ? (
               <div className="flex-1 flex items-center justify-center py-20"><p className="text-xs font-black text-gray-400 uppercase tracking-widest">No products found</p></div>
             ) : sortedProducts.map((p, i) => renderProductCard(p, i))}
           </div>
-          <div className="md:hidden">{renderPagination(true)}</div>
+          <div className="lg:hidden">{renderPagination(true)}</div>
 
           {/* ── DESKTOP CONTROLS + TABLE ── */}
-          <div className="hidden md:flex flex-col flex-1 bg-white rounded-none md:rounded-r-2xl shadow-sm border border-gray-200 border-l-0 overflow-hidden">
+          <div className="hidden lg:flex flex-col bg-white rounded-none md:rounded-r-2xl shadow-sm border border-gray-200 border-l-0 overflow-hidden">
             {/* Desktop header */}
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center gap-4 min-h-[60px]">
               <div className="flex items-center gap-4">
@@ -577,13 +547,14 @@ function ProductsPageContent() {
               </select>
             </div>
 
-            {/* Desktop table */}
-            <div className="flex-1 overflow-auto custom-scrollbar">
-              <table className="w-full border-separate border-spacing-0 table-fixed min-w-[900px]">
-                <thead className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-gray-100">
-                  <tr>
+            {/* Desktop table area */}
+            <div className="flex-1 overflow-x-auto">
+              <table className="w-full border-collapse table-fixed min-w-[900px]">
+                <TableColGroup />
+                <thead className="sticky top-0 z-20">
+                  <tr className="bg-gray-50 border-b-2 border-gray-200">
                     {TABLE_HEADERS.map(h => (
-                      <th key={h} className={`px-5 py-3 text-[11px] font-bold text-black uppercase tracking-wider text-center border-b border-gray-100${h === 'Action' ? ' min-w-[120px]' : ''}`}>{h}</th>
+                      <th key={h} className="px-4 py-3 text-[11px] font-black text-black uppercase tracking-widest text-center">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -595,17 +566,17 @@ function ProductsPageContent() {
                     const isOutOfStock = product.stock_status === "Not Available" || Number(product?.stock_qty ?? 0) <= 0;
                     return (
                       <tr key={index} className={`hover:bg-gray-50/50 transition-colors group ${ROW_HEIGHT}`}>
-                        <td className="px-5 text-[12px] font-normal text-gray-700 text-center">{brandName}</td>
-                        <td className="px-5 text-center">
+                        <td className="px-4 text-[12px] font-normal text-gray-700 text-center">{brandName}</td>
+                        <td className="px-4 text-center">
                           <div className="flex items-center justify-center gap-2">
                             <span className="text-[12px] font-normal text-gray-900 tracking-tight">{product?.tyre_size}</span>
                             <div onClick={() => setSelectedProduct(product)} className="w-4 h-4 bg-gray-900 rounded-full flex items-center justify-center text-[9px] font-bold text-white cursor-pointer hover:bg-yellow-400 hover:text-black transition-all shadow-sm">i</div>
                           </div>
                         </td>
-                        <td className="px-5 text-[12px] font-normal text-gray-600 text-center">{product?.pattern || "—"}</td>
-                        <td className="px-5 text-[12px] font-normal text-gray-500 text-center font-mono">{product?.year || "—"}</td>
-                        <td className="px-5 text-[12px] font-normal text-gray-600 text-center">{product?.origin || "—"}</td>
-                        <td className="px-5 text-center">
+                        <td className="px-4 text-[12px] font-normal text-gray-600 text-center">{product?.pattern || "—"}</td>
+                        <td className="px-4 text-[12px] font-normal text-gray-500 text-center font-mono">{product?.year || "—"}</td>
+                        <td className="px-4 text-[12px] font-normal text-gray-600 text-center">{product?.origin || "—"}</td>
+                        <td className="px-4 text-center">
                           <div className="w-10 h-10 mx-auto">
                             {product?.image_url ? (
                               <div className="relative w-10 h-10 group/img cursor-pointer" onClick={() => { setSelectedImage(product.image_url); setPreviewProduct(product); setIsImageModalOpen(true); }}>
@@ -617,10 +588,10 @@ function ProductsPageContent() {
                             ) : <span className="text-[10px] text-gray-300 font-black uppercase leading-[40px]">No Image</span>}
                           </div>
                         </td>
-                        <td className="px-5 text-center">{product.offer ? <span className="text-red-600 font-bold text-[10px] uppercase tracking-tight block max-w-[150px] mx-auto">{product.offer}</span> : <span className="text-gray-200">—</span>}</td>
-                        <td className="px-5 text-center">{getStockBadge(product)}</td>
-                        <td className="px-5 text-center whitespace-nowrap"><span className="text-[12px] font-black text-black tracking-tight rubik-sans"><Price amount={product?.final_price || 0} /></span></td>
-                        <td className="px-5 text-center min-w-[120px]">
+                        <td className="px-4 text-center">{product.offer ? <span className="text-red-600 font-bold text-[10px] uppercase tracking-tight block max-w-[150px] mx-auto">{product.offer}</span> : <span className="text-gray-200">—</span>}</td>
+                        <td className="px-4 text-center">{getStockBadge(product)}</td>
+                        <td className="px-4 text-center whitespace-nowrap"><span className="text-[12px] font-black text-black tracking-tight rubik-sans"><Price amount={product?.final_price || 0} /></span></td>
+                        <td className="px-4 text-center">
                           <div className="grid grid-cols-3 gap-1.5 justify-items-center">
                             {!isOutOfStock ? <div className="w-9 h-9 border-2 border-gray-100 rounded-lg flex items-center justify-center text-xs font-black text-gray-900 bg-white shadow-sm">1</div> : <div className="w-9 h-9" />}
                             {!isOutOfStock ? (
@@ -646,7 +617,7 @@ function ProductsPageContent() {
         </div>
 
         {/* Desktop bottom search bar */}
-        <div className="hidden md:flex fixed bottom-0 left-0 right-0 z-[40] bg-white border-t-[4px] border-[#f5a623] shadow-[0_-10px_30px_rgba(0,0,0,0.12)] h-[90px] items-center" style={{ paddingRight: 'var(--removed-body-scroll-bar-size, 0px)' }}>
+        <div className="hidden lg:flex fixed bottom-0 left-0 right-0 z-[40] bg-white border-t-[4px] border-[#f5a623] shadow-[0_-10px_30px_rgba(0,0,0,0.12)] h-[90px] items-center">
           <div className={`w-full transition-all duration-300 ${isSidebarCollapsed ? "pl-[50px]" : "pl-[300px]"}`}>
             <div className="w-full max-w-[1400px] mx-auto px-4">
               <HorizontalFilter onSearch={handleHorizontalSearch} initialValues={{ width: debouncedFilters["width"]?.[0] || "", height: debouncedFilters["height"]?.[0] || "", rim: debouncedFilters["rim"]?.[0] || "" }} />
@@ -654,8 +625,6 @@ function ProductsPageContent() {
           </div>
         </div>
       </div>
-
-      {/* Modals */}
       <ProductDialog product={selectedProduct} isOpen={!!selectedProduct} onClose={() => setSelectedProduct(null)} />
       <ProductEnquiryModal isOpen={isInquiryModalOpen} productSku={inquiryProduct?.sku || ""} productName={inquiryProduct?.name || ""} productPrice={inquiryProduct?.final_price || 0} onClose={() => { setIsInquiryModalOpen(false); setInquiryProduct(null); }} />
       <Drawer isOpen={isImageModalOpen && !!selectedImage} onClose={() => setIsImageModalOpen(false)}>

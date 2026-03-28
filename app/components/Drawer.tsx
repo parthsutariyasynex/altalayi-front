@@ -10,19 +10,24 @@ interface DrawerProps {
     title?: string;
 }
 
+let savedScrollY = 0;
+
 function lockScroll() {
-    const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
-    document.documentElement.style.overflow = "hidden";
+    savedScrollY = window.scrollY;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${savedScrollY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
     document.body.style.overflow = "hidden";
-    document.body.style.paddingRight = `${scrollBarWidth}px`;
-    document.documentElement.style.setProperty('--removed-body-scroll-bar-size', `${scrollBarWidth}px`);
 }
 
 function unlockScroll() {
-    document.documentElement.style.overflow = "";
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.left = "";
+    document.body.style.right = "";
     document.body.style.overflow = "";
-    document.body.style.paddingRight = "";
-    document.documentElement.style.setProperty('--removed-body-scroll-bar-size', '0px');
+    window.scrollTo(0, savedScrollY);
 }
 
 /**

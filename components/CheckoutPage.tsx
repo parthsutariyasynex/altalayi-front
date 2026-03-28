@@ -37,13 +37,13 @@ import Price from "@/app/components/Price";
 // --- Sub-components ---
 
 const SectionHeader = ({ title, step }: { title: string; step?: number }) => (
-    <div className="bg-white px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+    <div className="bg-gray-50 px-6 py-4 border-b border-[#ebebeb] flex items-center gap-3">
         {step && (
-            <span className="w-6 h-6 rounded-full bg-black text-white text-[10px] font-black flex items-center justify-center">
+            <span className="w-5 h-5 rounded-full bg-black text-white text-[9px] font-black flex items-center justify-center">
                 {step}
             </span>
         )}
-        <h3 className="text-[14px] font-black text-black uppercase tracking-[0.2em]">
+        <h3 className="text-[11px] font-black text-black uppercase tracking-widest">
             {title}
         </h3>
     </div>
@@ -625,15 +625,18 @@ const CheckoutPageUI: React.FC = () => {
     };
 
     return (
-        <div className="bg-[#F8F9FA] min-h-screen font-sans">
-            <main className="max-w-7xl mx-auto py-10 px-4 lg:px-6">
+        <div className="min-h-screen flex flex-col w-full bg-[#fcfcfc] font-rubik text-xs italic-none">
+            <main className="flex-1 w-full px-4 md:px-6 lg:px-8 py-10 pt-4">
                 {/* Header Section */}
-                <div className="flex items-center justify-between mb-8">
-                    <Link href="/cart" className="flex items-center gap-2 text-gray-500 hover:text-black transition-colors text-[11px] font-black uppercase tracking-widest">
-                        <ArrowLeft size={16} /> Back to Cart
+                <div className="flex flex-col items-center justify-center text-center gap-4 mb-12 relative">
+                    <Link href="/cart" className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-2 text-gray-400 hover:text-black transition-colors text-[10px] font-black uppercase tracking-widest">
+                        <ArrowLeft size={14} strokeWidth={3} /> Back to Cart
                     </Link>
-                    <h1 className="text-2xl font-black text-black uppercase tracking-[0.2em]">Checkout</h1>
-                    <div className="w-24"></div> {/* Spacer */}
+
+                    <div className="flex flex-col items-center gap-4">
+                        <h1 className="text-[28px] md:text-[32px] font-black text-black uppercase tracking-tight">Checkout</h1>
+                        <div className="h-2 w-32 bg-yellow-400 rounded-full shadow-sm"></div>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -646,11 +649,11 @@ const CheckoutPageUI: React.FC = () => {
                             <SectionHeader title="Shipping Address" step={1} />
                             <div className="p-4">
                                 {/* Search */}
-                                <div className="mb-4">
+                                <div className="mb-6">
                                     <input
                                         type="text"
-                                        placeholder="Search Address"
-                                        className="w-full px-4 py-2 bg-white border border-gray-200 outline-none text-[14px] transition-all placeholder:text-gray-400 focus:border-[#F5B21B]"
+                                        placeholder="Search your saved addresses..."
+                                        className="w-full px-4 py-3 bg-gray-50 border border-[#ebebeb] rounded-md outline-none text-xs font-bold transition-all placeholder:text-gray-300 focus:bg-white focus:border-yellow-400 shadow-sm"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                     />
@@ -1133,12 +1136,12 @@ const CheckoutPageUI: React.FC = () => {
                     {/* ═══════════ Right Column (Order Summary) ═══════════ */}
                     <div className="lg:col-span-4 space-y-6">
                         <div className="bg-white border border-gray-200 shadow-sm rounded-sm sticky top-24 overflow-hidden">
-                            {/* Header */}
-                            <div className="bg-[#f2f2f2] px-6 py-4 flex items-center gap-3 border-b border-gray-200">
-                                <div className="w-5 h-5 rounded-full bg-gray-600 flex items-center justify-center">
-                                    <Check size={12} className="text-white" />
+                            {/* Header exactly as per image */}
+                            <div className="bg-gray-50 px-6 py-4 flex items-center gap-3 border-b border-[#ebebeb]">
+                                <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center">
+                                    <Check size={12} strokeWidth={4} className="text-white" />
                                 </div>
-                                <h3 className="text-[14px] font-black text-black text-center uppercase tracking-wider">
+                                <h3 className="text-[11px] font-black text-black text-center uppercase tracking-widest">
                                     Order Summary
                                 </h3>
                             </div>
@@ -1247,15 +1250,15 @@ const CheckoutPageUI: React.FC = () => {
                                     <button
                                         onClick={handlePlaceOrder}
                                         disabled={isPlacingOrder || isTotalsLoading}
-                                        className={`w-full py-5 text-[18px] font-black uppercase tracking-tight transition-all duration-300 flex items-center justify-center gap-3 rounded-sm shadow-sm ${isPlacingOrder
-                                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                            : "bg-[#F5B21B] text-black hover:bg-black hover:text-white"
+                                        className={`w-full py-5 text-sm font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3 rounded-md shadow-md border ${isPlacingOrder
+                                            ? "bg-gray-100 text-gray-400 cursor-not-allowed border-[#ebebeb]"
+                                            : "bg-yellow-400 text-black hover:bg-yellow-500 border-yellow-500 active:scale-[0.98]"
                                             }`}
                                     >
                                         {isPlacingOrder ? (
                                             <>
-                                                <Loader2 size={20} className="animate-spin" />
-                                                Processing...
+                                                <Loader2 size={18} className="animate-spin" strokeWidth={4} />
+                                                PROCESSING...
                                             </>
                                         ) : (
                                             "Place Order"

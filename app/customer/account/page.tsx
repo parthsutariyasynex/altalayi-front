@@ -93,11 +93,11 @@ export default function MyAccountPage() {
         <>
 
 
-            <div className="flex flex-col md:flex-row min-h-screen">
+            <div className="flex-1 flex flex-col md:flex-row min-h-0">
                 <Sidebar />
 
                 {/* Right Content */}
-                <main className="flex-1 p-8 bg-[#fcfcfc] min-h-screen">
+                <main className="flex-1 p-8 bg-[#fcfcfc] min-h-0">
                     <div className="max-w-[1200px]">
 
                         <h1 className="text-2xl font-light text-gray-800 mb-6 uppercase tracking-[0.6px]">

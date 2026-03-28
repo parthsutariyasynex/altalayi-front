@@ -11,38 +11,38 @@ interface CartActionsProps {
 
 const CartActions: React.FC<CartActionsProps> = ({ itemsCount, onClearCart, onUpdateCart }) => {
     return (
-        <div className="flex flex-col md:flex-row justify-between items-center bg-[#f2f2f2] border-x border-b border-gray-200 px-6 py-6 shadow-sm gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-center bg-gray-50 border border-[#ebebeb] px-8 py-6 rounded-md shadow-sm gap-6">
             <div className="flex flex-wrap items-center gap-3">
                 <Link
                     href="/products"
-                    className="px-6 py-3.5 bg-black text-white text-[11px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all duration-300 border border-black cursor-pointer"
+                    className="px-6 py-2.5 bg-black text-white text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all duration-300 border border-black cursor-pointer rounded-md text-center active:scale-95"
                 >
                     Continue Shopping
                 </Link>
                 <button
                     onClick={onClearCart}
-                    className="px-6 py-3.5 bg-white text-black text-[11px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all duration-300 border border-gray-300 cursor-pointer"
+                    className="px-6 py-2.5 bg-white text-black text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all duration-300 border border-[#ebebeb] cursor-pointer rounded-md active:scale-95"
                 >
                     Clear Cart
                 </button>
                 <button
                     onClick={onUpdateCart}
-                    className="px-6 py-3.5 bg-[#f4b400] text-black text-[11px] font-black uppercase tracking-widest hover:bg-[#e0a500] transition-all duration-300 cursor-pointer"
+                    className="px-6 py-2.5 bg-yellow-400 text-black text-[10px] font-black uppercase tracking-widest hover:bg-yellow-500 transition-all duration-300 cursor-pointer rounded-md border border-yellow-500 active:scale-95 shadow-sm"
                 >
-                    Update Shopping Cart
+                    Update Cart
                 </button>
             </div>
 
-            <div className="flex items-center gap-4 ml-auto">
+            <div className="flex items-center gap-4 md:ml-auto">
                 <div className="flex flex-col items-end">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">
-                        Cart Item
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] leading-none mb-1">
+                        Total Items
                     </span>
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">
-                        Quantity
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] leading-none">
+                        in Cart
                     </span>
                 </div>
-                <span className="text-3xl font-black text-black leading-none">
+                <span className="text-3xl font-black text-black leading-none tracking-tighter">
                     {itemsCount}
                 </span>
             </div>
