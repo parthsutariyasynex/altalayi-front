@@ -54,7 +54,26 @@ export default function MyAccountPage() {
     }, [pathname, router]);
 
     const [businessOverview, setBusinessOverview] = useState<any>(null);
+    const [targets, setTargets] = useState<any>(null);
+    const [availableYears, setAvailableYears] = useState<number[]>([]);
+    const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+    const fetchTargets = async (year: string) => {
+        try {
+            const response = await fetch(`/api/kleverapi/targets-achievements?year=${year}`);
+            const data = await response.json();
+
+            if (data.available_years) setAvailableYears(data.available_years);
+
+            // Extract targets for the current year from data.years array or use first matching object
+            const yearData = data.years?.[0] || {};
+            setTargets(yearData);
+        } catch (err) {
+            console.error("Targets Fetch Error:", err);
+            setTargets({});
+        }
+    };
 
     const fetchOverview = async () => {
         try {
@@ -75,8 +94,9 @@ export default function MyAccountPage() {
         if (status === "authenticated" && token) {
             dispatch(fetchCustomerInfo());
             fetchOverview();
+            fetchTargets(selectedYear);
         }
-    }, [status, token, dispatch, router]);
+    }, [status, token, dispatch, router, selectedYear]);
 
     const getOverviewAttr = (key: string, fallback: string = "N/A") => {
         return businessOverview?.[key] || fallback;
@@ -145,11 +165,11 @@ export default function MyAccountPage() {
 
 
             <div className="min-h-screen flex flex-col w-full bg-[#fcfcfc] font-rubik">
-                <div className="flex flex-1 w-full">
+                <div className="flex flex-col md:flex-row flex-1 w-full">
                     <Sidebar />
 
                     {/* Right Content */}
-                    <main className="flex-1 w-full px-4 md:px-6 lg:px-8 py-10">
+                    <main className="flex-1 w-full px-4 md:px-6 lg:px-8 py-4 md:py-6 lg:py-10">
 
                         {/* Sub-account Identity Banner */}
                         {isSubAccountSession && (
@@ -159,23 +179,23 @@ export default function MyAccountPage() {
                             </div>
                         )}
 
-                        <h1 className="text-[26px] font-black text-black mb-10 uppercase tracking-wide">
+                        <h1 className="text-[20px] sm:text-[22px] md:text-[26px] font-black text-black mb-6 md:mb-10 uppercase tracking-wide">
                             MY ACCOUNT
                         </h1>
 
                         <div className="space-y-8">
                             {/* ACCOUNT INFORMATION */}
                             <div>
-                                <h2 className="text-[16px] font-bold text-black uppercase mb-3">ACCOUNT INFORMATION</h2>
+                                <h2 className="text-[14px] md:text-[16px] font-bold text-black uppercase mb-3">ACCOUNT INFORMATION</h2>
                                 <hr className="border-gray-200 mb-6" />
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                                     {/* Contact Information */}
                                     <div className={cardBase}>
                                         <div className={sectionHeader}>
                                             CONTACT INFORMATION
                                         </div>
-                                        <div className="p-5 text-[13px] text-gray-700 space-y-2.5 font-medium leading-relaxed">
+                                        <div className="p-3 md:p-5 text-[13px] text-gray-700 space-y-2.5 font-medium leading-relaxed">
                                             <p>Contact Name: {(customer as any).firstname} {(customer as any).lastname}</p>
                                             <p>Email: {(customer as any).email}</p>
                                             <p>Customer Mobile: {customerMobile}</p>
@@ -185,11 +205,11 @@ export default function MyAccountPage() {
                                             <p>Location: {customerLocation}</p>
                                             <p>Contact Information: {(customer as any).email} ,{customerMobile}</p>
 
-                                            <div className="flex gap-3 pt-6">
-                                                <Link href="/customer/account/edit" className="bg-[#F5B21B] hover:bg-[#e0a116] text-black text-[12px] font-bold px-6 py-2 uppercase transition-all rounded-sm">
+                                            <div className="flex flex-col md:flex-row gap-3 pt-4 md:pt-6">
+                                                <Link href="/customer/account/edit" className="w-full md:w-auto text-center bg-[#F5B21B] hover:bg-[#e0a116] text-black text-[12px] font-bold px-6 py-2 uppercase transition-all rounded-sm">
                                                     EDIT
                                                 </Link>
-                                                <Link href="/customer/account/edit?change=password" className="bg-[#F5B21B] hover:bg-[#e0a116] text-black text-[12px] font-bold px-6 py-2 uppercase transition-all rounded-sm whitespace-nowrap">
+                                                <Link href="/customer/account/edit?change=password" className="w-full md:w-auto text-center bg-[#F5B21B] hover:bg-[#e0a116] text-black text-[12px] font-bold px-6 py-2 uppercase transition-all rounded-sm whitespace-nowrap">
                                                     CHANGE PASSWORD
                                                 </Link>
                                             </div>
@@ -199,7 +219,7 @@ export default function MyAccountPage() {
                             </div>
 
                             {/* BUSINESS OVERVIEW & SALES DATA */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                                 <div className={cardBase}>
                                     <div className={sectionHeader + " flex justify-between items-center"}>
                                         <span>BUSINESS OVERVIEW</span>
@@ -210,7 +230,7 @@ export default function MyAccountPage() {
                                             EDIT
                                         </button>
                                     </div>
-                                    <div className="p-5 text-[13px] text-gray-700 space-y-2.5 font-medium leading-relaxed">
+                                    <div className="p-3 md:p-5 text-[13px] text-gray-700 space-y-2.5 font-medium leading-relaxed">
                                         <p>Company Size: {getOverviewAttr("total_employees")} employees, {getOverviewAttr("trucks")} Trucks, {getOverviewAttr("annual_revenue")} annual revenue</p>
                                         <p>Business Model: {getOverviewAttr("business_model")}</p>
                                         <p>Products/Services Offered: {getOverviewAttr("products_offered")}</p>
@@ -221,7 +241,7 @@ export default function MyAccountPage() {
                                     <div className={sectionHeader}>
                                         SALES DATA (QTY)
                                     </div>
-                                    <div className="p-5 text-[13px] text-gray-700 space-y-2.5 font-medium leading-relaxed">
+                                    <div className="p-3 md:p-5 text-[13px] text-gray-700 space-y-2.5 font-medium leading-relaxed">
                                         <p>Total Sales Qty: {getAttr("total_sales_qty", "0")}</p>
                                         <p>Order Frequency: {getAttr("order_frequency", "0")} orders/month</p>
                                     </div>
@@ -229,19 +249,41 @@ export default function MyAccountPage() {
                             </div>
 
                             {/* TARGETS & BEHAVIOR */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                                 <div className={cardBase}>
                                     <div className={sectionHeader + " flex justify-between items-center"}>
                                         <span>TARGETS AND ACHIEVEMENTS</span>
-                                        <select className="border border-gray-300 rounded-sm text-[12px] px-2 py-1 bg-white outline-none">
-                                            <option>2023</option>
-                                            <option>2024</option>
+                                        <select
+                                            value={selectedYear}
+                                            onChange={(e) => setSelectedYear(e.target.value)}
+                                            className="border border-gray-300 rounded-sm text-[12px] px-2 py-1 bg-white outline-none cursor-pointer hover:border-[#F5B21B]"
+                                        >
+                                            {availableYears.length > 0 ? (
+                                                availableYears.map(y => <option key={y} value={y}>{y}</option>)
+                                            ) : (
+                                                <>
+                                                    <option value="2023">2023</option>
+                                                    <option value="2024">2024</option>
+                                                    <option value="2025">2025</option>
+                                                </>
+                                            )}
                                         </select>
                                     </div>
-                                    <div className="p-5 text-[13px] text-gray-700 space-y-2.5 font-medium leading-relaxed">
-                                        <p>Sales Targets: {getAttr("sales_targets")}</p>
-                                        <p>Achievements: {getAttr("achievements")}</p>
-                                        <p>Incentive: SAR {formatCurrency(getAttr("incentive"))}</p>
+                                    <div className="p-3 md:p-5 text-[13px] text-gray-700 space-y-2.5 font-medium leading-relaxed">
+                                        {targets ? (
+                                            <>
+                                                <p>Sales Target: {targets.sales_target || "0"}</p>
+                                                <p>Achievement: {targets.achievement || "0"}</p>
+                                                <p>Incentive: SAR {formatCurrency(targets.incentive)}</p>
+                                                {targets.remarks && <p className="text-[#F5B21B] font-bold">Remarks: {targets.remarks}</p>}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <p>Sales Targets: {getAttr("sales_targets")}</p>
+                                                <p>Achievements: {getAttr("achievements")}</p>
+                                                <p>Incentive: SAR {formatCurrency(getAttr("incentive"))}</p>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
 
@@ -249,7 +291,7 @@ export default function MyAccountPage() {
                                     <div className={sectionHeader}>
                                         CUSTOMER BEHAVIOR
                                     </div>
-                                    <div className="p-5 text-[13px] text-gray-700 space-y-2.5 font-medium leading-relaxed">
+                                    <div className="p-3 md:p-5 text-[13px] text-gray-700 space-y-2.5 font-medium leading-relaxed">
                                         <p>Payment History(DSO): {getAttr("payment_history")}</p>
                                         <p>Credit Limit: SAR {formatCurrency(getAttr("total_credit_limit"))}</p>
                                         <p>Credit Period: {getAttr("credit_period")} days</p>
@@ -259,16 +301,16 @@ export default function MyAccountPage() {
 
                             {/* ADDRESS BOOK */}
                             <div>
-                                <h2 className="text-[16px] font-bold text-black uppercase mb-3">ADDRESS BOOK</h2>
+                                <h2 className="text-[14px] md:text-[16px] font-bold text-black uppercase mb-3">ADDRESS BOOK</h2>
                                 <hr className="border-gray-200 mb-6" />
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                                     {/* Default Billing Address Card */}
                                     <div className={cardBase + " flex flex-col"}>
                                         <div className={sectionHeader}>
                                             DEFAULT BILLING ADDRESS
                                         </div>
-                                        <div className="p-5 flex flex-col flex-1">
+                                        <div className="p-3 md:p-5 flex flex-col flex-1">
                                             {defaultBilling ? (
                                                 <div className="text-[13px] text-gray-800 leading-relaxed space-y-1 font-normal flex-1">
                                                     <p>{defaultBilling.firstname} {defaultBilling.lastname}</p>
@@ -289,7 +331,7 @@ export default function MyAccountPage() {
                                         <div className={sectionHeader}>
                                             DEFAULT SHIPPING ADDRESS
                                         </div>
-                                        <div className="p-5 flex flex-col flex-1">
+                                        <div className="p-3 md:p-5 flex flex-col flex-1">
                                             {defaultShipping ? (
                                                 <div className="text-[13px] text-gray-800 leading-relaxed space-y-1 font-normal flex-1">
                                                     <p>{defaultShipping.firstname} {defaultShipping.lastname}</p>
@@ -303,13 +345,13 @@ export default function MyAccountPage() {
                                                 <p className="text-[13px] text-gray-500 italic flex-1">No default shipping address set.</p>
                                             )}
 
-                                            <div className="pt-8">
+                                            <div className="pt-4 md:pt-8">
                                                 {defaultShipping?.id ? (
-                                                    <Link href={`/customer/address-book/edit/${defaultShipping.id}`} className="bg-[#F5B21B] hover:bg-[#e0a116] text-black text-[13px] font-bold px-8 py-2.5 uppercase transition-all rounded-none inline-block">
+                                                    <Link href={`/customer/address-book/edit/${defaultShipping.id}`} className="w-full md:w-auto text-center bg-[#F5B21B] hover:bg-[#e0a116] text-black text-[13px] font-bold px-4 md:px-8 py-2.5 uppercase transition-all rounded-none inline-block">
                                                         EDIT ADDRESS
                                                     </Link>
                                                 ) : (
-                                                    <Link href="/customer/address-book" className="bg-[#F5B21B] hover:bg-[#e0a116] text-black text-[13px] font-bold px-8 py-2.5 uppercase transition-all rounded-none inline-block">
+                                                    <Link href="/customer/address-book" className="w-full md:w-auto text-center bg-[#F5B21B] hover:bg-[#e0a116] text-black text-[13px] font-bold px-4 md:px-8 py-2.5 uppercase transition-all rounded-none inline-block">
                                                         ADD ADDRESS
                                                     </Link>
                                                 )}

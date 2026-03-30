@@ -105,19 +105,19 @@ function EditAccountPageContent() {
 
     const inputClass = "w-full border border-gray-200 px-4 py-2 text-[14px] focus:border-[#F5B21B] outline-none transition-all rounded-sm bg-white font-medium text-gray-800 placeholder:text-gray-300";
     const labelClass = "block text-[13px] font-bold text-gray-900 mb-1.5";
-    const sectionHeader = "bg-white px-6 py-3 border-b border-gray-100 text-black font-black uppercase text-[15px] tracking-tight";
+    const sectionHeader = "bg-white px-4 md:px-6 py-2.5 md:py-3 border-b border-gray-100 text-black font-black uppercase text-[13px] md:text-[15px] tracking-tight";
 
     return (
-        <div className="flex flex-1 min-h-0 min-w-full">
+        <div className="flex flex-col md:flex-row flex-1 min-h-0 min-w-full">
             <Sidebar />
 
             <main className="flex-1 p-6 md:p-12 min-h-0 bg-[#FDFDFD]">
                 <div className="w-full">
-                    <h1 className="text-[28px] font-black text-black mb-10 uppercase tracking-tight">
+                    <h1 className="text-[20px] sm:text-[24px] md:text-[28px] font-black text-black mb-6 md:mb-10 uppercase tracking-tight">
                         Edit Account Information
                     </h1>
 
-                    <div className="space-y-10">
+                    <div className="space-y-6 md:space-y-10">
                         {/* ACCOUNT INFORMATION SECTION - MATCHING SCREENSHOT */}
                         <div className="bg-white border border-gray-200 shadow-sm rounded-sm overflow-hidden">
                             <div className={sectionHeader}>
@@ -190,7 +190,7 @@ function EditAccountPageContent() {
                                     CHANGE EMAIL
                                 </div>
 
-                                <div className="p-8 space-y-6">
+                                <div className="p-4 md:p-8 space-y-4 md:space-y-6">
                                     <div className="space-y-2">
                                         <label className={labelClass}>
                                             Email <span className="text-red-500">*</span>
@@ -225,7 +225,7 @@ function EditAccountPageContent() {
                                     CHANGE PASSWORD
                                 </div>
 
-                                <div className="p-8 space-y-6">
+                                <div className="p-4 md:p-8 space-y-4 md:space-y-6">
                                     <div className="space-y-2">
                                         <label className={labelClass}>
                                             Current Password <span className="text-red-500">*</span>
@@ -270,7 +270,7 @@ function EditAccountPageContent() {
                             <button
                                 onClick={handleSave}
                                 disabled={isSaving}
-                                className="bg-[#F5B21B] hover:bg-black hover:text-white text-black text-[15px] font-black px-12 py-3.5 uppercase transition-all rounded-sm shadow-md tracking-wider active:scale-95"
+                                className="bg-[#F5B21B] hover:bg-black hover:text-white text-black text-[13px] md:text-[15px] font-black px-8 md:px-12 py-3 md:py-3.5 uppercase transition-all rounded-sm shadow-md tracking-wider active:scale-95 w-full sm:w-auto"
                             >
                                 {isSaving ? "Saving..." : "Save"}
                             </button>

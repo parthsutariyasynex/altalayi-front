@@ -158,98 +158,96 @@ function EditAddressPageContent() {
         <div className="min-h-screen bg-white font-['Rubik'] text-[#333]">
 
 
-            <div className="flex flex-1 min-h-0 w-full px-8 py-10">
-                <div className="flex flex-1 flex-col md:flex-row gap-10 items-start w-full">
-                    <Sidebar />
+            <div className="flex flex-col md:flex-row flex-1 min-h-0 w-full min-w-full">
+                <Sidebar />
 
-                    <main className="flex-1 w-full min-w-0">
-                        <h1 className="text-[28px] font-bold text-black uppercase tracking-tight mb-6">
-                            EDIT ADDRESS
-                        </h1>
+                <main className="flex-1 w-full min-w-0 p-4 md:p-10 bg-[#fdfdfd]">
+                    <h1 className="text-[22px] md:text-[32px] font-black text-black uppercase tracking-tight mb-6 md:mb-10 px-1 md:px-0">
+                        EDIT ADDRESS
+                    </h1>
 
-                        <div className="border border-gray-200 rounded-sm overflow-hidden">
-                            {/* Section Header */}
-                            <div className="bg-[#fcfcfc] px-6 py-3 border-b border-gray-200">
-                                <h2 className="text-[17px] font-bold text-black uppercase tracking-wide">
-                                    CONTACT INFORMATION
-                                </h2>
-                            </div>
-
-                            <div className="p-8">
-                                <form onSubmit={onSubmit} className="space-y-6">
-                                    {/* First Name */}
-                                    <div>
-                                        <label className="block text-[14px] font-bold text-[#333] mb-2">
-                                            First Name <span className="text-red-600 font-bold">*</span>
-                                        </label>
-                                        <input
-                                            name="firstname"
-                                            value={formData.firstname}
-                                            onChange={handleInputChange}
-                                            type="text"
-                                            className={`w-full p-3 border ${errors.firstname ? 'border-red-500' : 'border-gray-300'} rounded-sm focus:outline-none focus:border-[#f5a623] text-sm text-gray-700`}
-                                            placeholder="Enter first name"
-                                        />
-                                        {errors.firstname && (
-                                            <p className="mt-1 text-xs text-red-500">{errors.firstname}</p>
-                                        )}
-                                    </div>
-
-                                    {/* Last Name */}
-                                    <div>
-                                        <label className="block text-[14px] font-bold text-[#333] mb-2">
-                                            Last Name <span className="text-red-600 font-bold">*</span>
-                                        </label>
-                                        <input
-                                            name="lastname"
-                                            value={formData.lastname}
-                                            onChange={handleInputChange}
-                                            type="text"
-                                            className={`w-full p-3 border ${errors.lastname ? 'border-red-500' : 'border-gray-300'} rounded-sm focus:outline-none focus:border-[#f5a623] text-sm text-gray-700`}
-                                            placeholder="Enter last name"
-                                        />
-                                        {errors.lastname && (
-                                            <p className="mt-1 text-xs text-red-500">{errors.lastname}</p>
-                                        )}
-                                    </div>
-
-                                    {/* Phone Number */}
-                                    <div>
-                                        <label className="block text-[14px] font-bold text-[#333] mb-2">
-                                            Phone Number <span className="text-red-600 font-bold">*</span>
-                                        </label>
-                                        <input
-                                            name="telephone"
-                                            value={formData.telephone}
-                                            onChange={handleInputChange}
-                                            type="tel"
-                                            className={`w-full p-3 border ${errors.telephone ? 'border-red-500' : 'border-gray-300'} rounded-sm focus:outline-none focus:border-[#f5a623] text-sm text-gray-700`}
-                                            placeholder="Enter phone number"
-                                        />
-                                        {errors.telephone && (
-                                            <p className="mt-1 text-xs text-red-500">{errors.telephone}</p>
-                                        )}
-                                    </div>
-
-                                    {/* Save Button */}
-                                    <div className="pt-2">
-                                        <button
-                                            type="submit"
-                                            disabled={saving}
-                                            className="bg-[#ffb12b] hover:bg-[#e5a026] text-black text-[14px] font-bold px-10 py-3 uppercase transition-colors rounded-[3px] shadow-sm tracking-wide disabled:opacity-50 flex items-center justify-center min-w-[180px]"
-                                        >
-                                            {saving ? (
-                                                <div className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
-                                            ) : (
-                                                "SAVE ADDRESS"
-                                            )}
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
+                    <div className="bg-white border border-gray-200 shadow-sm rounded-sm overflow-hidden max-w-4xl">
+                        {/* Section Header */}
+                        <div className="bg-white px-5 md:px-8 py-3.5 md:py-4 border-b border-gray-100">
+                            <h2 className="text-[14px] md:text-[16px] font-black text-black uppercase tracking-tight">
+                                CONTACT INFORMATION
+                            </h2>
                         </div>
-                    </main>
-                </div>
+
+                        <div className="p-5 md:p-10">
+                            <form onSubmit={onSubmit} className="space-y-6 md:space-y-8">
+                                {/* First Name */}
+                                <div>
+                                    <label className="block text-[14px] font-bold text-[#333] mb-2">
+                                        First Name <span className="text-red-600 font-bold">*</span>
+                                    </label>
+                                    <input
+                                        name="firstname"
+                                        value={formData.firstname}
+                                        onChange={handleInputChange}
+                                        type="text"
+                                        className={`w-full p-2.5 md:p-3 border ${errors.firstname ? 'border-red-500' : 'border-gray-300'} rounded-sm focus:outline-none focus:border-[#f5a623] text-sm text-gray-700`}
+                                        placeholder="Enter first name"
+                                    />
+                                    {errors.firstname && (
+                                        <p className="mt-1 text-xs text-red-500">{errors.firstname}</p>
+                                    )}
+                                </div>
+
+                                {/* Last Name */}
+                                <div>
+                                    <label className="block text-[14px] font-bold text-[#333] mb-2">
+                                        Last Name <span className="text-red-600 font-bold">*</span>
+                                    </label>
+                                    <input
+                                        name="lastname"
+                                        value={formData.lastname}
+                                        onChange={handleInputChange}
+                                        type="text"
+                                        className={`w-full p-2.5 md:p-3 border ${errors.lastname ? 'border-red-500' : 'border-gray-300'} rounded-sm focus:outline-none focus:border-[#f5a623] text-sm text-gray-700`}
+                                        placeholder="Enter last name"
+                                    />
+                                    {errors.lastname && (
+                                        <p className="mt-1 text-xs text-red-500">{errors.lastname}</p>
+                                    )}
+                                </div>
+
+                                {/* Phone Number */}
+                                <div>
+                                    <label className="block text-[14px] font-bold text-[#333] mb-2">
+                                        Phone Number <span className="text-red-600 font-bold">*</span>
+                                    </label>
+                                    <input
+                                        name="telephone"
+                                        value={formData.telephone}
+                                        onChange={handleInputChange}
+                                        type="tel"
+                                        className={`w-full p-2.5 md:p-3 border ${errors.telephone ? 'border-red-500' : 'border-gray-300'} rounded-sm focus:outline-none focus:border-[#f5a623] text-sm text-gray-700`}
+                                        placeholder="Enter phone number"
+                                    />
+                                    {errors.telephone && (
+                                        <p className="mt-1 text-xs text-red-500">{errors.telephone}</p>
+                                    )}
+                                </div>
+
+                                {/* Save Button */}
+                                <div className="pt-2">
+                                    <button
+                                        type="submit"
+                                        disabled={saving}
+                                        className="w-full sm:w-auto bg-[#ffb12b] hover:bg-[#e5a026] text-black text-[14px] font-bold px-6 sm:px-10 py-2.5 md:py-3 uppercase transition-colors rounded-[3px] shadow-sm tracking-wide disabled:opacity-50 flex items-center justify-center min-w-[180px]"
+                                    >
+                                        {saving ? (
+                                            <div className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
+                                        ) : (
+                                            "SAVE ADDRESS"
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </main>
             </div>
         </div>
     );

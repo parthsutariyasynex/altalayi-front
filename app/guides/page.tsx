@@ -17,13 +17,13 @@ export default function UserGuidesPage() {
             </div>
 
             {/* Content Section */}
-            <div className="max-w-[1200px] mx-auto px-6 mt-16 md:mt-20 pb-20">
-                <h1 className="text-[28px] md:text-[32px] font-black text-center mb-16 tracking-wide text-black uppercase">
+            <div className="max-w-[1200px] mx-auto px-6 mt-16 md:mt-20 pb-10 sm:pb-16 md:pb-20">
+                <h1 className="text-[22px] sm:text-[26px] md:text-[32px] font-black text-center mb-16 tracking-wide text-black uppercase">
                     User Guides
                 </h1>
 
                 {/* Guides Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-[1000px] mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8 w-full max-w-[1000px] mx-auto">
 
                     {/* Guide 1: Why Btire? */}
                     <div className="w-full flex justify-center">

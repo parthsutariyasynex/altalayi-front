@@ -137,11 +137,11 @@ export default function ManageSubAccountsPage() {
 
     return (
         <div className="min-h-screen flex flex-col w-full bg-[#fcfcfc] font-rubik">
-            <div className="flex flex-1 w-full">
+            <div className="flex flex-col md:flex-row flex-1 w-full">
                 <Sidebar />
 
                 <main className="flex-1 w-full px-4 md:px-6 lg:px-8 py-10">
-                    <h1 className="text-[26px] font-black text-black mb-10 uppercase tracking-wide">
+                    <h1 className="text-[20px] md:text-[26px] font-black text-black mb-6 md:mb-10 uppercase tracking-wide">
                         MANAGE ACCOUNTS
                     </h1>
 
@@ -161,10 +161,10 @@ export default function ManageSubAccountsPage() {
                             <table className="w-full text-left border-collapse bg-white">
                                 <thead className="bg-gray-50 border-b border-[#ebebeb]">
                                     <tr className="h-[50px]">
-                                        <th className="px-6 py-3 text-xs font-black text-black uppercase tracking-wider">Name</th>
-                                        <th className="px-6 py-3 text-xs font-black text-black uppercase tracking-wider">Email</th>
-                                        <th className="px-6 py-3 text-xs font-black text-black uppercase tracking-wider">Status</th>
-                                        <th className="px-6 py-3 text-xs font-black text-black uppercase tracking-wider text-center">Action</th>
+                                        <th className="px-3 md:px-6 py-3 text-xs font-black text-black uppercase tracking-wider">Name</th>
+                                        <th className="px-3 md:px-6 py-3 text-xs font-black text-black uppercase tracking-wider">Email</th>
+                                        <th className="px-3 md:px-6 py-3 text-xs font-black text-black uppercase tracking-wider">Status</th>
+                                        <th className="px-3 md:px-6 py-3 text-xs font-black text-black uppercase tracking-wider text-center">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -172,13 +172,13 @@ export default function ManageSubAccountsPage() {
                                         const accountId = account.entity_id || account.id || account.customer_id || account.sub_account_id;
                                         return (
                                             <tr key={accountId || idx} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} border-b border-[#ebebeb] hover:bg-yellow-50/30 transition-colors`}>
-                                                <td className="px-6 py-4 text-xs font-bold text-black uppercase">
+                                                <td className="px-3 md:px-6 py-3 md:py-4 text-xs font-bold text-black uppercase">
                                                     {account.firstname || account.name || "N/A"} {account.lastname || ""}
                                                 </td>
-                                                <td className="px-6 py-4 text-xs font-medium text-gray-600">
+                                                <td className="px-3 md:px-6 py-3 md:py-4 text-xs font-medium text-gray-600">
                                                     {account.email || "N/A"}
                                                 </td>
-                                                <td className="px-6 py-4 text-xs">
+                                                <td className="px-3 md:px-6 py-3 md:py-4 text-xs">
                                                     <span className={`px-2 py-1 text-[10px] font-black uppercase rounded-md ${account.is_active !== false
                                                         ? "bg-green-100 text-green-700"
                                                         : "bg-red-100 text-red-700"
@@ -186,11 +186,11 @@ export default function ManageSubAccountsPage() {
                                                         {account.is_active !== false ? "Active" : "Inactive"}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 text-center">
+                                                <td className="px-3 md:px-6 py-3 md:py-4 text-center">
                                                     <button
                                                         onClick={() => handleLoginAsSubAccount(account)}
                                                         disabled={loggingInId === accountId}
-                                                        className="bg-yellow-400 hover:bg-yellow-500 text-black text-[10px] font-black px-4 py-2 uppercase tracking-widest transition-all rounded-md shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+                                                        className="w-full sm:w-auto bg-yellow-400 hover:bg-yellow-500 text-black text-[10px] font-black px-3 md:px-4 py-2 uppercase tracking-widest transition-all rounded-md shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
                                                     >
                                                         {loggingInId === accountId ? "Logging in..." : "Login As"}
                                                     </button>

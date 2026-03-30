@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ShoppingCart, X, Info, Star, Trash2 } from "lucide-react";
 import { formatPrice, redirectToLogin } from "@/utils/helpers";
@@ -15,6 +15,53 @@ import { api } from "@/lib/api/api-client";
 import Pagination from "@/components/Pagination";
 import { useCart } from "@/modules/cart/context/CartContext";
 import { useSession } from "next-auth/react";
+import { ChevronDown } from "lucide-react";
+
+function PageSizeDropdown({ pageSize, onChange }: { pageSize: number; onChange: (size: number) => void }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+    const sizes = [10, 20, 50];
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const handler = (e: MouseEvent) => {
+            if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false);
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, [isOpen]);
+
+    return (
+        <div className="flex items-center gap-2">
+            <span className="text-[12px] md:text-[13px] text-gray-500 font-medium">Show</span>
+            <div className="relative" ref={ref}>
+                <button
+                    type="button"
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="border border-gray-200 rounded-md px-3 py-1.5 text-[13px] md:text-[14px] font-black text-black bg-white cursor-pointer flex items-center gap-3 min-w-[70px] justify-between focus:outline-none focus:border-[#f5a623] hover:border-gray-300 transition-all shadow-sm active:scale-95"
+                >
+                    {pageSize}
+                    <ChevronDown size={14} className={`text-gray-500 transition-transform duration-300 ${isOpen ? "rotate-180 text-[#f5a623]" : ""}`} />
+                </button>
+                {isOpen && (
+                    <div className="absolute z-[100] top-full mt-1.5 left-0 w-full min-w-[70px] bg-white border border-gray-200 rounded-md shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        {sizes.map((s) => (
+                            <button
+                                key={s}
+                                type="button"
+                                onClick={() => { onChange(s); setIsOpen(false); }}
+                                className={`w-full text-center px-3 py-2.5 text-[13px] font-bold cursor-pointer transition-colors border-b last:border-0 border-gray-50 ${s === pageSize ? "bg-[#f5a623] text-black" : "text-gray-700 hover:bg-orange-50 hover:text-[#f5a623]"}`}
+                            >
+                                {s}
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
+            <span className="text-[12px] md:text-[13px] text-gray-500 font-medium">per page</span>
+        </div>
+    );
+}
 
 interface Product {
     product_id: number;
@@ -217,63 +264,83 @@ export default function FavouriteProducts() {
 
     return (
         <div className="w-full font-rubik overflow-hidden">
-            <h1 className="text-[28px] font-bold text-center mb-10 text-black uppercase tracking-tight">
+            <h1 className="text-[20px] md:text-[28px] font-bold text-center mb-6 md:mb-10 text-black uppercase tracking-tight">
                 FAVOURITE PRODUCTS
             </h1>
 
             {/* Top Bar */}
-            <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-6 bg-white py-2">
-                {/* Left: Items count */}
-                <div className="text-[14px] text-gray-400 font-medium">
+            <div className="flex flex-col md:flex-row items-center justify-between mb-4 md:mb-8 gap-3 md:gap-6 bg-white py-2">
+                <div className="text-[12px] md:text-[14px] text-gray-400 font-medium">
                     Items <span className="text-black font-bold">{startItem} to {endItem}</span> of <span className="text-black font-bold">{totalCount}</span> total
                 </div>
-
-                {/* Center: Pagination */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 md:gap-2 flex-wrap justify-center">
                     {pages.map((p) => (
-                        <button
-                            key={p}
-                            onClick={() => setCurrentPage(p)}
-                            className={`w-9 h-9 flex items-center justify-center text-[13px] rounded-full border transition-all duration-200 cursor-pointer ${currentPage === p
-                                ? "bg-[#f5a623] border-[#f5a623] text-black font-bold shadow-md"
-                                : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-[#f5a623] hover:text-[#f5a623]"
-                                }`}
-                        >
-                            {p}
-                        </button>
+                        <button key={p} onClick={() => setCurrentPage(p)} className={`w-8 h-8 md:w-9 md:h-9 flex items-center justify-center text-[12px] md:text-[13px] rounded-full border transition-all cursor-pointer ${currentPage === p ? "bg-[#f5a623] border-[#f5a623] text-black font-bold shadow-md" : "bg-white border-gray-200 text-gray-600 hover:border-[#f5a623]"}`}>{p}</button>
                     ))}
-
                     {currentPage < totalPages && (
-                        <button
-                            onClick={() => setCurrentPage(currentPage + 1)}
-                            className="h-9 px-4 flex items-center justify-center text-[12px] bg-white border border-gray-200 text-black font-bold rounded-full hover:bg-gray-50 hover:border-[#f5a623] hover:text-[#f5a623] transition-all duration-200 uppercase cursor-pointer shadow-sm active:scale-95"
-                        >
-                            Next
-                        </button>
+                        <button onClick={() => setCurrentPage(currentPage + 1)} className="h-8 md:h-9 px-3 md:px-4 flex items-center justify-center text-[11px] md:text-[12px] bg-white border border-gray-200 text-black font-bold rounded-full uppercase cursor-pointer shadow-sm active:scale-95">Next</button>
                     )}
                 </div>
-
-                {/* Right: Show per page */}
-                <div className="flex items-center gap-2">
-                    <span className="text-[13px] text-gray-500 font-medium whitespace-nowrap">Show</span>
-                    <select
-                        value={pageSize}
-                        onChange={(e) => {
-                            setPageSize(Number(e.target.value));
-                            setCurrentPage(1);
-                        }}
-                        className="border border-gray-200 rounded px-2 py-1.5 text-[14px] font-bold text-black focus:outline-none focus:border-[#f5a623] bg-white cursor-pointer"
-                    >
-                        <option value={10}>10</option>
-                        <option value={20}>20</option>
-                        <option value={50}>50</option>
-                    </select>
-                    <span className="text-[13px] text-gray-500 font-medium whitespace-nowrap">per page</span>
-                </div>
+                <PageSizeDropdown pageSize={pageSize} onChange={(size) => { setPageSize(size); setCurrentPage(1); }} />
             </div>
 
-            {/* Table */}
-            <div className="w-full overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+            {/* Mobile/Tablet Card List */}
+            <div className="xl:hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {favProducts.length === 0 ? (
+                    <div className="py-16 text-center text-gray-400 italic text-[13px]">Your favorites list is currently empty.</div>
+                ) : favProducts.map((product) => {
+                    const brandName = product.brand || product.name.split(' ')[0] || "—";
+                    const isOutOfStock = product.stock_status === "Out of Stock" || product.stock_status === "Not Available" || Number(product.stock_qty || 0) <= 0;
+                    const isLimited = product.stock_qty > 0 && product.stock_qty <= 10;
+                    const dotColor = isOutOfStock ? "bg-red-500" : isLimited ? "bg-yellow-400" : "bg-green-500";
+                    const stockLabel = isOutOfStock ? "Not Available" : isLimited ? "Limited" : "In Stock";
+
+                    return (
+                        <div key={product.product_id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-3 flex flex-col gap-2">
+                            <div className="flex gap-3">
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{brandName}</p>
+                                    <p className="text-[12px] font-black text-gray-900 leading-tight mt-0.5 truncate">{product.pattern || product.name || "—"}</p>
+                                    <div className="flex items-center gap-1.5 mt-1">
+                                        <span className="text-[12px] font-bold text-black">{product.tyre_size || "—"}</span>
+                                        <div onClick={() => handleShowProductDetail(product)} className="w-4 h-4 bg-gray-900 rounded-full flex items-center justify-center text-[9px] font-bold text-white cursor-pointer active:scale-95 flex-shrink-0">i</div>
+                                        {product.origin && <span className="text-[11px] text-gray-400">{product.origin}</span>}
+                                        {product.year && <span className="text-[11px] text-gray-400 font-mono">{product.year}</span>}
+                                    </div>
+                                    <div className="flex items-center gap-1.5 mt-1.5">
+                                        <span className={`w-2 h-2 rounded-full ${dotColor}`}></span>
+                                        <span className="text-[10px] font-bold text-gray-600 uppercase">{stockLabel}</span>
+                                    </div>
+                                    {product.offer && <p className="text-[10px] font-bold text-red-600 uppercase mt-1">{product.offer}</p>}
+                                </div>
+                                <div className="w-14 h-14 flex-shrink-0 rounded-lg border border-gray-100 overflow-hidden bg-gray-50 flex items-center justify-center cursor-pointer" onClick={() => { setSelectedImage(product.image_url); setPreviewProduct(product); setIsImageModalOpen(true); }}>
+                                    <img src={product.image_url} alt={product.name} className="w-full h-full object-contain" />
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between border-t border-gray-100 pt-2.5 mt-1 gap-2">
+                                <span className="text-[13px] font-black text-black rubik-sans"><Price amount={product.final_price} /></span>
+                                <div className="flex items-center gap-1 flex-shrink-0">
+                                    {!isOutOfStock ? (
+                                        <button onClick={() => onAddToCart(product)} disabled={addingToCart === product.sku} className={`h-9 px-2.5 rounded-lg flex items-center gap-1.5 text-[11px] font-black uppercase shadow-sm active:scale-95 cursor-pointer flex-shrink-0 bg-[#f5a623] text-black`}>
+                                            {addingToCart === product.sku ? <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> : <><ShoppingCart size={14} strokeWidth={2.5} /> Buy Now</>}
+                                        </button>
+                                    ) : (
+                                        <button onClick={() => { setInquiryProduct(product); setIsInquiryModalOpen(true); }} className="h-9 px-2.5 bg-[#f5a623] text-black rounded-lg flex items-center gap-1.5 text-[11px] font-black uppercase shadow-sm active:scale-95 cursor-pointer flex-shrink-0">
+                                            <Info size={14} strokeWidth={2.5} /> Enquiry
+                                        </button>
+                                    )}
+                                    <button onClick={() => handleRemove(product)} disabled={removing === product.product_id} className={`w-9 h-9 rounded-lg flex items-center justify-center active:scale-95 cursor-pointer flex-shrink-0 ${removing === product.product_id ? "bg-gray-100 text-gray-400" : "bg-white text-gray-400 border border-gray-100 hover:text-red-500"}`}>
+                                        {removing === product.product_id ? <div className="w-3.5 h-3.5 border-2 border-gray-300 border-t-red-500 rounded-full animate-spin"></div> : <Trash2 size={16} strokeWidth={2.5} />}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Desktop Table */}
+            <div className="hidden xl:block w-full overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
                 <table className="w-full text-left border-collapse bg-[#f2f2f2]">
                     <thead>
                         <tr className="bg-white border-b border-gray-200 text-[12px] uppercase font-bold text-gray-800">
@@ -482,31 +549,17 @@ export default function FavouriteProducts() {
                 onClose={() => setIsImageModalOpen(false)}
             >
                 <div className="flex flex-col h-full bg-white">
-                    {/* Header */}
-                    <div className="bg-[#FFB82B] px-8 py-6 flex items-center justify-center relative flex-shrink-0">
-                        <h2 className="text-[17px] font-black text-black text-center uppercase tracking-tight">
+                    <div className="bg-[#FFB82B] px-4 md:px-8 py-4 md:py-6 flex items-center justify-center relative flex-shrink-0">
+                        <h2 className="text-[14px] md:text-[17px] font-black text-black text-center uppercase tracking-tight">
                             {previewProduct ? `${previewProduct.pattern || '-'} - ${previewProduct.tyre_size || '-'}` : "Product Preview"}
                         </h2>
                     </div>
-
-                    <div className="flex-1 overflow-y-auto p-8 flex flex-col items-center justify-center">
-                        {/* Image Container */}
-                        <div className="p-4 bg-white flex items-center justify-center min-h-[400px] w-full">
-                            <img
-                                src={selectedImage || ''}
-                                alt={previewProduct ? `${previewProduct.pattern} - ${previewProduct.tyre_size}` : "Product Preview"}
-                                className="max-w-full max-h-[75vh] object-contain rounded-lg transition-transform duration-500 hover:scale-[1.02]"
-                            />
+                    <div className="flex-1 overflow-y-auto p-4 md:p-8 flex flex-col items-center justify-center">
+                        <div className="p-2 md:p-4 bg-white flex items-center justify-center min-h-[200px] md:min-h-[400px] w-full">
+                            <img src={selectedImage || ''} alt={previewProduct ? `${previewProduct.pattern} - ${previewProduct.tyre_size}` : "Product Preview"} className="max-w-full max-h-[60vh] md:max-h-[75vh] object-contain rounded-lg" />
                         </div>
-
-                        {/* Footer Section */}
-                        <div className="mt-10 w-full flex flex-col items-center gap-4">
-                            <button
-                                onClick={() => setIsImageModalOpen(false)}
-                                className="w-full py-4.5 bg-black text-white font-black uppercase tracking-widest rounded shadow-xl hover:bg-gray-800 transition-all text-sm cursor-pointer active:scale-95"
-                            >
-                                Close Preview
-                            </button>
+                        <div className="mt-6 md:mt-10 w-full">
+                            <button onClick={() => setIsImageModalOpen(false)} className="w-full py-3 md:py-4 bg-black text-white text-[12px] md:text-sm font-black uppercase tracking-widest rounded shadow-xl hover:bg-gray-800 transition-all cursor-pointer active:scale-95">Close Preview</button>
                         </div>
                     </div>
                 </div>

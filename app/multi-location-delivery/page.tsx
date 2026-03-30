@@ -135,13 +135,13 @@ const MultiLocationDeliveryPage: React.FC = () => {
         return (
             <div className="bg-white min-h-screen font-sans">
 
-                <div className="max-w-[1440px] mx-auto py-24 px-4 flex flex-col items-center text-center">
-                    <h1 className="text-[28px] font-black text-black uppercase mb-12 tracking-wide">
+                <div className="max-w-[1440px] mx-auto py-12 md:py-24 px-3 sm:px-4 flex flex-col items-center text-center">
+                    <h1 className="text-[20px] sm:text-[24px] md:text-[28px] font-black text-black uppercase mb-8 md:mb-12 tracking-wide">
                         SHOPPING CART
                     </h1>
 
                     <div className="relative mb-8">
-                        <ShoppingCart size={80} strokeWidth={1.5} className="text-black" />
+                        <ShoppingCart size={60} strokeWidth={1.5} className="text-black sm:w-[80px] sm:h-[80px]" />
                         <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
                             <div className="bg-white border-2 border-black rounded-full w-8 h-8 flex items-center justify-center font-black text-black text-[18px]">
                                 !
@@ -150,13 +150,13 @@ const MultiLocationDeliveryPage: React.FC = () => {
                         </div>
                     </div>
 
-                    <h2 className="text-[17px] font-bold text-black uppercase tracking-tight mb-8">
+                    <h2 className="text-[13px] sm:text-[15px] md:text-[17px] font-bold text-black uppercase tracking-tight mb-6 md:mb-8">
                         YOU HAVE NO ITEMS IN YOUR SHOPPING CART.
                     </h2>
 
                     <Link
                         href="/"
-                        className="bg-[#f5b21a] text-black px-12 py-4 text-[13px] font-black uppercase tracking-[0.1em] hover:bg-black hover:text-white transition-all shadow-md"
+                        className="bg-[#f5b21a] text-black px-8 sm:px-10 md:px-12 py-3.5 md:py-4 text-[11px] sm:text-[12px] md:text-[13px] font-black uppercase tracking-[0.1em] hover:bg-black hover:text-white transition-all shadow-md"
                     >
                         CONTINUE SHOPPING
                     </Link>
@@ -170,16 +170,16 @@ const MultiLocationDeliveryPage: React.FC = () => {
     };
 
     return (
-        <div className="bg-white min-h-screen font-sans pb-32">
+        <div className="bg-white min-h-screen font-sans pb-16 md:pb-32">
 
 
-            <div className="max-w-[1440px] mx-auto py-12 px-4 sm:px-6 lg:px-10">
+            <div className="max-w-[1440px] mx-auto py-6 sm:py-8 md:py-12 px-3 sm:px-6 lg:px-10">
                 {/* Heading Block */}
-                <div className="text-center mb-10">
-                    <h1 className="text-[26px] font-black text-black uppercase tracking-normal mb-1">
+                <div className="text-center mb-6 md:mb-10">
+                    <h1 className="text-[18px] sm:text-[22px] md:text-[26px] font-black text-black uppercase tracking-normal mb-1">
                         SHIP TO MULTIPLE ADDRESSES
                     </h1>
-                    <p className="text-[14px] text-gray-800 font-medium italic">
+                    <p className="text-[12px] sm:text-[13px] md:text-[14px] text-gray-800 font-medium italic">
                         Please assign Qty against shipping address for applicable items.
                     </p>
                 </div>
@@ -193,15 +193,15 @@ const MultiLocationDeliveryPage: React.FC = () => {
                                 <tr>
                                     <th
                                         rowSpan={2}
-                                        className="py-5 px-6 text-left text-[14px] font-black uppercase text-black border-r border-b border-gray-300 w-[240px] bg-white align-middle"
+                                        className="py-3 md:py-5 px-3 md:px-6 text-left text-[11px] sm:text-[12px] md:text-[14px] font-black uppercase text-black border-r border-b border-gray-300 w-[160px] md:w-[240px] bg-white align-middle"
                                     >
                                         Product
                                     </th>
-                                    <th className="py-5 px-4 text-center text-[14px] font-black uppercase text-black border-r border-b border-gray-300 w-[120px] bg-white">
+                                    <th className="py-3 md:py-5 px-2 md:px-4 text-center text-[11px] sm:text-[12px] md:text-[14px] font-black uppercase text-black border-r border-b border-gray-300 w-[80px] md:w-[120px] bg-white">
                                         Cart Qty
                                     </th>
                                     <th
-                                        className="py-5 px-4 text-center text-[14px] font-black uppercase text-black border-b border-gray-300 bg-white"
+                                        className="py-3 md:py-5 px-2 md:px-4 text-center text-[11px] sm:text-[12px] md:text-[14px] font-black uppercase text-black border-b border-gray-300 bg-white"
                                         colSpan={addresses.length + 1}
                                     >
                                         Assign Qty against Shipping Location
@@ -209,18 +209,18 @@ const MultiLocationDeliveryPage: React.FC = () => {
                                 </tr>
                                 {/* Sub Header Row */}
                                 <tr>
-                                    <th className="py-4 text-center text-[12px] font-bold text-black border-r border-b border-gray-300 uppercase bg-white">
+                                    <th className="py-3 md:py-4 text-center text-[10px] md:text-[12px] font-bold text-black border-r border-b border-gray-300 uppercase bg-white">
                                         Qty
                                     </th>
                                     {addresses.map((addr) => (
                                         <th
                                             key={addr.id}
-                                            className="py-4 px-4 text-center text-[12px] font-bold text-black border-r border-b border-gray-300 uppercase bg-white min-w-[150px]"
+                                            className="py-3 md:py-4 px-2 md:px-4 text-center text-[10px] md:text-[12px] font-bold text-black border-r border-b border-gray-300 uppercase bg-white min-w-[100px] md:min-w-[150px]"
                                         >
                                             {getAddressLocation(addr)}
                                         </th>
                                     ))}
-                                    <th className="border-b border-gray-300 bg-white min-w-[140px]"></th>
+                                    <th className="border-b border-gray-300 bg-white min-w-[90px] md:min-w-[140px]"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -229,17 +229,17 @@ const MultiLocationDeliveryPage: React.FC = () => {
                                     return (
                                         <tr key={item.item_id} className="border-b border-gray-300 last:border-b-0">
                                             {/* Column 1: Product Information */}
-                                            <td className="py-10 px-6 border-r border-gray-300 align-middle">
-                                                <span className="text-[14px] font-bold text-black leading-tight max-w-[200px] uppercase block">
+                                            <td className="py-4 md:py-10 px-3 md:px-6 border-r border-gray-300 align-middle">
+                                                <span className="text-[12px] md:text-[14px] font-bold text-black leading-tight max-w-[200px] uppercase block">
                                                     {item.name}
                                                 </span>
                                             </td>
 
                                             {/* Column 2: Cart Qty Box */}
-                                            <td className="py-10 px-4 border-r border-gray-300 align-middle">
+                                            <td className="py-4 md:py-10 px-2 md:px-4 border-r border-gray-300 align-middle">
                                                 <div className="flex flex-col items-center">
-                                                    <span className="text-[11px] font-bold text-black mb-2 uppercase tracking-tighter">Qty</span>
-                                                    <div className="w-[50px] h-[38px] flex items-center justify-center border border-gray-300 text-gray-400 font-bold bg-white">
+                                                    <span className="text-[10px] md:text-[11px] font-bold text-black mb-1.5 md:mb-2 uppercase tracking-tighter">Qty</span>
+                                                    <div className="w-[40px] md:w-[50px] h-[34px] md:h-[38px] flex items-center justify-center border border-gray-300 text-gray-400 font-bold bg-white text-[13px] md:text-[14px]">
                                                         {item.qty}
                                                     </div>
                                                 </div>
@@ -252,16 +252,16 @@ const MultiLocationDeliveryPage: React.FC = () => {
                                                 return (
                                                     <td
                                                         key={addr.id}
-                                                        className="py-10 px-4 border-r border-gray-300 align-middle"
+                                                        className="py-4 md:py-10 px-2 md:px-4 border-r border-gray-300 align-middle"
                                                     >
                                                         <div className="flex flex-col items-center">
-                                                            <span className="text-[11px] font-bold text-black mb-2 uppercase tracking-tighter">{cityLabel}</span>
+                                                            <span className="text-[10px] md:text-[11px] font-bold text-black mb-1.5 md:mb-2 uppercase tracking-tighter">{cityLabel}</span>
                                                             <input
                                                                 type="text"
                                                                 inputMode="numeric"
                                                                 value={currentVal}
                                                                 onChange={(e) => handleQtyChange(item.item_id, addr.id, e.target.value)}
-                                                                className="w-[50px] h-[38px] text-center text-[14px] font-bold border border-black rounded-none outline-none focus:ring-1 focus:ring-black transition-all"
+                                                                className="w-[40px] md:w-[50px] h-[34px] md:h-[38px] text-center text-[13px] md:text-[14px] font-bold border border-black rounded-none outline-none focus:ring-1 focus:ring-black transition-all"
                                                             />
                                                         </div>
                                                     </td>
@@ -269,7 +269,7 @@ const MultiLocationDeliveryPage: React.FC = () => {
                                             })}
 
                                             {/* Validation Row Message */}
-                                            <td className="py-10 px-4 align-middle bg-white">
+                                            <td className="py-4 md:py-10 px-2 md:px-4 align-middle bg-white">
                                                 {!isItemValid && (
                                                     <div className="text-[#ff0000] text-[11px] font-bold leading-[1.3] text-center whitespace-pre-line uppercase tracking-tight">
                                                         Assigned{"\n"}Qty{"\n"}should{"\n"}be{"\n"}matched{"\n"}with{"\n"}Cart Qty.
@@ -285,10 +285,10 @@ const MultiLocationDeliveryPage: React.FC = () => {
                 </div>
 
                 {/* Footer Section */}
-                <div className="mt-8 bg-[#f2f2f2] p-6 flex flex-col sm:flex-row items-center justify-between gap-6 border border-gray-100">
+                <div className="mt-6 md:mt-8 bg-[#f2f2f2] p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-6 border border-gray-100">
                     <Link
                         href="/cart"
-                        className="bg-black text-white px-10 py-4 text-[11px] font-black uppercase tracking-[0.1em] hover:bg-zinc-900 transition-colors"
+                        className="w-full sm:w-auto text-center bg-black text-white px-6 md:px-10 py-3.5 md:py-4 text-[11px] font-black uppercase tracking-[0.1em] hover:bg-zinc-900 transition-colors"
                     >
                         BACK TO SHOPPING CART
                     </Link>
@@ -296,7 +296,7 @@ const MultiLocationDeliveryPage: React.FC = () => {
                     <button
                         onClick={handleProceed}
                         disabled={!isReadyToProceed || isAssigning}
-                        className={`px-10 py-4 text-[11px] font-black uppercase tracking-[0.1em] transition-all flex items-center gap-2
+                        className={`w-full sm:w-auto justify-center px-6 md:px-10 py-3.5 md:py-4 text-[11px] font-black uppercase tracking-[0.1em] transition-all flex items-center gap-2
                             ${isReadyToProceed
                                 ? 'bg-[#f5b21a] text-black hover:bg-black hover:text-white cursor-pointer'
                                 : 'bg-[#f5b21a]/60 text-black/40 cursor-not-allowed'

@@ -144,13 +144,13 @@ export default function MyStatementPage() {
         <div className="min-h-screen bg-white">
 
 
-            <div className="flex flex-1 min-h-0 w-full">
+            <div className="flex flex-col md:flex-row flex-1 min-h-0 w-full">
                 {/* Left Sidebar */}
                 <Sidebar />
 
                 {/* Right Content */}
-                <main className="flex-1 p-8 bg-[#fcfcfc] min-h-0">
-                    <h1 className="text-[24px] font-black text-black tracking-tight uppercase mb-8">
+                <main className="flex-1 p-4 md:p-6 lg:p-8 bg-[#fcfcfc] min-h-0">
+                    <h1 className="text-[18px] sm:text-[20px] md:text-[24px] font-black text-black tracking-tight uppercase mb-4 md:mb-8">
                         MY STATEMENT
                     </h1>
 
@@ -163,8 +163,8 @@ export default function MyStatementPage() {
                         </div>
 
                         {/* Card Body */}
-                        <div className="p-8">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                        <div className="p-4 md:p-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 mb-4 md:mb-8">
                                 {/* Start Date */}
                                 <div>
                                     <label className="block text-[13px] font-bold text-gray-800 mb-2">
@@ -193,7 +193,7 @@ export default function MyStatementPage() {
                             </div>
 
                             {/* Statement Type */}
-                            <div className="mb-10">
+                            <div className="mb-6 md:mb-10">
                                 <label className="block text-[13px] font-bold text-gray-800 mb-2">
                                     Statement Type
                                 </label>
@@ -219,7 +219,7 @@ export default function MyStatementPage() {
                                 <button
                                     onClick={handleGetStatement}
                                     disabled={isDownloading}
-                                    className={`bg-[#f5a623] text-black px-10 py-3.5 font-bold text-[14px] uppercase tracking-widest hover:bg-[#e6950f] transition-all shadow-md flex items-center justify-center gap-3 active:scale-[0.98] ${isDownloading ? 'opacity-70 cursor-not-allowed grayscale' : ''}`}
+                                    className={`w-full sm:w-auto bg-[#f5a623] text-black px-6 sm:px-10 py-3 md:py-3.5 font-bold text-[14px] uppercase tracking-widest hover:bg-[#e6950f] transition-all shadow-md flex items-center justify-center gap-3 active:scale-[0.98] ${isDownloading ? 'opacity-70 cursor-not-allowed grayscale' : ''}`}
                                 >
                                     {isDownloading ? (
                                         <>

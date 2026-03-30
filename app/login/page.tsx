@@ -539,14 +539,14 @@ function LoginPageContent() {
     <div className="flex-1 bg-[#f4f4f4] flex flex-col font-['Rubik']">
 
       {/* ── CHANGE: pt-24→pt-16, added pb-12 for bottom breathing room ── */}
-      <main className="flex-1 flex justify-center items-start pt-16 pb-12 px-4 md:px-0">
+      <main className="flex-1 flex justify-center items-start pt-8 md:pt-16 pb-12 px-4 md:px-0">
 
         {/* ── CHANGE: max-w-[400px]→max-w-[440px] for slightly more room ── */}
         <div className="w-full max-w-[440px] bg-white rounded-[3px] shadow-[0_10px_40px_rgba(0,0,0,0.08)] border border-gray-100 overflow-hidden">
 
           {/* Header Section */}
           {/* ── CHANGE: p-8 pb-4 → px-8 pt-7 pb-5 ── */}
-          <div className="px-8 pt-7 pb-5">
+          <div className="px-4 sm:px-6 md:px-8 pt-5 sm:pt-7 pb-4 sm:pb-5">
             {/* ── CHANGE: removed border-b and pb-2 (no more bottom line) ── */}
             <div className="text-left">
               {/* ── CHANGE: text-[20px] → text-[15px], tracking-tight → tracking-widest ── */}
@@ -558,7 +558,7 @@ function LoginPageContent() {
 
           {/* Login Tabs */}
           {/* ── CHANGE: kept px-8, removed flex wrapper (unnecessary) ── */}
-          <div className="px-8">
+          <div className="px-4 sm:px-6 md:px-8">
             <div className="flex w-full rounded-[3px] overflow-hidden border border-gray-200">
               {/* ── CHANGE: removed inner p-1 and bg-gray-50/50 on wrapper;
                    active tab = solid black fill, no rounded corners inside ── */}
@@ -586,16 +586,16 @@ function LoginPageContent() {
           </div>
 
           {/* ── CHANGE: p-8 pt-6 → px-8 pt-5 pb-8 (unified horizontal padding) ── */}
-          <div className="px-8 pt-5 pb-8">
+          <div className="px-4 sm:px-6 md:px-8 pt-4 sm:pt-5 pb-6 sm:pb-8">
             {/* ── CHANGE: text-[13px] → text-[13px] (same), mb-6 → mb-5 ── */}
-            <p className="text-[13px] text-gray-500 font-medium leading-relaxed mb-5">
+            <p className="text-[12px] sm:text-[13px] text-gray-500 font-medium leading-relaxed mb-5">
               {mode === 'password'
                 ? "If you have an account, sign in with your email address."
                 : "If you have an account, sign in with your mobile number."}
             </p>
 
             {/* ── CHANGE: space-y-5 → flex flex-col gap-[14px] ── */}
-            <form onSubmit={handleSubmit} className="flex flex-col gap-[14px]" noValidate>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-[14px]" noValidate>
               {mode === 'password' && (
                 <>
                   {/* ── CHANGE: space-y-2 → flex flex-col gap-[5px] ── */}
@@ -645,7 +645,7 @@ function LoginPageContent() {
                     <div className={`flex h-10 bg-white border transition-all ${errors.mobile ? 'border-red-500' : 'border-gray-300 focus-within:border-gray-600'
                       }`}>
                       <div
-                        className="bg-gray-50 px-3 flex items-center gap-1.5 border-r border-gray-300 cursor-pointer min-w-[90px] hover:bg-gray-100 transition-colors"
+                        className="bg-gray-50 px-3 flex items-center gap-1.5 border-r border-gray-300 cursor-pointer min-w-[75px] sm:min-w-[90px] hover:bg-gray-100 transition-colors"
                         onClick={() => setShowDropdown(!showDropdown)}
                       >
                         <span className={`${selectedCountry?.flagClass}`}></span>
@@ -662,7 +662,7 @@ function LoginPageContent() {
                       />
 
                       {showDropdown && (
-                        <div className="absolute top-[66px] left-0 w-full bg-white border border-gray-200 shadow-xl z-50 overflow-hidden">
+                        <div className="absolute top-full mt-1 left-0 w-full bg-white border border-gray-200 shadow-xl z-50 overflow-hidden">
                           {COUNTRY_CODES.map((item) => (
                             <div
                               key={item.code}
@@ -708,7 +708,7 @@ function LoginPageContent() {
                   type={mode === 'otp' && !otpSent ? 'button' : 'submit'}
                   disabled={loading || reduxLoading}
                   onClick={mode === 'otp' && !otpSent ? handleSendOtp : undefined}
-                  className="w-full h-[46px] bg-[#f5b21a] hover:bg-[#e0a218] text-black font-black uppercase transition-all disabled:opacity-50 cursor-pointer active:scale-[0.98] tracking-widest text-[12px]"
+                  className="w-full h-10 sm:h-[46px] bg-[#f5b21a] hover:bg-[#e0a218] text-black font-black uppercase transition-all disabled:opacity-50 cursor-pointer active:scale-[0.98] tracking-widest text-[11px] sm:text-[12px]"
                 >
                   {mode === 'otp' && !otpSent ? 'Send OTP' : (loading || reduxLoading ? 'Please Wait...' : 'Sign In')}
                 </button>
@@ -716,7 +716,7 @@ function LoginPageContent() {
                 {/* ── CHANGE: text-center → text-right, removed pt-2, adjusted color ── */}
                 <div className="text-right">
                   <Link href="/forgot-password">
-                    <span className="text-[12px] font-medium text-gray-700 hover:text-black cursor-pointer hover:underline underline-offset-2">
+                    <span className="text-[12px] font-medium text-gray-700 hover:text-black cursor-pointer hover:underline underline-offset-2 py-2 inline-block">
                       Forgot Your Password?
                     </span>
                   </Link>

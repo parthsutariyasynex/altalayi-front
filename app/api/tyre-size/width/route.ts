@@ -35,17 +35,22 @@ export async function GET(request: NextRequest) {
     // const encodedCategory = category ? encodeURIComponent(category) : '';
     // const url = `${process.env.NEXT_PUBLIC_BASE_URL}/tyre-size/width${encodedCategory ? `?category=${encodedCategory}` : ''}`;
 
+    const fetchOptions: any = {
+        headers: {
+            'Content-Type': 'application/json',
+            'platform': 'web'
+        },
+        cache: 'no-store',
+    };
+
+    if (token && token !== "null") {
+        fetchOptions.headers['Authorization'] = `Bearer ${token}`;
+    }
+
     try {
         const res = await fetch(
             `${process.env.NEXT_PUBLIC_BASE_URL}/tyre-size/width`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                    'platform': 'web'
-                },
-                cache: 'no-store',
-            }
+            fetchOptions
         );
 
         if (!res.ok) {

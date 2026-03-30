@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, RotateCcw, Search, X } from "lucide-react";
 import { api } from "@/lib/api/api-client";
 
@@ -43,18 +44,27 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+    const triggerRef = useRef<HTMLDivElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
 
-    // Close on outside click
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
+    const updatePosition = useCallback(() => {
+        if (triggerRef.current) {
+            const rect = triggerRef.current.getBoundingClientRect();
+            setPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+        }
     }, []);
+
+    // Keep position updated on scroll/resize while open
+    useEffect(() => {
+        if (!isOpen) return;
+        window.addEventListener("scroll", updatePosition, true);
+        window.addEventListener("resize", updatePosition);
+        return () => {
+            window.removeEventListener("scroll", updatePosition, true);
+            window.removeEventListener("resize", updatePosition);
+        };
+    }, [isOpen, updatePosition]);
 
     const filteredOptions = useMemo(() => {
         if (!searchTerm) return options;
@@ -69,11 +79,81 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
         return selected ? selected.label : placeholder;
     }, [value, options, placeholder]);
 
+    // Calculate position BEFORE opening so portal renders at correct spot immediately
+    const handleToggle = useCallback(() => {
+        if (disabled || loading) return;
+        if (!isOpen && triggerRef.current) {
+            const rect = triggerRef.current.getBoundingClientRect();
+            setPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+        }
+        setIsOpen(prev => !prev);
+    }, [disabled, loading, isOpen]);
+
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => { setMounted(true); }, []);
+
+    const renderDropdownList = () => (
+        <>
+            <div className="px-3 sm:px-4 py-2 bg-[#f5a623] border-b border-yellow-600/20">
+                <span className="text-[12px] sm:text-[14px] font-[900] text-black uppercase tracking-tight">
+                    {label.replace(" Options", "")}
+                </span>
+            </div>
+
+            <div className="p-2 border-b border-gray-100 flex items-center gap-2 bg-white">
+                <div className="relative flex-1">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                    <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search..."
+                        className="w-full pl-8 pr-8 py-1.5 text-[12px] sm:text-[14px] bg-gray-50 border border-gray-200 rounded outline-none focus:ring-1 focus:ring-[#f5a623] focus:border-[#f5a623] transition-all"
+                    />
+                    {searchTerm && (
+                        <button
+                            onClick={() => setSearchTerm("")}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 hover:text-[#f5a623] text-gray-400"
+                        >
+                            <X className="w-3 h-3" />
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto custom-scrollbar bg-white py-1">
+                {filteredOptions.length > 0 ? (
+                    filteredOptions.map((opt) => (
+                        <div
+                            key={opt.value}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onChange(opt.value);
+                                setIsOpen(false);
+                                setSearchTerm("");
+                            }}
+                            className={`px-3 sm:px-4 py-2.5 sm:py-3 text-[12px] sm:text-[14px] font-bold cursor-pointer transition-colors ${value === opt.value
+                                ? "bg-yellow-50 text-black border-l-4 border-[#f5a623]"
+                                : "text-gray-700 hover:bg-gray-50 hover:text-black"
+                                }`}
+                        >
+                            {opt.label}
+                        </div>
+                    ))
+                ) : (
+                    <div className="px-4 py-6 text-center text-[12px] text-gray-500 font-medium italic">
+                        {emptyMessage}
+                    </div>
+                )}
+            </div>
+        </>
+    );
+
     return (
-        <div className="relative" ref={dropdownRef}>
-            {/* Header / Display Box */}
+        <div className="relative">
             <div
-                onClick={() => !disabled && !loading && setIsOpen(!isOpen)}
+                ref={triggerRef}
+                onClick={handleToggle}
                 className={`flex items-center justify-between px-3 sm:px-4 py-2.5 w-full bg-white border rounded cursor-pointer transition-all h-full ${disabled ? "bg-gray-50 border-gray-200 cursor-not-allowed text-gray-400" :
                     loading ? "border-[#f5a623] bg-yellow-50 cursor-wait text-gray-800" :
                         "border-gray-300 hover:border-[#f5a623] text-gray-800"
@@ -85,62 +165,37 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
                 <ChevronDown className={`w-4 h-4 flex-shrink-0 ml-1 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
             </div>
 
-            {isOpen && (
-                <div className={`absolute z-[110] left-0 right-0 ${direction === "up" ? "bottom-full mb-2 shadow-[0_-20px_50px_rgba(0,0,0,0.15)] animate-in fade-in slide-in-from-bottom-1" : "top-full mt-1 shadow-[0_20px_50px_rgba(0,0,0,0.15)] animate-in fade-in slide-in-from-top-1"} transition-all duration-200 bg-white border border-gray-200 rounded max-h-[300px] sm:max-h-[400px] flex flex-col overflow-hidden w-full min-w-0`}>
-                    <div className="px-3 sm:px-4 py-2 bg-[#f5a623] border-b border-yellow-600/20">
-                        <span className="text-[12px] sm:text-[14px] font-[900] text-black uppercase tracking-tight">
-                            {label.replace(" Options", "")}
-                        </span>
+            {isOpen && mounted && createPortal(
+                <>
+                    {/* Invisible backdrop to catch outside clicks */}
+                    <div
+                        className="fixed inset-0"
+                        style={{ zIndex: 9998 }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsOpen(false);
+                            setSearchTerm("");
+                        }}
+                    />
+                    <div
+                        ref={dropdownRef}
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        style={{
+                            position: "fixed",
+                            top: direction === "up" ? "auto" : pos.top,
+                            bottom: direction === "up" ? (window.innerHeight - (triggerRef.current?.getBoundingClientRect().top ?? 0) + 4) : "auto",
+                            left: pos.left,
+                            width: pos.width || "auto",
+                            minWidth: 200,
+                            zIndex: 9999,
+                        }}
+                        className="bg-white border border-gray-200 rounded max-h-[300px] sm:max-h-[400px] flex flex-col overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.15)]"
+                    >
+                        {renderDropdownList()}
                     </div>
-
-                    <div className="p-2 border-b border-gray-100 flex items-center gap-2 sticky top-0 bg-white z-10">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-                            <input
-                                type="text"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                placeholder="Search..."
-                                autoFocus
-                                className="w-full pl-8 pr-8 py-1.5 text-[12px] sm:text-[14px] bg-gray-50 border border-gray-200 rounded outline-none focus:ring-1 focus:ring-[#f5a623] focus:border-[#f5a623] transition-all"
-                            />
-                            {searchTerm && (
-                                <button
-                                    onClick={() => setSearchTerm("")}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 hover:text-[#f5a623] text-gray-400"
-                                >
-                                    <X className="w-3 h-3" />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Options List */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar bg-white py-1">
-                        {filteredOptions.length > 0 ? (
-                            filteredOptions.map((opt) => (
-                                <div
-                                    key={opt.value}
-                                    onClick={() => {
-                                        onChange(opt.value);
-                                        setIsOpen(false);
-                                        setSearchTerm("");
-                                    }}
-                                    className={`px-3 sm:px-4 py-2.5 sm:py-3 text-[12px] sm:text-[14px] font-bold cursor-pointer transition-colors ${value === opt.value
-                                        ? "bg-yellow-50 text-black border-l-4 border-[#f5a623]"
-                                        : "text-gray-700 hover:bg-gray-50 hover:text-black"
-                                        }`}
-                                >
-                                    {opt.label}
-                                </div>
-                            ))
-                        ) : (
-                            <div className="px-4 py-6 text-center text-[12px] text-gray-500 font-medium italic">
-                                {emptyMessage}
-                            </div>
-                        )}
-                    </div>
-                </div>
+                </>,
+                document.body
             )}
         </div>
     );

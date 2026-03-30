@@ -174,17 +174,17 @@ export default function MyOrdersPage() {
         <div className="min-h-screen bg-white font-['Rubik'] pb-20">
 
 
-            <div className="flex flex-1 min-h-0 w-full px-8 py-10">
-                <div className="flex flex-1 flex-col md:flex-row gap-10 items-start w-full">
+            <div className="flex flex-1 min-h-0 w-full px-4 md:px-8 py-6 md:py-10">
+                <div className="flex flex-1 flex-col md:flex-row gap-6 md:gap-10 items-start w-full">
                     <Sidebar />
 
                     <main className="flex-1 w-full min-w-0">
                         {/* Header */}
-                        <div className="flex justify-between items-center mb-6">
-                            <h1 className="text-[24px] font-bold text-black uppercase tracking-tight">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-4 md:mb-6">
+                            <h1 className="text-[18px] sm:text-[20px] md:text-[24px] font-bold text-black uppercase tracking-tight">
                                 MY ORDERS
                             </h1>
-                            <button className="flex items-center gap-2 bg-[#f5a623] text-black text-[13px] font-bold px-5 py-2.5 uppercase tracking-wide hover:bg-[#e6950f] transition-colors rounded-[2px] shadow-sm">
+                            <button className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#f5a623] text-black text-[13px] font-bold px-5 py-2.5 uppercase tracking-wide hover:bg-[#e6950f] transition-colors rounded-[2px] shadow-sm">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>

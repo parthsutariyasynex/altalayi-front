@@ -51,7 +51,7 @@ const ContactForm: React.FC = () => {
 
     if (isSubmitted) {
         return (
-            <div className={`w-full max-w-[1100px] mx-auto bg-green-50 border border-green-200 p-16 text-center rounded-sm ${styles.fadeIn} shadow-inner`}>
+            <div className={`w-full max-w-[1100px] mx-auto bg-green-50 border border-green-200 p-8 sm:p-12 md:p-16 text-center rounded-sm ${styles.fadeIn} shadow-inner`}>
                 <div className="flex justify-center mb-6">
                     <CheckCircle2 className="w-20 h-20 text-green-500 animate-bounce" />
                 </div>
@@ -81,7 +81,7 @@ const ContactForm: React.FC = () => {
                             placeholder="Your Name"
                             value={formData.name}
                             onChange={handleChange}
-                            className={`w-full pl-12 pr-5 py-4.5 border-2 ${errors.name ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-[#f5a623]'} focus:outline-none transition-all bg-white text-black text-[15px] shadow-sm rounded-sm`}
+                            className={`w-full pl-10 sm:pl-12 pr-5 py-4.5 border-2 ${errors.name ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-[#f5a623]'} focus:outline-none transition-all bg-white text-black text-[15px] shadow-sm rounded-sm`}
                         />
                         {errors.name && <span className="text-red-500 text-[11px] font-black mt-1.5 block uppercase tracking-wider pl-1">{errors.name}</span>}
                     </div>
@@ -95,7 +95,7 @@ const ContactForm: React.FC = () => {
                             placeholder="Phone"
                             value={formData.phone}
                             onChange={handleChange}
-                            className={`w-full pl-12 pr-5 py-4.5 border-2 ${errors.phone ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-[#f5a623]'} focus:outline-none transition-all bg-white text-black text-[15px] shadow-sm rounded-sm`}
+                            className={`w-full pl-10 sm:pl-12 pr-5 py-4.5 border-2 ${errors.phone ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-[#f5a623]'} focus:outline-none transition-all bg-white text-black text-[15px] shadow-sm rounded-sm`}
                         />
                         {errors.phone && <span className="text-red-500 text-[11px] font-black mt-1.5 block uppercase tracking-wider pl-1">{errors.phone}</span>}
                     </div>
@@ -111,7 +111,7 @@ const ContactForm: React.FC = () => {
                         placeholder="Your Email"
                         value={formData.email}
                         onChange={handleChange}
-                        className={`w-full pl-12 pr-5 py-4.5 border-2 ${errors.email ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-[#f5a623]'} focus:outline-none transition-all bg-white text-black text-[15px] shadow-sm rounded-sm`}
+                        className={`w-full pl-10 sm:pl-12 pr-5 py-4.5 border-2 ${errors.email ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-[#f5a623]'} focus:outline-none transition-all bg-white text-black text-[15px] shadow-sm rounded-sm`}
                     />
                     {errors.email && <span className="text-red-500 text-[11px] font-black mt-1.5 block uppercase tracking-wider pl-1">{errors.email}</span>}
                 </div>
@@ -126,7 +126,7 @@ const ContactForm: React.FC = () => {
                         rows={7}
                         value={formData.comment}
                         onChange={handleChange}
-                        className={`w-full pl-12 pr-5 py-4.5 border-2 ${errors.comment ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-[#f5a623]'} focus:outline-none transition-all bg-white text-black text-[15px] resize-none shadow-sm rounded-sm`}
+                        className={`w-full pl-10 sm:pl-12 pr-5 py-4.5 border-2 ${errors.comment ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-[#f5a623]'} focus:outline-none transition-all bg-white text-black text-[15px] resize-none shadow-sm rounded-sm`}
                     ></textarea>
                     {errors.comment && <span className="text-red-500 text-[11px] font-black mt-1.5 block uppercase tracking-wider pl-1">{errors.comment}</span>}
                 </div>
@@ -135,7 +135,7 @@ const ContactForm: React.FC = () => {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className={`bg-[#f5a623] text-black font-black px-12 py-4.5 uppercase tracking-widest hover:bg-black hover:text-white transition-all duration-500 text-[15px] shadow-xl hover:shadow-2xl flex items-center justify-center gap-4 min-w-[240px] border-b-4 border-black/10 hover:border-black/0 active:translate-y-1 mb-2`}
+                        className={`bg-[#f5a623] text-black font-black px-8 sm:px-10 md:px-12 py-4.5 uppercase tracking-widest hover:bg-black hover:text-white transition-all duration-500 text-[15px] shadow-xl hover:shadow-2xl flex items-center justify-center gap-4 min-w-[240px] border-b-4 border-black/10 hover:border-black/0 active:translate-y-1 mb-2`}
                     >
                         {isLoading ? (
                             <>

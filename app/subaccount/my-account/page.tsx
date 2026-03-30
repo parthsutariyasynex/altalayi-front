@@ -137,43 +137,43 @@ export default function SubAccountMyAccountPage() {
     const defaultShipping = subAddresses?.find((a: Address) => a.default_shipping);
 
     const cardBase = "border border-gray-300 bg-white shadow-sm rounded-none";
-    const sectionHeader = "bg-[#f5f5f5] px-4 py-3 border-b border-gray-300 text-black font-bold uppercase text-[13px]";
+    const sectionHeader = "bg-[#f5f5f5] px-3 md:px-4 py-2.5 md:py-3 border-b border-gray-300 text-black font-bold uppercase text-[12px] md:text-[13px]";
 
     return (
         <>
 
 
-            <div className="flex flex-1 min-h-0 w-full">
+            <div className="flex flex-col md:flex-row flex-1 min-h-0 w-full">
                 <Sidebar />
 
                 {/* Right Content */}
-                <main className="flex-1 p-8 bg-white min-h-0">
+                <main className="flex-1 p-4 md:p-8 bg-white min-h-0">
 
                     {/* Green Alert Banner */}
                     {isSubAccountSession && (
-                        <div className="bg-[#e7f6e7] border-l-4 border-[#2d8a2d] text-[#1b5e20] p-4 mb-8 flex items-center gap-3 animate-in fade-in slide-in-from-top duration-500 shadow-sm" role="alert">
+                        <div className="bg-[#e7f6e7] border-l-4 border-[#2d8a2d] text-[#1b5e20] p-3 md:p-4 mb-6 md:mb-8 flex items-center gap-3 animate-in fade-in slide-in-from-top duration-500 shadow-sm" role="alert">
                             <span className="text-[#2d8a2d] font-bold text-lg">✔</span>
                             <p className="text-[14px] font-medium tracking-tight">You are logged as subaccount now.</p>
                         </div>
                     )}
 
-                    <h1 className="text-2xl font-bold text-black mb-6 uppercase tracking-wide">
+                    <h1 className="text-xl md:text-2xl font-bold text-black mb-4 md:mb-6 uppercase tracking-wide">
                         MY ACCOUNT
                     </h1>
 
-                    <div className="space-y-8">
+                    <div className="space-y-6 md:space-y-8">
                         {/* ACCOUNT INFORMATION */}
                         <div>
-                            <h2 className="text-[16px] font-bold text-black uppercase mb-3">ACCOUNT INFORMATION</h2>
-                            <hr className="border-gray-200 mb-6" />
+                            <h2 className="text-[14px] md:text-[16px] font-bold text-black uppercase mb-2 md:mb-3">ACCOUNT INFORMATION</h2>
+                            <hr className="border-gray-200 mb-4 md:mb-6" />
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                                 {/* Contact Information - from SUB-ACCOUNT login customer */}
                                 <div className={cardBase}>
                                     <div className={sectionHeader}>
                                         CONTACT INFORMATION
                                     </div>
-                                    <div className="p-5 text-[13px] text-gray-800 space-y-2 font-normal leading-relaxed">
+                                    <div className="p-3 md:p-5 text-[13px] text-gray-800 space-y-2 font-normal leading-relaxed">
                                         <p><span className="text-black font-bold">Contact Name:</span> {contactName}</p>
                                         <p><span className="text-black font-bold">Email:</span> {contactEmail}</p>
                                         <p><span className="text-black font-bold">Contact Information:</span> {contactEmail} ,</p>
@@ -185,7 +185,7 @@ export default function SubAccountMyAccountPage() {
                                     <div className={sectionHeader}>
                                         COMPANY INFORMATION
                                     </div>
-                                    <div className="p-5 text-[13px] text-gray-800 space-y-2 font-normal leading-relaxed">
+                                    <div className="p-3 md:p-5 text-[13px] text-gray-800 space-y-2 font-normal leading-relaxed">
                                         <p><span className="text-black font-bold">Company Name:</span> {companyName}</p>
                                         <p><span className="text-black font-bold">Company Contact Name:</span> {companyContactName}</p>
                                         <p><span className="text-black font-bold">Company Email:</span> {companyEmail}</p>
@@ -198,16 +198,16 @@ export default function SubAccountMyAccountPage() {
 
                         {/* ADDRESS BOOK - from SUB-ACCOUNT login customer (has vat_id) */}
                         <div>
-                            <h2 className="text-[16px] font-bold text-black uppercase mb-3">ADDRESS BOOK</h2>
-                            <hr className="border-gray-200 mb-6" />
+                            <h2 className="text-[14px] md:text-[16px] font-bold text-black uppercase mb-2 md:mb-3">ADDRESS BOOK</h2>
+                            <hr className="border-gray-200 mb-4 md:mb-6" />
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                                 {/* Default Billing Address */}
                                 <div className={cardBase + " flex flex-col"}>
                                     <div className={sectionHeader}>
                                         DEFAULT BILLING ADDRESS
                                     </div>
-                                    <div className="p-5 flex flex-col flex-1">
+                                    <div className="p-3 md:p-5 flex flex-col flex-1">
                                         {defaultBilling ? (
                                             <div className="text-[13px] text-gray-800 leading-relaxed space-y-1 font-normal flex-1">
                                                 <p>{defaultBilling.firstname} {defaultBilling.lastname}</p>
@@ -229,7 +229,7 @@ export default function SubAccountMyAccountPage() {
                                     <div className={sectionHeader}>
                                         DEFAULT SHIPPING ADDRESS
                                     </div>
-                                    <div className="p-5 flex flex-col flex-1">
+                                    <div className="p-3 md:p-5 flex flex-col flex-1">
                                         {defaultShipping ? (
                                             <div className="text-[13px] text-gray-800 leading-relaxed space-y-1 font-normal flex-1">
                                                 <p>{defaultShipping.firstname} {defaultShipping.lastname}</p>
@@ -248,14 +248,14 @@ export default function SubAccountMyAccountPage() {
                                             {defaultShipping?.id ? (
                                                 <Link
                                                     href={`/customer/address-book/edit/${defaultShipping.id}`}
-                                                    className="bg-[#F5B21B] hover:bg-[#e0a116] text-black text-[13px] font-bold px-8 py-2.5 uppercase transition-all rounded-none inline-block"
+                                                    className="bg-[#F5B21B] hover:bg-[#e0a116] text-black text-[12px] md:text-[13px] font-bold px-6 md:px-8 py-2 md:py-2.5 uppercase transition-all rounded-none inline-block w-full sm:w-auto text-center"
                                                 >
                                                     EDIT ADDRESS
                                                 </Link>
                                             ) : (
                                                 <Link
                                                     href="/customer/address-book"
-                                                    className="bg-[#F5B21B] hover:bg-[#e0a116] text-black text-[13px] font-bold px-8 py-2.5 uppercase transition-all rounded-none inline-block"
+                                                    className="bg-[#F5B21B] hover:bg-[#e0a116] text-black text-[12px] md:text-[13px] font-bold px-6 md:px-8 py-2 md:py-2.5 uppercase transition-all rounded-none inline-block w-full sm:w-auto text-center"
                                                 >
                                                     ADD ADDRESS
                                                 </Link>

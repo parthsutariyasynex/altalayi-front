@@ -121,7 +121,7 @@ export default function Navbar() {
                 alt="AL TALAYI KSA"
                 width={300}
                 height={57}
-                className="h-[28px] sm:h-[36px] md:h-[50px] w-auto max-w-[100px] sm:max-w-[180px] md:max-w-[280px] object-contain"
+                className="h-[28px] sm:h-[36px] md:h-[42px] lg:h-[50px] w-auto max-w-[100px] sm:max-w-[180px] md:max-w-[200px] lg:max-w-[280px] object-contain"
               />
             </Link>
           </div>
@@ -139,14 +139,14 @@ export default function Navbar() {
               <div className="relative hidden md:block" ref={dropdownRef}>
                 <div
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="flex items-center bg-white border border-gray-100 rounded-full pl-1 pr-4 py-1 shadow-[0_2px_8px_-3px_rgba(0,0,0,0.12)] hover:shadow-md transition-shadow group cursor-pointer"
+                  className="flex items-center bg-white border border-gray-100 rounded-full pl-1 pr-2 lg:pr-4 py-1 shadow-[0_2px_8px_-3px_rgba(0,0,0,0.12)] hover:shadow-md transition-shadow group cursor-pointer"
                 >
-                  <div className="w-7 h-7 bg-[#f5b21a] rounded-full flex items-center justify-center mr-2 flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <div className="w-7 h-7 bg-[#f5b21a] rounded-full flex items-center justify-center mr-1.5 lg:mr-2 flex-shrink-0 group-hover:scale-110 transition-transform">
                     <UserCircle size={16} strokeWidth={2.5} />
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-[8px] text-gray-400 font-bold uppercase tracking-widest leading-none">Welcome Back</span>
-                    <span className="text-[12px] text-black font-black uppercase tracking-tighter leading-snug mt-0.5 truncate max-w-[120px] lg:max-w-[140px]">
+                    <span className="hidden lg:block text-[8px] text-gray-400 font-bold uppercase tracking-widest leading-none">Welcome Back</span>
+                    <span className="text-[11px] lg:text-[12px] text-black font-black uppercase tracking-tighter leading-snug mt-0.5 truncate max-w-[80px] lg:max-w-[140px]">
                       {isSubAccount && subAccountName ? subAccountName : displayUser}
                     </span>
                   </div>
@@ -233,12 +233,12 @@ export default function Navbar() {
 
       {/* ── YELLOW NAV BAR — desktop only ── */}
       <nav className="bg-[#f5b21a] border-b border-yellow-600/10 w-full hidden md:block">
-        <div className="flex items-center justify-center h-9 max-w-[1280px] mx-auto px-4">
+        <div className="flex items-center justify-center h-9 max-w-[1280px] mx-auto px-2 lg:px-4">
           {NAV_LINKS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center h-full px-4 lg:px-7 text-[12px] font-semibold uppercase tracking-wider text-black hover:bg-black hover:text-white transition-all duration-200 whitespace-nowrap"
+              className="flex items-center h-full px-2.5 lg:px-7 text-[11px] lg:text-[12px] font-semibold uppercase tracking-wide lg:tracking-wider text-black hover:bg-black hover:text-white transition-all duration-200 whitespace-nowrap"
             >
               {item.label}
             </Link>

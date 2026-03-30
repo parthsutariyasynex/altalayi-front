@@ -234,9 +234,9 @@ export default function ForgotPasswordPage() {
         <div className="w-full max-w-[450px] bg-white rounded-[3px] shadow-lg border border-gray-100 flex flex-col overflow-hidden">
 
           {/* Header Section */}
-          <div className="p-6 md:p-8 flex flex-col gap-6">
+          <div className="p-4 sm:p-6 md:p-8 flex flex-col gap-6">
             <div className="pb-4 border-b-[0.80px] border-gray-200">
-              <div className="text-black text-lg font-bold uppercase tracking-wide">
+              <div className="text-black text-base sm:text-lg font-bold uppercase tracking-wide">
                 {step === 'input' ? 'Forgot Password' : step === 'otp' ? 'Verify OTP' : 'Reset Password'}
               </div>
             </div>
@@ -263,15 +263,15 @@ export default function ForgotPasswordPage() {
           </div>
 
           {/* Form Content Section */}
-          <div className="px-6 md:px-8 pb-8 flex flex-col gap-6">
-            <div className="text-gray-600 text-xs font-normal leading-4">
+          <div className="px-4 sm:px-6 md:px-8 pb-6 sm:pb-8 flex flex-col gap-6">
+            <div className="text-gray-600 text-xs font-normal leading-5 sm:leading-4">
               {step === 'input'
                 ? (resetMode === 'email' ? "Enter your email address to receive a reset link." : "Enter your mobile number to receive a verification code.")
                 : step === 'otp' ? `Enter the verification code sent to ${countryCode} ${mobileNumber}`
                   : "Enter your new password below to reset your account access."}
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-5" noValidate>
 
               {/* Step: Input Email or Mobile */}
               {step === "input" && (
@@ -288,7 +288,7 @@ export default function ForgotPasswordPage() {
                         placeholder="Enter your email address"
                         value={email}
                         onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors({ ...errors, email: "" }); }}
-                        className={`w-full h-11 bg-white px-3 text-sm rounded-[1px] outline outline-1 transition-all cursor-text ${errors.email ? 'outline-red-500' : 'outline-neutral-200 focus:outline-black focus:outline-2 focus:ring-1 focus:ring-black'}`}
+                        className={`w-full h-10 sm:h-11 bg-white px-3 text-sm rounded-[1px] outline outline-1 transition-all cursor-text ${errors.email ? 'outline-red-500' : 'outline-neutral-200 focus:outline-black focus:outline-2 focus:ring-1 focus:ring-black'}`}
                       />
                       {errors.email && <span className="text-red-500 text-[11px] font-medium leading-none">{errors.email}</span>}
                     </div>
@@ -298,9 +298,9 @@ export default function ForgotPasswordPage() {
                         <span className="text-black text-xs font-semibold uppercase tracking-tight">Mobile Number</span>
                         <span className="text-red-600 text-xl font-semibold leading-none mt-1">*</span>
                       </div>
-                      <div className={`flex h-11 bg-white rounded-[1px] outline outline-1 transition-all overflow-visible ${errors.mobile ? 'outline-red-500' : 'outline-neutral-200 focus-within:outline-black focus-within:outline-2'}`}>
+                      <div className={`flex h-10 sm:h-11 bg-white rounded-[1px] outline outline-1 transition-all overflow-visible ${errors.mobile ? 'outline-red-500' : 'outline-neutral-200 focus-within:outline-black focus-within:outline-2'}`}>
                         <div
-                          className="bg-[#f5f5f5] px-3 flex items-center gap-2 border-r border-neutral-200 cursor-pointer min-w-[100px] hover:bg-neutral-200 transition-colors"
+                          className="bg-[#f5f5f5] px-3 flex items-center gap-2 border-r border-neutral-200 cursor-pointer min-w-[75px] sm:min-w-[100px] hover:bg-neutral-200 transition-colors"
                           onClick={() => setShowDropdown(!showDropdown)}
                         >
                           <span className={`${selectedCountry?.flagClass} scale-110`}></span>
@@ -317,7 +317,7 @@ export default function ForgotPasswordPage() {
                         />
 
                         {showDropdown && (
-                          <div className="absolute top-[75px] left-0 w-full bg-white border border-neutral-300 shadow-2xl z-[9999] rounded-[2px] overflow-hidden">
+                          <div className="absolute top-full mt-1 left-0 w-full bg-white border border-neutral-300 shadow-2xl z-[9999] rounded-[2px] overflow-hidden">
                             {COUNTRY_CODES.map((item) => (
                               <div
                                 key={item.code}
@@ -351,7 +351,7 @@ export default function ForgotPasswordPage() {
                     placeholder="Enter OTP"
                     value={otp}
                     onChange={(e) => { setOtp(e.target.value); if (errors.otp) setErrors({ ...errors, otp: "" }); }}
-                    className={`w-full h-11 bg-white px-3 text-sm text-center font-bold tracking-[8px] rounded-[1px] outline outline-1 transition-all placeholder:tracking-normal placeholder:font-normal cursor-text ${errors.otp ? 'outline-red-500' : 'outline-neutral-200 focus:outline-black focus:outline-2 focus:ring-1 focus:ring-black'}`}
+                    className={`w-full h-10 sm:h-11 bg-white px-3 text-sm text-center font-bold tracking-[6px] sm:tracking-[8px] rounded-[1px] outline outline-1 transition-all placeholder:tracking-normal placeholder:font-normal cursor-text ${errors.otp ? 'outline-red-500' : 'outline-neutral-200 focus:outline-black focus:outline-2 focus:ring-1 focus:ring-black'}`}
                   />
                   {errors.otp && <span className="text-red-500 text-[11px] font-medium leading-none">{errors.otp}</span>}
                   <button
@@ -378,7 +378,7 @@ export default function ForgotPasswordPage() {
                       placeholder="Enter new password"
                       value={newPassword}
                       onChange={(e) => { setNewPassword(e.target.value); if (errors.password) setErrors({ ...errors, password: "" }); }}
-                      className={`w-full h-11 bg-white px-3 text-sm rounded-[1px] outline outline-1 transition-all cursor-text ${errors.password ? 'outline-red-500' : 'outline-neutral-200 focus:outline-black focus:outline-2 focus:ring-1 focus:ring-black'}`}
+                      className={`w-full h-10 sm:h-11 bg-white px-3 text-sm rounded-[1px] outline outline-1 transition-all cursor-text ${errors.password ? 'outline-red-500' : 'outline-neutral-200 focus:outline-black focus:outline-2 focus:ring-1 focus:ring-black'}`}
                     />
                     {errors.password && <span className="text-red-500 text-[11px] font-medium leading-none">{errors.password}</span>}
                   </div>
@@ -394,14 +394,14 @@ export default function ForgotPasswordPage() {
                       placeholder="Confirm new password"
                       value={confirmPassword}
                       onChange={(e) => { setConfirmPassword(e.target.value); if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: "" }); }}
-                      className={`w-full h-11 bg-white px-3 text-sm rounded-[1px] outline outline-1 transition-all cursor-text ${errors.confirmPassword ? 'outline-red-500' : 'outline-neutral-200 focus:outline-black focus:outline-2 focus:ring-1 focus:ring-black'}`}
+                      className={`w-full h-10 sm:h-11 bg-white px-3 text-sm rounded-[1px] outline outline-1 transition-all cursor-text ${errors.confirmPassword ? 'outline-red-500' : 'outline-neutral-200 focus:outline-black focus:outline-2 focus:ring-1 focus:ring-black'}`}
                     />
                     {errors.confirmPassword && <span className="text-red-500 text-[11px] font-medium leading-none">{errors.confirmPassword}</span>}
                   </div>
                 </>
               )}
 
-              <div className="flex flex-col gap-4 mt-2">
+              <div className="flex flex-col gap-3 sm:gap-4 mt-2">
                 <button
                   id="submit-button"
                   type="submit"

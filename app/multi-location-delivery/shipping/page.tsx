@@ -25,7 +25,9 @@ const MultiShippingShippingPage: React.FC = () => {
     const {
         addresses,
         isLoading: isCheckoutLoading,
-        fetchMultiShippingMethods
+        fetchMultiShippingMethods,
+        setMultiShippingMethods,
+        startMultiShipping
     } = useCheckout(); // Automatically loads addresses on mount
 
     const [groups, setGroups] = useState<AddressGroup[]>([]);
@@ -59,6 +61,9 @@ const MultiShippingShippingPage: React.FC = () => {
 
                 hasFetched.current = true;
                 setIsLoading(true);
+
+                // Re-initialize multishipping session in case it expired
+                await startMultiShipping();
 
                 // 1. Process Assignments into Groups
                 const assignments: Assignments = JSON.parse(saved);
@@ -160,33 +165,33 @@ const MultiShippingShippingPage: React.FC = () => {
     }
 
     return (
-        <div className="bg-white min-h-screen font-sans pb-20">
+        <div className="bg-white min-h-screen font-sans pb-10 md:pb-20">
 
 
-            <div className="max-w-[1200px] mx-auto pt-10 px-4">
-                <h1 className="text-[24px] font-[900] text-black text-center uppercase mb-3 tracking-tighter">
+            <div className="max-w-[1200px] mx-auto pt-6 md:pt-10 px-3 sm:px-4">
+                <h1 className="text-[18px] sm:text-[20px] md:text-[24px] font-[900] text-black text-center uppercase mb-2 md:mb-3 tracking-tighter">
                     SELECT SHIPPING METHOD
                 </h1>
-                <p className="text-[15px] font-bold text-black text-center mb-12">
+                <p className="text-[12px] sm:text-[13px] md:text-[15px] font-bold text-black text-center mb-6 md:mb-12">
                     Address 1 <span className="text-gray-300 font-medium">of {groups.length}</span>
                 </p>
 
-                <div className="space-y-6">
+                <div className="space-y-4 md:space-y-6">
                     {groups.map((group) => {
                         const methods = shippingMethods[group.address.id] || [];
                         const selected = selectedMethods[group.address.id];
 
                         return (
                             <div key={group.address.id} className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                                     {/* Shipping To Section */}
-                                    <div className="bg-[#f2f2f2] min-h-[250px] flex flex-col">
-                                        <div className="bg-[#dadada] py-2.5 px-6 text-center">
+                                    <div className="bg-[#f2f2f2] min-h-[200px] md:min-h-[250px] flex flex-col">
+                                        <div className="bg-[#dadada] py-2.5 px-4 md:px-6 text-center">
                                             <h2 className="text-[11px] font-[900] text-black uppercase tracking-widest">
                                                 SHIPPING TO
                                             </h2>
                                         </div>
-                                        <div className="p-10 text-[14px] text-black leading-[1.6] flex-grow">
+                                        <div className="p-5 md:p-10 text-[13px] md:text-[14px] text-black leading-[1.6] flex-grow">
                                             <p className="mb-0.5">{group.address.firstname} {group.address.lastname}</p>
                                             <p className="mb-0.5">{group.address.company || "Company Name"}</p>
                                             <p className="mb-0.5">{group.address.street}</p>
@@ -197,8 +202,8 @@ const MultiShippingShippingPage: React.FC = () => {
                                     </div>
 
                                     {/* Items Section */}
-                                    <div className="bg-[#f2f2f2] min-h-[250px] flex flex-col">
-                                        <div className="bg-[#dadada] py-2.5 px-6 text-center">
+                                    <div className="bg-[#f2f2f2] min-h-[200px] md:min-h-[250px] flex flex-col">
+                                        <div className="bg-[#dadada] py-2.5 px-4 md:px-6 text-center">
                                             <h2 className="text-[11px] font-[900] text-black uppercase tracking-widest">
                                                 ITEMS
                                             </h2>
@@ -207,17 +212,17 @@ const MultiShippingShippingPage: React.FC = () => {
                                             <table className="w-full text-left border-collapse">
                                                 <thead>
                                                     <tr className="border-b border-[#e0e0e0]">
-                                                        <th className="py-4 px-6 text-[12px] font-black text-black">Product Name</th>
-                                                        <th className="py-4 px-6 text-[12px] font-black text-black text-right">Qty</th>
+                                                        <th className="py-3 md:py-4 px-4 md:px-6 text-[11px] md:text-[12px] font-black text-black">Product Name</th>
+                                                        <th className="py-3 md:py-4 px-4 md:px-6 text-[11px] md:text-[12px] font-black text-black text-right">Qty</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="bg-white">
                                                     {group.items.map((item) => (
                                                         <tr key={item.itemId} className="border-b border-[#f2f2f2] last:border-b-0">
-                                                            <td className="py-4 px-6 text-[13px] font-medium text-gray-700">
+                                                            <td className="py-3 md:py-4 px-4 md:px-6 text-[12px] md:text-[13px] font-medium text-gray-700">
                                                                 {item.name}
                                                             </td>
-                                                            <td className="py-4 px-6 text-[13px] font-medium text-gray-700 text-right">
+                                                            <td className="py-3 md:py-4 px-4 md:px-6 text-[12px] md:text-[13px] font-medium text-gray-700 text-right">
                                                                 {item.qty}
                                                             </td>
                                                         </tr>
@@ -228,55 +233,37 @@ const MultiShippingShippingPage: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Shipping Methods Selection */}
-                                {/* <div className="bg-white p-6 border border-[#f2f2f2]">
-                                    <h3 className="text-[11px] font-black text-black uppercase tracking-widest mb-6">Select a Shipping Method:</h3>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                        {methods.map((method) => (
-                                            <label
-                                                key={method.code || method.method_code}
-                                                className={`
-                                                    relative p-5 border-2 transition-all cursor-pointer flex flex-col items-center justify-center text-center
-                                                    ${selected === (method.code || method.method_code)
-                                                        ? 'border-[#f5b21a] bg-white shadow-sm'
-                                                        : 'border-[#f2f2f2] bg-white hover:border-gray-200'
-                                                    }
-                                                `}
-                                            >
-                                                <input
-                                                    type="radio"
-                                                    name={`shipMethod_${group.address.id}`}
-                                                    className="hidden"
-                                                    checked={selected === (method.code || method.method_code)}
-                                                    onChange={() => handleSelectMethod(group.address.id, method.code || method.method_code)}
-                                                />
-                                                <span className="text-[13px] font-black text-black uppercase mb-1">{method.title}</span>
-                                                <span className="text-[12px] font-bold text-[#f5b21a]">
-                                                    <Price amount={method.price} />
-                                                </span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div> */}
+                                {/* Shipping Methods Selection UI removed as per user request */}
                             </div>
                         );
                     })}
                 </div>
 
                 {/* Bottom Actions Bar */}
-                <div className="mt-4 bg-[#f2f2f2] p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="mt-4 md:mt-6 bg-[#f2f2f2] p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
                     <button
                         onClick={() => router.push('/multi-location-delivery')}
-                        className="bg-black text-white px-8 py-3.5 text-[11px] font-black uppercase tracking-wider hover:opacity-90 transition-opacity"
+                        className="w-full sm:w-auto text-center bg-black text-white px-6 md:px-8 py-3 md:py-3.5 text-[11px] font-black uppercase tracking-wider hover:opacity-90 transition-opacity"
                     >
                         BACK TO SELECT ADDRESSES
                     </button>
 
                     <button
-                        onClick={() => {
-                            toast.success("Proceeding to Billing...");
+                        onClick={async () => {
+                            try {
+                                if (Object.keys(selectedMethods).length > 0) {
+                                    await setMultiShippingMethods(selectedMethods);
+                                }
+                                // Automatically save the auto-selected shipping methods
+                                localStorage.setItem('multi_shipping_methods', JSON.stringify(selectedMethods));
+                                router.push('/multi-location-delivery/billing');
+                            } catch (err: any) {
+                                console.error("Error saving shipping methods:", err);
+                                toast.error(err.message || "Failed to save shipping methods.");
+                            }
                         }}
-                        className="bg-[#f5b21a] text-black px-10 py-3.5 text-[11px] font-black uppercase tracking-wider hover:bg-black hover:text-white transition-all shadow-sm"
+                        disabled={isLoading || isCheckoutLoading}
+                        className="w-full sm:w-auto text-center bg-[#f5b21a] text-black px-6 md:px-10 py-3 md:py-3.5 text-[11px] font-black uppercase tracking-wider hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-50"
                     >
                         CONTINUE TO BILLING INFORMATION
                     </button>

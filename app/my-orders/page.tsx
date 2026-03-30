@@ -324,18 +324,18 @@ function MyOrdersPageContent() {
 
     return (
         <div className="min-h-screen flex flex-col w-full bg-[#fcfcfc] font-rubik">
-            <div className="flex flex-1 w-full">
+            <div className="flex flex-col md:flex-row flex-1 w-full">
                 <Sidebar />
 
-                <main className="flex-1 w-full px-4 md:px-6 lg:px-8 py-10">
-                    <div className="flex justify-between items-center mb-8">
-                        <h1 className="text-[26px] font-black text-black mb-10 uppercase tracking-wide">
+                <main className="flex-1 w-full px-4 md:px-6 lg:px-8 py-4 md:py-8 lg:py-10">
+                    <div className="flex flex-col md:flex-row gap-4 md:gap-0 md:items-center mb-6 md:mb-8">
+                        <h1 className="text-[20px] sm:text-[22px] md:text-[26px] font-black text-black mb-4 md:mb-10 uppercase tracking-wide">
                             MY ORDERS
                         </h1>
                         <button
                             onClick={handleExportOrders}
                             disabled={isExporting}
-                            className={`flex items-center gap-2 border-2 border-[#f5a623] text-black text-[12px] font-bold px-5 py-2 uppercase tracking-wide hover:bg-[#f5a623] transition-colors ${isExporting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            className={`w-full md:w-auto justify-center flex items-center gap-2 border-2 border-[#f5a623] text-black text-[12px] font-bold px-5 py-2 uppercase tracking-wide hover:bg-[#f5a623] transition-colors ${isExporting ? 'opacity-70 cursor-not-allowed' : ''}`}
                         >
                             {isExporting ? (
                                 <>
@@ -368,13 +368,13 @@ function MyOrdersPageContent() {
                         But here we just show no orders.
                     */}
                     {!isLoading && !hasFetched && orders.length === 0 && (
-                        <div className="text-gray-500 py-20 text-center animate-pulse">
+                        <div className="text-gray-500 py-10 md:py-20 text-center animate-pulse">
                             Initializing orders dashboard...
                         </div>
                     )}
 
                     {hasFetched && orders.length === 0 && !isLoading ? (
-                        <div className="py-12 bg-white border border-gray-100 rounded-lg shadow-sm px-10">
+                        <div className="py-12 bg-white border border-gray-100 rounded-lg shadow-sm px-4 md:px-10">
                             <div className="mb-4">
                                 <button
                                     onClick={handleResetClick}

@@ -29,14 +29,19 @@ export async function GET(request: NextRequest) {
         if (width) params.append("width", width);
         if (height) params.append("height", height);
         if (params.toString()) url += `?${params.toString()}`;
-        const res = await fetch(url, {
+        const fetchOptions: any = {
             headers: {
-                Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
                 platform: "web",
             },
             cache: "no-store",
-        });
+        };
+
+        if (token && token !== "null") {
+            fetchOptions.headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        const res = await fetch(url, fetchOptions);
 
         if (!res.ok) {
             const errBody = await res.text();

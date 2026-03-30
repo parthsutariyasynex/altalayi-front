@@ -237,15 +237,15 @@ export default function MyForecastPage() {
         <div className="flex flex-col md:flex-row min-h-screen">
             <Sidebar />
 
-            <main className="flex-1 p-8 bg-[#f9f9f9] min-h-screen">
+            <main className="flex-1 p-4 md:p-8 bg-[#f9f9f9] min-h-screen">
                 {/* Header with Refresh */}
-                <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-[22px] font-black text-black uppercase tracking-tight">
+                <div className="flex justify-between items-center mb-6 md:mb-8">
+                    <h1 className="text-[18px] md:text-[22px] font-black text-black uppercase tracking-tight">
                         MY FORECAST
                     </h1>
                     <button
                         onClick={() => pullForecasts(currentPage, pageSize)}
-                        className="bg-white border border-gray-300 text-[12px] font-black px-4 py-1.5 uppercase hover:bg-gray-100 transition-all shadow-sm flex items-center gap-2"
+                        className="bg-white border border-gray-300 text-[11px] md:text-[12px] font-black px-3 md:px-4 py-1.5 uppercase hover:bg-gray-100 transition-all shadow-sm flex items-center gap-2"
                     >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /></svg>
                         REFRESH
@@ -253,15 +253,15 @@ export default function MyForecastPage() {
                 </div>
 
                 {/* Section: Upload */}
-                <h2 className="text-[15px] font-black text-black mb-4 uppercase tracking-tighter">
+                <h2 className="text-[13px] md:text-[15px] font-black text-black mb-3 md:mb-4 uppercase tracking-tighter">
                     UPLOAD FORECAST
                 </h2>
 
-                <div className="bg-white border border-gray-200 rounded-sm mb-12 shadow-sm overflow-hidden">
-                    <div className="p-8">
-                        <div className="border-2 border-dashed border-gray-300 rounded-sm bg-[#eeeeee] px-6 py-8 flex flex-col lg:flex-row items-center justify-between gap-6">
-                            <div className="flex items-center gap-3">
-                                <span className="text-[14px] font-medium text-black">Drop files here</span>
+                <div className="bg-white border border-gray-200 rounded-sm mb-8 md:mb-12 shadow-sm overflow-hidden">
+                    <div className="p-4 md:p-8">
+                        <div className="border-2 border-dashed border-gray-300 rounded-sm bg-[#eeeeee] px-4 md:px-6 py-6 md:py-8 flex flex-col items-center gap-4 md:gap-6">
+                            <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                                <span className="text-[13px] md:text-[14px] font-medium text-black">Drop files here</span>
                                 <input
                                     type="file"
                                     id="file-upload"
@@ -271,27 +271,29 @@ export default function MyForecastPage() {
                                 />
                                 <label
                                     htmlFor="file-upload"
-                                    className="bg-[#f0f0f0] border border-gray-400 px-3 py-1 text-[13px] font-medium text-black cursor-pointer hover:bg-gray-200 transition-colors rounded-[2px]"
+                                    className="bg-[#f0f0f0] border border-gray-400 px-4 py-1.5 text-[12px] md:text-[13px] font-medium text-black cursor-pointer hover:bg-gray-200 transition-colors rounded-[2px]"
                                 >
                                     Choose File
                                 </label>
-                                <span className="text-[13px] text-gray-800 font-medium">
-                                    {selectedFile ? selectedFile.name : "No file chosen"}
-                                </span>
                             </div>
-                            <div className="text-right">
-                                <span className="text-[14px] font-medium text-black leading-relaxed">
+                            {selectedFile && (
+                                <span className="text-[12px] md:text-[13px] text-gray-800 font-medium truncate max-w-full">
+                                    {selectedFile.name}
+                                </span>
+                            )}
+                            <div className="text-center">
+                                <span className="text-[11px] md:text-[14px] font-medium text-gray-600 leading-relaxed">
                                     Allowed file types : jpg,jpeg,png,zip,rar,docx,doc,pdf,xls,xlsx,csv,msg
                                 </span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white px-8 pb-8 flex justify-end">
+                    <div className="bg-white px-4 md:px-8 pb-4 md:pb-8 flex justify-center md:justify-end">
                         <button
                             onClick={handleUpload}
                             disabled={uploading}
-                            className="bg-[#f4b400] text-black text-[13px] font-black px-12 py-2.5 uppercase tracking-wider hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-50"
+                            className="w-full sm:w-auto bg-[#f4b400] text-black text-[12px] md:text-[13px] font-black px-8 md:px-12 py-2.5 md:py-2.5 uppercase tracking-wider hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-50"
                         >
                             {uploading ? "UPLOADING..." : "SUBMIT"}
                         </button>
@@ -299,9 +301,9 @@ export default function MyForecastPage() {
                 </div>
 
                 {/* Table Header Row */}
-                <div className="grid grid-cols-2 bg-[#fcfcfc] border border-gray-100 py-4 mb-2">
-                    <span className="text-[13px] font-black text-black px-6">File Name</span>
-                    <span className="text-[13px] font-black text-black text-center border-l border-gray-100">Uploaded Date</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 bg-[#fcfcfc] border border-gray-100 py-3 md:py-4 mb-2">
+                    <span className="text-[12px] md:text-[13px] font-black text-black px-4 md:px-6">File Name</span>
+                    <span className="text-[12px] md:text-[13px] font-black text-black text-center border-l border-gray-100 hidden sm:block">Uploaded Date</span>
                 </div>
 
                 {/* Files List - Mapping Data from Proxy API */}
@@ -309,8 +311,8 @@ export default function MyForecastPage() {
                     {forecasts.length > 0 ? forecasts.map((file, idx) => {
                         const fileId = file.forecast_id || file.entity_id || file.id || file.file_id;
                         return (
-                            <div key={fileId || idx} className="grid grid-cols-2 border-b border-gray-50 py-4 hover:bg-[#fff7e6] transition-colors group">
-                                <div className="flex items-center gap-3 px-6">
+                            <div key={fileId || idx} className="grid grid-cols-1 sm:grid-cols-2 border-b border-gray-50 py-3 md:py-4 hover:bg-[#fff7e6] transition-colors group">
+                                <div className="flex items-center gap-3 px-4 md:px-6">
                                     <button
                                         onClick={() => handleDownload(file)}
                                         disabled={downloadingId !== null && downloadingId === fileId}
@@ -322,7 +324,7 @@ export default function MyForecastPage() {
                                         <div className="animate-spin h-3 w-3 border-b-2 border-[#f4b400] rounded-full"></div>
                                     )}
                                 </div>
-                                <span className="text-[13px] text-gray-700 font-medium text-center border-l border-gray-50">
+                                <span className="text-[12px] md:text-[13px] text-gray-700 font-medium text-center sm:border-l border-gray-50 px-4 md:px-0">
                                     {getProperDate(file)}
                                 </span>
                             </div>
@@ -335,7 +337,7 @@ export default function MyForecastPage() {
                 </div>
 
                 {/* Pagination / Info Row */}
-                <div className="bg-[#f2f2f2] mt-10 py-3.5 px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-[#555] rounded-sm">
+                <div className="bg-[#f2f2f2] mt-6 md:mt-10 py-3 md:py-3.5 px-4 md:px-6 flex flex-col md:flex-row justify-between items-center gap-3 md:gap-4 text-[#555] rounded-sm">
                     <div className="flex items-center gap-6">
                         <span className="text-[12px] font-medium">{totalItems} Item(s)</span>
                         <div className="flex items-center gap-2">

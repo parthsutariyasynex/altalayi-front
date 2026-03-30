@@ -20,9 +20,9 @@ import { toast } from "react-hot-toast";
 const PAGE_SIZE = 20;
 
 const TABLE_HEADERS = ['Brand', 'Size', 'Pattern', 'Year', 'Origin', 'Image', 'Offer', 'Stock', 'Price', 'Action'] as const;
-const COL_WIDTHS = ['9%', '10%', '14%', '6%', '9%', '7%', '10%', '10%', '10%', '15%'] as const;
+const COL_WIDTHS = ['8%', '13%', '13%', '6%', '7%', '7%', '9%', '9%', '10%', '110px'] as const;
 const SHIMMER_ROWS = 10;
-const ROW_HEIGHT = 'h-[52px]';
+const ROW_HEIGHT = 'h-auto md:h-[52px]';
 
 function TableColGroup() {
   return (
@@ -304,30 +304,34 @@ export default function ProductsPage() {
     const dotColor = stockColor === "green" ? "bg-green-500" : stockColor === "yellow" ? "bg-yellow-400" : "bg-red-500";
 
     return (
-      <div key={index} className="bg-white rounded-xl border border-gray-200 shadow-sm p-3 flex flex-col gap-2">
+      <div key={index} className="bg-white rounded-xl border border-gray-200 shadow-sm p-3 sm:p-4 flex flex-col gap-2">
         {/* Top: content left + image right */}
         <div className="flex gap-3">
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{brandName}</p>
-            <p className="text-[13px] font-black text-gray-900 leading-tight mt-0.5 truncate">{product?.pattern || product?.name || "—"}</p>
-            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-              <span className="text-[11px] text-gray-600 bg-gray-50 px-2 py-0.5 rounded font-medium">{product?.tyre_size || "—"}</span>
-              {product?.origin && <span className="text-[11px] text-gray-500">{product.origin}</span>}
-              {product?.year && <span className="text-[11px] text-gray-400 font-mono">{product.year}</span>}
+            <p className="text-[12px] md:text-[13px] font-black text-gray-900 leading-tight mt-0.5 truncate">{product?.pattern || product?.name || "—"}</p>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="text-[12px] font-bold text-black">{product?.tyre_size || "—"}</span>
+              <div onClick={() => setSelectedProduct(product)} className="w-4 h-4 bg-gray-900 rounded-full flex items-center justify-center text-[9px] font-bold text-white cursor-pointer hover:bg-yellow-400 hover:text-black transition-all shadow-sm active:scale-95 flex-shrink-0">i</div>
+              {product?.origin && <span className="text-[11px] text-gray-400 font-normal">{product.origin}</span>}
+              {product?.year && <span className="text-[11px] text-gray-400 font-mono font-normal">{product.year}</span>}
             </div>
-            <div className="flex items-center gap-1.5 mt-2">
-              <span className={`w-2.5 h-2.5 rounded-full ${dotColor}`}></span>
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <span className={`w-2 h-2 rounded-full ${dotColor}`}></span>
               <span className="text-[10px] font-bold text-gray-600 uppercase">{stockLabel}</span>
             </div>
             {product?.offer && <p className="text-[10px] font-bold text-red-600 uppercase mt-1">{product.offer}</p>}
           </div>
-          <div className="w-16 h-16 flex-shrink-0 rounded-lg border border-gray-100 overflow-hidden bg-gray-50 flex items-center justify-center cursor-pointer" onClick={() => { if (product?.image_url) { setSelectedImage(product.image_url); setPreviewProduct(product); setIsImageModalOpen(true); } }}>
+          <div
+            className="w-14 h-14 md:w-16 md:h-16 flex-shrink-0 rounded-lg border border-gray-100 overflow-hidden bg-gray-50 flex items-center justify-center cursor-pointer"
+            onClick={() => { if (product?.image_url) { setSelectedImage(product.image_url); setPreviewProduct(product); setIsImageModalOpen(true); } }}
+          >
             {product?.image_url ? <img src={product.image_url} alt={product.name} className="w-full h-full object-contain" /> : <span className="text-[8px] text-gray-300 font-bold uppercase">No Img</span>}
           </div>
         </div>
         {/* Bottom: price left + actions right */}
-        <div className="flex items-center justify-between border-t border-gray-100 pt-3 mt-1 gap-2">
-          <div className="flex flex-col min-w-0">
+        <div className="flex items-center justify-between border-t border-gray-100 pt-2.5 mt-1 gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             <span className="text-[13px] font-black text-black rubik-sans truncate">
               <Price amount={product?.final_price || 0} />
             </span>
@@ -337,22 +341,22 @@ export default function ProductsPage() {
               <button
                 onClick={() => handleAddToCart(product.sku)}
                 disabled={addingToCart === product.sku}
-                className={`h-9 px-3 rounded-lg flex items-center gap-1.5 text-[11px] font-black uppercase shadow-sm active:scale-95 cursor-pointer flex-shrink-0 ${justAdded === product.sku ? "bg-green-500 text-white" : "bg-[#f5b21a] text-black"}`}
+                className={`h-9 px-2.5 rounded-lg flex items-center gap-1.5 text-[11px] font-black uppercase shadow-sm active:scale-95 cursor-pointer flex-shrink-0 ${justAdded === product.sku ? "bg-green-500 text-white" : "bg-[#f5b21a] text-black"}`}
               >
                 {addingToCart === product.sku ? (
                   <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
                 ) : justAdded === product.sku ? (
                   <><Check size={14} strokeWidth={3} /> Added</>
                 ) : (
-                  <><ShoppingCart size={14} strokeWidth={2.5} /> Buy Now</>
+                  <><ShoppingCart size={14} strokeWidth={2.5} /></>
                 )}
               </button>
             ) : (
               <button
                 onClick={() => { setInquiryProduct(product); setIsInquiryModalOpen(true); }}
-                className="h-9 px-3 bg-[#f5b21a] text-black rounded-lg flex items-center gap-1.5 text-[11px] font-black uppercase shadow-sm active:scale-95 cursor-pointer flex-shrink-0"
+                className="h-9 px-2.5 bg-[#f5b21a] text-black rounded-lg flex items-center gap-1.5 text-[11px] font-black uppercase shadow-sm active:scale-95 cursor-pointer flex-shrink-0"
               >
-                <Info size={14} strokeWidth={2.5} /> Enquiry
+                <Info size={14} strokeWidth={2.5} />
               </button>
             )}
             <button
@@ -396,7 +400,7 @@ export default function ProductsPage() {
       <Suspense fallback={null}><SearchParamsReader onParams={handleParams} /></Suspense>
       <div className="flex">
         {/* Desktop Sidebar */}
-        <div className="hidden lg:flex flex-col flex-shrink-0 self-stretch min-h-full">
+        <div className="hidden xl:flex flex-col flex-shrink-0 self-stretch min-h-full">
           <SidebarFilter
             onFilterChange={handleFilterChange}
             selectedFilters={selectedFilters}
@@ -417,7 +421,7 @@ export default function ProductsPage() {
             </div>
             <div className="flex-1 overflow-y-auto">
               {/* Render SidebarFilter content directly — override its aside wrapper via CSS */}
-              <div className="[&>aside]:!w-full [&>aside]:!h-auto [&>aside]:!static [&>aside]:!border-0 [&>aside]:!overflow-visible [&>aside>div:first-child]:!hidden">
+              <div className="[&>aside]:!w-full [&>aside]:!h-auto [&>aside]:!static [&>aside]:!border-0 [&>aside]:!overflow-visible [&>aside>div]:!static [&>aside>div]:!h-auto [&>aside>div>div:first-child]:!hidden">
                 <SidebarFilter onFilterChange={(f, l) => { handleFilterChange(f, l); setIsMobileFilterOpen(false); }} selectedFilters={selectedFilters} isCollapsed={false} setIsCollapsed={() => { }} initialFilters={apiFilters} />
               </div>
             </div>
@@ -436,26 +440,23 @@ export default function ProductsPage() {
               <h2 className="text-[14px] font-black text-black uppercase tracking-tight">Search by Tyre Size</h2>
             </div>
             <div className="flex-1 overflow-y-auto p-5">
-              <HorizontalFilter vertical onSearch={(w, h, r) => { handleHorizontalSearch(w, h, r); setIsMobileSearchOpen(false); }} initialValues={{ width: debouncedFilters["width"]?.[0] || "", height: debouncedFilters["height"]?.[0] || "", rim: debouncedFilters["rim"]?.[0] || "" }} />
+              <HorizontalFilter vertical onSearch={(w, h, r) => { handleHorizontalSearch(w, h, r); if (w && h && r) setIsMobileSearchOpen(false); }} initialValues={{ width: debouncedFilters["width"]?.[0] || "", height: debouncedFilters["height"]?.[0] || "", rim: debouncedFilters["rim"]?.[0] || "" }} />
             </div>
           </div>
         </Drawer>
 
-        <div className="flex flex-col p-2 lg:p-0">
+        <div className="flex-1 flex flex-col w-full">
 
           {/* ── MOBILE CONTROLS ── */}
-          <div className="lg:hidden flex flex-col gap-2 mb-3">
-            {/* Row 1: Favourites + Search */}
-            <div className="grid grid-cols-2 gap-2">
+          <div className="xl:hidden flex flex-col gap-2 mb-3">
+            {/* Controls: 2 cols on mobile, 4 cols on tablet */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <button onClick={() => router.push("/favorites")} className="h-[44px] bg-white border border-gray-200 rounded-xl flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider shadow-sm active:scale-95 cursor-pointer">
                 <Star className="w-4 h-4 fill-black text-black" /> Favourites
               </button>
               <button onClick={() => setIsMobileSearchOpen(true)} className="h-[44px] bg-[#f5b21a] rounded-xl flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider shadow-sm active:scale-95 cursor-pointer">
                 <Search className="w-4 h-4" /> Search
               </button>
-            </div>
-            {/* Row 2: Sort + Filter */}
-            <div className="grid grid-cols-2 gap-2">
               <button onClick={() => setIsMobileSortOpen(true)} className="h-[44px] bg-white border border-gray-200 rounded-xl flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider shadow-sm active:scale-95 cursor-pointer">
                 <ChevronDown className="w-4 h-4" />
                 {sortBy === "none" ? "Sort By" : sortBy === "price-asc" ? "Price: Low" : "Price: High"}
@@ -480,7 +481,7 @@ export default function ProductsPage() {
 
           {/* Mobile Sort Bottom Sheet */}
           {isMobileSortOpen && (
-            <div className="lg:hidden fixed inset-0 z-[100]">
+            <div className="xl:hidden fixed inset-0 z-[100]">
               <div className="absolute inset-0 bg-black/40" onClick={() => setIsMobileSortOpen(false)} />
               <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl animate-in slide-in-from-bottom duration-300">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
@@ -508,16 +509,16 @@ export default function ProductsPage() {
             </div>
           )}
 
-          {/* ── MOBILE CARD LIST ── */}
-          <div className="lg:hidden flex-1 flex flex-col gap-2.5 overflow-y-auto">
+          {/* ── MOBILE/TABLET CARD LIST ── */}
+          <div className="xl:hidden flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 overflow-y-auto">
             {loading ? <MobileCardShimmer /> : sortedProducts.length === 0 ? (
-              <div className="flex-1 flex items-center justify-center py-20"><p className="text-xs font-black text-gray-400 uppercase tracking-widest">No products found</p></div>
+              <div className="flex-1 flex items-center justify-center py-20 col-span-full"><p className="text-xs font-black text-gray-400 uppercase tracking-widest">No products found</p></div>
             ) : sortedProducts.map((p, i) => renderProductCard(p, i))}
           </div>
-          <div className="lg:hidden">{renderPagination(true)}</div>
+          <div className="xl:hidden">{renderPagination(true)}</div>
 
           {/* ── DESKTOP CONTROLS + TABLE ── */}
-          <div className="hidden lg:flex flex-col bg-white rounded-none md:rounded-r-2xl shadow-sm border border-gray-200 border-l-0 overflow-hidden">
+          <div className="hidden xl:flex flex-col bg-white rounded-none md:rounded-r-2xl shadow-sm border border-gray-200 border-l-0 overflow-hidden">
             {/* Desktop header */}
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center gap-4 min-h-[60px]">
               <div className="flex items-center gap-4">
@@ -554,7 +555,7 @@ export default function ProductsPage() {
                 <thead className="sticky top-0 z-20">
                   <tr className="bg-gray-50 border-b-2 border-gray-200">
                     {TABLE_HEADERS.map(h => (
-                      <th key={h} className="px-4 py-3 text-[11px] font-black text-black uppercase tracking-widest text-center">{h}</th>
+                      <th key={h} className="px-2 md:px-4 py-2 md:py-3 text-[11px] font-black text-black uppercase tracking-widest text-center">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -566,17 +567,17 @@ export default function ProductsPage() {
                     const isOutOfStock = product.stock_status === "Not Available" || Number(product?.stock_qty ?? 0) <= 0;
                     return (
                       <tr key={index} className={`hover:bg-gray-50/50 transition-colors group ${ROW_HEIGHT}`}>
-                        <td className="px-4 text-[12px] font-normal text-gray-700 text-center">{brandName}</td>
-                        <td className="px-4 text-center">
-                          <div className="flex items-center justify-center gap-2">
+                        <td className="px-2 md:px-4 text-[12px] font-normal text-gray-700 text-center">{brandName}</td>
+                        <td className="px-2 md:px-4 text-center whitespace-nowrap">
+                          <div className="flex items-center justify-center gap-1.5">
                             <span className="text-[12px] font-normal text-gray-900 tracking-tight">{product?.tyre_size}</span>
-                            <div onClick={() => setSelectedProduct(product)} className="w-4 h-4 bg-gray-900 rounded-full flex items-center justify-center text-[9px] font-bold text-white cursor-pointer hover:bg-yellow-400 hover:text-black transition-all shadow-sm">i</div>
+                            <div onClick={() => setSelectedProduct(product)} className="w-4 h-4 bg-gray-900 rounded-full flex items-center justify-center text-[9px] font-bold text-white cursor-pointer hover:bg-yellow-400 hover:text-black transition-all shadow-sm flex-shrink-0">i</div>
                           </div>
                         </td>
-                        <td className="px-4 text-[12px] font-normal text-gray-600 text-center">{product?.pattern || "—"}</td>
-                        <td className="px-4 text-[12px] font-normal text-gray-500 text-center font-mono">{product?.year || "—"}</td>
-                        <td className="px-4 text-[12px] font-normal text-gray-600 text-center">{product?.origin || "—"}</td>
-                        <td className="px-4 text-center">
+                        <td className="px-2 md:px-4 text-[12px] font-normal text-gray-600 text-center">{product?.pattern || "—"}</td>
+                        <td className="px-2 md:px-4 text-[12px] font-normal text-gray-500 text-center font-mono">{product?.year || "—"}</td>
+                        <td className="px-2 md:px-4 text-[12px] font-normal text-gray-600 text-center">{product?.origin || "—"}</td>
+                        <td className="px-2 md:px-4 text-center">
                           <div className="w-10 h-10 mx-auto">
                             {product?.image_url ? (
                               <div className="relative w-10 h-10 group/img cursor-pointer" onClick={() => { setSelectedImage(product.image_url); setPreviewProduct(product); setIsImageModalOpen(true); }}>
@@ -588,21 +589,28 @@ export default function ProductsPage() {
                             ) : <span className="text-[10px] text-gray-300 font-black uppercase leading-[40px]">No Image</span>}
                           </div>
                         </td>
-                        <td className="px-4 text-center">{product.offer ? <span className="text-red-600 font-bold text-[10px] uppercase tracking-tight block max-w-[150px] mx-auto">{product.offer}</span> : <span className="text-gray-200">—</span>}</td>
-                        <td className="px-4 text-center">{getStockBadge(product)}</td>
-                        <td className="px-4 text-center whitespace-nowrap"><span className="text-[12px] font-black text-black tracking-tight rubik-sans"><Price amount={product?.final_price || 0} /></span></td>
-                        <td className="px-4 text-center">
-                          <div className="grid grid-cols-3 gap-1.5 justify-items-center">
-                            {!isOutOfStock ? <div className="w-9 h-9 border-2 border-gray-100 rounded-lg flex items-center justify-center text-xs font-black text-gray-900 bg-white shadow-sm">1</div> : <div className="w-9 h-9" />}
+                        <td className="px-2 md:px-4 text-center">{product.offer ? <span className="text-red-600 font-bold text-[10px] uppercase tracking-tight block max-w-[150px] mx-auto">{product.offer}</span> : <span className="text-gray-200">—</span>}</td>
+                        <td className="px-2 md:px-4 text-center">{getStockBadge(product)}</td>
+                        <td className="px-2 md:px-4 text-center whitespace-nowrap"><span className="text-[12px] font-black text-black tracking-tight rubik-sans"><Price amount={product?.final_price || 0} /></span></td>
+                        <td className="px-1 text-center align-middle">
+                          <div className="inline-grid grid-cols-3 gap-1 items-center">
+                            {/* Col 1: Qty */}
                             {!isOutOfStock ? (
-                              <button onClick={() => handleAddToCart(product.sku)} disabled={addingToCart === product.sku} className={`w-10 h-10 rounded-lg flex items-center justify-center shadow-md hover:-translate-y-0.5 transition-all cursor-pointer ${justAdded === product.sku ? "bg-green-500 text-white" : "bg-yellow-400 text-black hover:bg-yellow-500"}`}>
-                                {addingToCart === product.sku ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div> : justAdded === product.sku ? <Check size={18} strokeWidth={3} /> : <ShoppingCart size={18} strokeWidth={2.5} />}
+                              <div className="w-8 h-8 border-2 border-gray-100 rounded-md flex items-center justify-center text-[11px] font-black text-gray-900 bg-white shadow-sm">1</div>
+                            ) : (
+                              <div className="w-8 h-8" />
+                            )}
+                            {/* Col 2: Cart or Enquiry */}
+                            {!isOutOfStock ? (
+                              <button onClick={() => handleAddToCart(product.sku)} disabled={addingToCart === product.sku} className={`w-8 h-8 rounded-md flex items-center justify-center shadow-md hover:-translate-y-0.5 transition-all cursor-pointer ${justAdded === product.sku ? "bg-green-500 text-white" : "bg-yellow-400 text-black hover:bg-yellow-500"}`}>
+                                {addingToCart === product.sku ? <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> : justAdded === product.sku ? <Check size={15} strokeWidth={3} /> : <ShoppingCart size={15} strokeWidth={2.5} />}
                               </button>
                             ) : (
-                              <button onClick={() => { setInquiryProduct(product); setIsInquiryModalOpen(true); }} className="w-10 h-10 bg-yellow-400 hover:bg-yellow-500 text-black rounded-lg flex items-center justify-center shadow-md active:scale-95 cursor-pointer"><Info size={18} strokeWidth={2.5} /></button>
+                              <button onClick={() => { setInquiryProduct(product); setIsInquiryModalOpen(true); }} className="w-8 h-8 bg-yellow-400 hover:bg-yellow-500 text-black rounded-md flex items-center justify-center shadow-md active:scale-95 cursor-pointer"><Info size={15} strokeWidth={2.5} /></button>
                             )}
-                            <button onClick={() => toggleFavorite(product)} className={`w-10 h-10 rounded-lg flex items-center justify-center shadow-md active:scale-95 cursor-pointer ${favIds.includes(product.product_id) ? "bg-yellow-400 text-black" : "bg-white text-gray-400 border border-gray-100 hover:border-yellow-200"}`}>
-                              <Star size={18} fill={favIds.includes(product.product_id) ? "currentColor" : "none"} strokeWidth={2.5} />
+                            {/* Col 3: Wishlist */}
+                            <button onClick={() => toggleFavorite(product)} className={`w-8 h-8 rounded-md flex items-center justify-center shadow-md active:scale-95 cursor-pointer ${favIds.includes(product.product_id) ? "bg-yellow-400 text-black" : "bg-white text-gray-400 border border-gray-100 hover:border-yellow-200"}`}>
+                              <Star size={15} fill={favIds.includes(product.product_id) ? "currentColor" : "none"} strokeWidth={2.5} />
                             </button>
                           </div>
                         </td>
@@ -617,7 +625,7 @@ export default function ProductsPage() {
         </div>
 
         {/* Desktop bottom search bar */}
-        <div className="hidden lg:flex fixed bottom-0 left-0 right-0 z-[40] bg-white border-t-[4px] border-[#f5a623] shadow-[0_-10px_30px_rgba(0,0,0,0.12)] h-[90px] items-center">
+        <div className="hidden xl:flex fixed bottom-0 left-0 right-0 z-[40] bg-white border-t-[4px] border-[#f5a623] shadow-[0_-10px_30px_rgba(0,0,0,0.12)] h-[90px] items-center">
           <div className={`w-full transition-all duration-300 ${isSidebarCollapsed ? "pl-[50px]" : "pl-[300px]"}`}>
             <div className="w-full max-w-[1400px] mx-auto px-4">
               <HorizontalFilter onSearch={handleHorizontalSearch} initialValues={{ width: debouncedFilters["width"]?.[0] || "", height: debouncedFilters["height"]?.[0] || "", rim: debouncedFilters["rim"]?.[0] || "" }} />

@@ -56,11 +56,9 @@ const CartItem: React.FC<CartItemProps> = ({ item, currencyCode, onUpdateQty, on
 
                 {/* Product Name & Details */}
                 <div className="w-full md:w-2/6 px-6 text-center md:text-left">
-                    <Link href={item.product_url || "#"} className="hover:text-yellow-600 transition-colors cursor-pointer inline-block">
-                        <h3 className="text-[15px] font-black text-black leading-tight mb-2 uppercase tracking-wide group-hover/item:text-yellow-600 transition-colors">
-                            {item.name}
-                        </h3>
-                    </Link>
+                    <h3 className="text-[15px] font-black text-black leading-tight mb-2 uppercase tracking-wide transition-colors">
+                        {item.name}
+                    </h3>
                     <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                         {item.size_display && (
                             <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded uppercase group-hover/item:bg-white border border-transparent group-hover/item:border-gray-200 transition-all">

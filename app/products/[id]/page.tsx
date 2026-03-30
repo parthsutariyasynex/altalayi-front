@@ -56,35 +56,35 @@ export default function CategoryProductsPage() {
     loadProducts();
   }, [categoryId]);
 
-  if (loading) return <div className="p-6">Loading products...</div>;
-  if (error) return <div className="p-6 text-red-500">{error}</div>;
+  if (loading) return <div className="p-3 md:p-6">Loading products...</div>;
+  if (error) return <div className="p-3 md:p-6 text-red-500">{error}</div>;
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Category {categoryId} — Products</h1>
+    <div className="p-3 md:p-6">
+      <h1 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">Category {categoryId} — Products</h1>
 
       {products.length === 0 ? (
         <p>No products found in this category.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           {products.map((product) => (
             <div
               key={product.product_id}
-              className="border rounded-lg p-4 shadow-sm hover:shadow-md transition"
+              className="border rounded-lg p-3 md:p-4 shadow-sm hover:shadow-md transition"
             >
               {product.image_url && (
                 <img
                   src={product.image_url}
                   alt={product.name}
-                  className="w-full h-40 object-contain mb-3"
+                  className="w-full h-32 md:h-40 object-contain mb-3"
                 />
               )}
-              <h3 className="font-semibold text-lg">{product.name}</h3>
-              <p className="text-sm text-gray-500">{product.tyre_size}</p>
-              <p className="text-sm text-gray-500">{product.origin} — {product.year}</p>
-              <p className="font-bold text-xl mt-2 price currency-riyal"><Price amount={product.final_price} /></p>
+              <h3 className="font-semibold text-base md:text-lg">{product.name}</h3>
+              <p className="text-xs md:text-sm text-gray-500">{product.tyre_size}</p>
+              <p className="text-xs md:text-sm text-gray-500">{product.origin} — {product.year}</p>
+              <p className="font-bold text-lg md:text-xl mt-2 price currency-riyal"><Price amount={product.final_price} /></p>
 
-              <p className={`text-sm mt-1 ${product.is_in_stock ? "text-green-600" : "text-red-500"}`}>
+              <p className={`text-xs md:text-sm mt-1 ${product.is_in_stock ? "text-green-600" : "text-red-500"}`}>
                 {product.is_in_stock ? `In Stock (${product.stock_qty})` : "Out of Stock"}
               </p>
             </div>

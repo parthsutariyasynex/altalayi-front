@@ -66,12 +66,17 @@ export default function Drawer({ isOpen, onClose, children, title }: DrawerProps
             {/* Overlay */}
             <div
                 className={`fixed inset-0 bg-black/40 transition-opacity duration-300 ease-in-out ${isOpen ? "opacity-100" : "opacity-0"}`}
-                onClick={onClose}
+                onMouseDown={(e) => {
+                    // Only close if the click target is the overlay itself, not a portal rendered above it
+                    if (e.target === e.currentTarget) onClose();
+                }}
             />
 
             {/* Side Panel */}
             <div
                 className={`relative w-full sm:w-[480px] h-full bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-in-out transform ${isOpen ? "translate-x-0" : "translate-x-full"}`}
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
             >
                 {/* Close Button */}
                 <button

@@ -55,29 +55,29 @@ export default function NotificationsPage() {
         <>
 
 
-            <div className="w-full px-4 md:px-8 lg:px-12 py-10">
-                <div className="flex flex-col md:flex-row gap-6 lg:gap-10">
+            <div className="w-full px-3 md:px-8 lg:px-12 py-4 md:py-10">
+                <div className="flex flex-col md:flex-row gap-4 md:gap-6 lg:gap-10">
                     {/* SIDEBAR */}
                     <aside className="w-full md:w-[280px] flex-shrink-0">
                         <nav className="bg-[#f0f0f0] border border-[#dddddd] rounded-sm">
-                            <ul className="text-[14px] text-[#333333]">
+                            <ul className="flex flex-row md:flex-col text-[13px] md:text-[14px] text-[#333333] overflow-x-auto md:overflow-x-visible">
                                 {accountSidebarMenu.map((item, idx) => (
-                                    <li key={idx}>
+                                    <li key={idx} className="flex-shrink-0">
                                         <Link
                                             href={item.href}
-                                            className={`block px-6 py-4 transition-colors ${item.href === "/customer/notifications"
-                                                ? "bg-white font-bold border-l-4 border-[#f5af02]"
-                                                : "hover:bg-[#e8e8e8] border-l-4 border-transparent"
+                                            className={`block px-4 md:px-6 py-3 md:py-4 transition-colors whitespace-nowrap ${item.href === "/customer/notifications"
+                                                ? "bg-white font-bold border-b-3 md:border-b-0 md:border-l-4 border-[#f5af02]"
+                                                : "hover:bg-[#e8e8e8] border-b-3 md:border-b-0 md:border-l-4 border-transparent"
                                                 }`}
                                         >
                                             {item.name}
                                         </Link>
                                     </li>
                                 ))}
-                                <li>
+                                <li className="flex-shrink-0">
                                     <button
                                         onClick={handleLogout}
-                                        className="w-full text-left px-6 py-4 text-[#333333] hover:bg-[#e8e8e8] transition-colors font-medium border-l-4 border-transparent"
+                                        className="w-full text-left px-4 md:px-6 py-3 md:py-4 text-[#333333] hover:bg-[#e8e8e8] transition-colors font-medium border-b-3 md:border-b-0 md:border-l-4 border-transparent whitespace-nowrap"
                                     >
                                         Sign Out
                                     </button>
@@ -88,13 +88,14 @@ export default function NotificationsPage() {
 
                     {/* MAIN CONTENT */}
                     <main className="flex-1 min-w-0">
-                        <h1 className="text-[26px] font-black text-black mb-10 uppercase tracking-wide">
+                        <h1 className="text-[20px] md:text-[26px] font-black text-black mb-6 md:mb-10 uppercase tracking-wide">
                             NOTIFICATIONS
                         </h1>
 
                         <div className="border border-[#ebebeb] rounded-sm overflow-hidden shadow-sm">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse table-fixed">
+                            {/* Desktop Table */}
+                            <div className="hidden md:block overflow-x-auto">
+                                <table className="w-full text-left border-collapse table-fixed min-w-[600px]">
                                     <thead>
                                         <tr className="border-b border-[#ebebeb]">
                                             <th className="px-6 py-4 text-[13px] font-black text-black uppercase text-center w-[15%] border-r border-[#ebebeb]">Date</th>
@@ -115,8 +116,7 @@ export default function NotificationsPage() {
                                                 <tr
                                                     key={`${item.notification_id || index}-${index}`}
                                                     onClick={() => handleNotificationClick(item)}
-                                                    className={`border-b border-[#ebebeb] last:border-0 transition-colors cursor-pointer ${!item.is_read ? "bg-[#fcf8ec]" : "bg-white"
-                                                        }`}
+                                                    className={`border-b border-[#ebebeb] last:border-0 transition-colors cursor-pointer ${!item.is_read ? "bg-[#fcf8ec]" : "bg-white"}`}
                                                 >
                                                     <td className="px-6 py-6 text-[14px] text-[#333333] text-center border-r border-[#ebebeb] align-middle relative">
                                                         {!item.is_read && (
@@ -124,38 +124,21 @@ export default function NotificationsPage() {
                                                         )}
                                                         {item.date_added_formatted}
                                                     </td>
-                                                    <td className={`px-6 py-6 text-[14px] text-center border-r border-[#ebebeb] hover:text-[#f5af02] transition-colors align-middle ${!item.is_read ? "font-bold text-black" : "font-normal text-[#666666]"
-                                                        }`}>
+                                                    <td className={`px-6 py-6 text-[14px] text-center border-r border-[#ebebeb] hover:text-[#f5af02] transition-colors align-middle ${!item.is_read ? "font-bold text-black" : "font-normal text-[#666666]"}`}>
                                                         {item.title}
                                                     </td>
-                                                    <td className={`px-6 py-6 text-[14px] text-center border-r border-[#ebebeb] leading-relaxed align-middle ${!item.is_read ? "font-medium text-black" : "text-[#666666]"
-                                                        }`}>
+                                                    <td className={`px-6 py-6 text-[14px] text-center border-r border-[#ebebeb] leading-relaxed align-middle ${!item.is_read ? "font-medium text-black" : "text-[#666666]"}`}>
                                                         {item.description}
                                                     </td>
                                                     <td className="px-6 py-6 text-[13px] text-center align-middle">
                                                         <div className="flex items-center justify-center gap-2 whitespace-nowrap text-[#333333]">
                                                             {!item.is_read && (
                                                                 <>
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            markAsRead(item.notification_id);
-                                                                        }}
-                                                                        className="hover:text-[#f5af02] cursor-pointer transition-colors font-bold"
-                                                                    >
-                                                                        Mark as Read
-                                                                    </button>
+                                                                    <button onClick={(e) => { e.stopPropagation(); markAsRead(item.notification_id); }} className="hover:text-[#f5af02] cursor-pointer transition-colors font-bold">Mark as Read</button>
                                                                     <span className="text-[#cccccc]">|</span>
                                                                 </>
                                                             )}
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    removeNotification(item.notification_id, item.is_read);
-                                                                }}
-                                                                disabled={deletingIds.includes(item.notification_id)}
-                                                                className="hover:text-[#f5af02] cursor-pointer transition-colors font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-                                                            >
+                                                            <button onClick={(e) => { e.stopPropagation(); removeNotification(item.notification_id, item.is_read); }} disabled={deletingIds.includes(item.notification_id)} className="hover:text-[#f5af02] cursor-pointer transition-colors font-bold disabled:opacity-50 disabled:cursor-not-allowed">
                                                                 {deletingIds.includes(item.notification_id) ? "Deleting..." : "Remove"}
                                                             </button>
                                                         </div>
@@ -164,17 +147,56 @@ export default function NotificationsPage() {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan={4} className="py-24 text-center text-gray-500 text-[14px]">
-                                                    You have no notifications.
-                                                </td>
+                                                <td colSpan={4} className="py-24 text-center text-gray-500 text-[14px]">You have no notifications.</td>
                                             </tr>
                                         )}
                                     </tbody>
                                 </table>
                             </div>
 
+                            {/* Mobile Card List */}
+                            <div className="md:hidden">
+                                {isLoading ? (
+                                    <div className="py-16 text-center">
+                                        <div className="inline-block w-8 h-8 border-3 border-[#f5b21a] border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                ) : notifications && notifications.length > 0 ? (
+                                    notifications.map((item, index) => (
+                                        <div
+                                            key={`mobile-${item.notification_id || index}-${index}`}
+                                            onClick={() => handleNotificationClick(item)}
+                                            className={`p-4 border-b border-[#ebebeb] last:border-0 cursor-pointer transition-colors ${!item.is_read ? "bg-[#fcf8ec]" : "bg-white"}`}
+                                        >
+                                            <div className="flex items-start justify-between gap-2 mb-2">
+                                                <div className="flex items-center gap-2">
+                                                    {!item.is_read && <div className="w-2 h-2 bg-[#f5af02] rounded-full flex-shrink-0 mt-1"></div>}
+                                                    <span className={`text-[13px] ${!item.is_read ? "font-bold text-black" : "font-normal text-[#666666]"}`}>{item.title}</span>
+                                                </div>
+                                                <span className="text-[11px] text-gray-400 flex-shrink-0">{item.date_added_formatted}</span>
+                                            </div>
+                                            <p className={`text-[12px] leading-relaxed mb-3 ${!item.is_read ? "font-medium text-black" : "text-[#666666]"}`}>
+                                                {item.description}
+                                            </p>
+                                            <div className="flex items-center gap-3 text-[11px] font-bold text-[#333333]">
+                                                {!item.is_read && (
+                                                    <>
+                                                        <button onClick={(e) => { e.stopPropagation(); markAsRead(item.notification_id); }} className="hover:text-[#f5af02] transition-colors">Mark as Read</button>
+                                                        <span className="text-[#cccccc]">|</span>
+                                                    </>
+                                                )}
+                                                <button onClick={(e) => { e.stopPropagation(); removeNotification(item.notification_id, item.is_read); }} disabled={deletingIds.includes(item.notification_id)} className="hover:text-[#f5af02] transition-colors disabled:opacity-50">
+                                                    {deletingIds.includes(item.notification_id) ? "Deleting..." : "Remove"}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="py-16 text-center text-gray-500 text-[13px]">You have no notifications.</div>
+                                )}
+                            </div>
+
                             {/* PAGINATION PANEL */}
-                            <div className="bg-[#e8e8e8] px-6 py-4 flex flex-col lg:flex-row items-center justify-between gap-6 border-t border-[#dddddd]">
+                            <div className="bg-[#e8e8e8] px-4 md:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 md:gap-6 border-t border-[#dddddd]">
                                 <div className="text-[13px] text-[#333333] font-medium order-2 lg:order-1">
                                     Items {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} total
                                 </div>

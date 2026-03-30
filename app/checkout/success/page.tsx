@@ -77,25 +77,25 @@ const CheckoutSuccessContent = () => {
         <div className="bg-white min-h-screen font-sans flex flex-col">
 
 
-            <main className="flex-grow flex flex-col items-center justify-center px-4 py-20 text-center">
-                <div className="max-w-2xl mx-auto space-y-6">
-                    <h1 className="text-[32px] md:text-[42px] font-black text-black uppercase tracking-tight leading-tight">
+            <main className="flex-grow flex flex-col items-center justify-center px-4 py-8 sm:py-12 md:py-20 text-center">
+                <div className="max-w-2xl mx-auto space-y-4 sm:space-y-5 md:space-y-6">
+                    <h1 className="text-[24px] sm:text-[28px] md:text-[32px] lg:text-[42px] font-black text-black uppercase tracking-tight leading-tight">
                         THANK YOU FOR YOUR PURCHASE!
                     </h1>
 
                     <div className="space-y-2">
-                        <p className="text-[16px] md:text-[18px] text-black">
+                        <p className="text-[14px] sm:text-[16px] md:text-[18px] text-black">
                             Your order number is: <span className="font-bold">{orderData?.order_increment_id || "..."}</span>.
                         </p>
-                        <p className="text-[14px] md:text-[16px] text-[#555] font-medium max-w-lg mx-auto leading-relaxed">
+                        <p className="text-[13px] sm:text-[14px] md:text-[16px] text-[#555] font-medium max-w-lg mx-auto leading-relaxed">
                             We'll email you an order confirmation with details and tracking info.
                         </p>
                     </div>
 
-                    <div className="pt-8">
+                    <div className="pt-4 sm:pt-6 md:pt-8">
                         <Link
                             href="/products"
-                            className="inline-block px-12 py-3.5 bg-[#F5B21B] text-black text-[13px] font-bold uppercase tracking-wider hover:bg-black hover:text-white transition-all shadow-sm rounded-sm"
+                            className="inline-block w-full sm:w-auto px-6 sm:px-12 py-3 sm:py-3.5 bg-[#F5B21B] text-black text-[13px] font-bold uppercase tracking-wider hover:bg-black hover:text-white transition-all shadow-sm rounded-sm"
                         >
                             CONTINUE SHOPPING
                         </Link>

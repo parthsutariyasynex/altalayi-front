@@ -17,8 +17,8 @@ export default function CataloguePage() {
             </div>
 
             {/* Content Section */}
-            <div className="max-w-[1200px] mx-auto px-6 mt-16 md:mt-20 pb-20 flex flex-col items-center">
-                <h1 className="text-[28px] md:text-[32px] font-black text-center mb-16 tracking-wide text-black uppercase">
+            <div className="max-w-[1200px] mx-auto px-6 mt-8 sm:mt-12 md:mt-20 pb-10 sm:pb-16 md:pb-20 flex flex-col items-center">
+                <h1 className="text-[22px] sm:text-[26px] md:text-[32px] font-black text-center mb-16 tracking-wide text-black uppercase">
                     Product Catalogue
                 </h1>
 
@@ -28,7 +28,7 @@ export default function CataloguePage() {
                         href="https://altalayi-demo.btire.com/media/wysiwyg/TBR-Range-Catalogue-2022-2023.pdf"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group flex flex-col items-center border-[2px] border-gray-200 bg-white hover:border-gray-300 transition-colors duration-300 w-full max-w-[300px]"
+                        className="group flex flex-col items-center border-[2px] border-gray-200 bg-white hover:border-gray-300 transition-colors duration-300 w-full sm:max-w-[280px] md:max-w-[300px]"
                     >
                         {/* Image Container */}
                         <div className="w-full p-1 bg-white flex justify-center">

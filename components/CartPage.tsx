@@ -92,9 +92,9 @@ const CartPage: React.FC = () => {
     if (!hasItems) {
         return (
             <div className="bg-white min-h-screen">
-                <div className="max-w-7xl mx-auto py-24 px-6 text-center">
+                <div className="max-w-7xl mx-auto py-12 md:py-24 px-4 md:px-6 text-center">
                     <ShoppingBag size={64} className="mx-auto text-gray-200 mb-6" />
-                    <h1 className="text-2xl font-bold text-gray-900 uppercase tracking-widest mb-4">
+                    <h1 className="text-xl md:text-2xl font-bold text-gray-900 uppercase tracking-widest mb-4">
                         No products in cart
                     </h1>
                     <Link href="/products" className="inline-flex items-center gap-2 text-yellow-600 font-bold hover:underline">
@@ -108,19 +108,19 @@ const CartPage: React.FC = () => {
 
     return (
         <div className="bg-white min-h-screen font-sans">
-            <div className="max-w-7xl mx-auto py-10 px-6">
+            <div className="max-w-7xl mx-auto py-6 md:py-10 px-3 md:px-6">
                 {/* Page Title */}
                 <div className="text-center mb-10">
-                    <h1 className="text-2xl font-bold text-gray-900 uppercase tracking-widest">
+                    <h1 className="text-xl md:text-2xl font-bold text-gray-900 uppercase tracking-widest">
                         Shopping Cart
                     </h1>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 md:gap-8 lg:gap-12">
                     {/* Left Side: Cart Items */}
                     <div className="lg:col-span-3">
                         {/* Table Header */}
-                        <div className="hidden md:flex bg-[#f2f2f2] border-b border-gray-200 items-center py-5 px-6">
+                        <div className="hidden md:flex bg-[#f2f2f2] border-b border-gray-200 items-center py-3 md:py-5 px-3 md:px-6">
                             <div className="w-1/6 text-[11px] font-black text-black uppercase tracking-[0.2em]">Item</div>
                             <div className="w-2/6"></div>
                             <div className="w-1/6 text-[11px] font-black text-black uppercase tracking-[0.2em] text-center ml-4">Price</div>
@@ -149,14 +149,14 @@ const CartPage: React.FC = () => {
                         />
 
                         {/* Multiple Address Section Bar */}
-                        <div className="mt-12 flex flex-col md:flex-row items-center justify-between border-2 border-[#f4b400]/20 bg-[#f4b400]/5 overflow-hidden group">
-                            <div className="py-6 px-8 text-[12px] font-black text-black uppercase tracking-tight">
+                        <div className="mt-6 md:mt-12 flex flex-col md:flex-row items-center justify-between border-2 border-[#f4b400]/20 bg-[#f4b400]/5 overflow-hidden group">
+                            <div className="py-4 px-4 md:py-6 md:px-8 text-[12px] font-black text-black uppercase tracking-tight">
                                 Do you want to ship the order to Multiple Addresses?
                             </div>
                             <button
                                 onClick={handleStartMultiShipping}
                                 disabled={isStartingMultiShipping}
-                                className="bg-[#f4b400] text-black font-black py-6 px-12 uppercase tracking-[0.15em] text-[12px] hover:bg-black hover:text-white transition-all duration-300 whitespace-nowrap cursor-pointer flex items-center justify-center h-full disabled:opacity-70 disabled:cursor-not-allowed min-w-[280px]"
+                                className="bg-[#f4b400] text-black font-black py-4 px-6 md:py-6 md:px-12 uppercase tracking-[0.15em] text-[12px] hover:bg-black hover:text-white transition-all duration-300 whitespace-nowrap cursor-pointer flex items-center justify-center h-full disabled:opacity-70 disabled:cursor-not-allowed w-full md:w-auto min-w-0 md:min-w-[280px]"
                             >
                                 {isStartingMultiShipping ? (
                                     <>

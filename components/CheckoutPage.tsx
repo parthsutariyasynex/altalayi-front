@@ -37,7 +37,7 @@ import Price from "@/app/components/Price";
 // --- Sub-components ---
 
 const SectionHeader = ({ title, step }: { title: string; step?: number }) => (
-    <div className="bg-gray-50 px-6 py-4 border-b border-[#ebebeb] flex items-center gap-3">
+    <div className="bg-gray-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-[#ebebeb] flex items-center gap-2 sm:gap-3">
         {step && (
             <span className="w-5 h-5 rounded-full bg-black text-white text-[9px] font-black flex items-center justify-center">
                 {step}
@@ -626,7 +626,7 @@ const CheckoutPageUI: React.FC = () => {
 
     return (
         <div className="min-h-screen flex flex-col w-full bg-[#fcfcfc] font-rubik text-xs italic-none">
-            <main className="flex-1 w-full px-4 md:px-6 lg:px-8 py-10 pt-4">
+            <main className="flex-1 w-full px-4 md:px-6 lg:px-8 py-4 md:py-6 lg:py-10 pt-2 md:pt-4">
                 {/* Header Section */}
                 <div className="flex flex-col items-center justify-center text-center gap-4 mb-12 relative">
                     <Link href="/cart" className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-2 text-gray-400 hover:text-black transition-colors text-[10px] font-black uppercase tracking-widest">
@@ -634,12 +634,12 @@ const CheckoutPageUI: React.FC = () => {
                     </Link>
 
                     <div className="flex flex-col items-center gap-4">
-                        <h1 className="text-[28px] md:text-[32px] font-black text-black uppercase tracking-tight">Checkout</h1>
-                        <div className="h-2 w-32 bg-yellow-400 rounded-full shadow-sm"></div>
+                        <h1 className="text-[22px] sm:text-[28px] md:text-[32px] font-black text-black uppercase tracking-tight">Checkout</h1>
+                        <div className="h-2 w-24 sm:w-28 md:w-32 bg-yellow-400 rounded-full shadow-sm"></div>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 lg:gap-8 items-start">
 
                     {/* ═══════════ Left Column ═══════════ */}
                     <div className="lg:col-span-8 space-y-6">
@@ -660,7 +660,7 @@ const CheckoutPageUI: React.FC = () => {
                                 </div>
 
                                 {/* Address List Container */}
-                                <div className="max-h-[460px] overflow-y-auto pr-1 card-scrollbar space-y-4">
+                                <div className="max-h-[300px] sm:max-h-[380px] md:max-h-[460px] overflow-y-auto pr-1 card-scrollbar space-y-4">
                                     {filteredAddresses.map((addr) => (
                                         selectedAddressId === addr.id ? (
                                             <SelectedAddressCard
@@ -686,7 +686,7 @@ const CheckoutPageUI: React.FC = () => {
                                                 <div className="flex-1 min-w-0">
 
                                                     <div className="text-[13px] text-gray-600 leading-relaxed mb-4">
-                                                        <p className="font-medium text-[14px] text-black">
+                                                        <p className="font-medium text-[13px] sm:text-[14px] text-black">
                                                             <span className="font-black">{addr.firstname} {addr.lastname}</span>{" "}
                                                             {addr.street} {addr.city}, {addr.postcode}{" "}
                                                             {addr.country_id === 'SA' ? 'Saudi Arabia' : addr.country_id} {addr.telephone}
@@ -734,7 +734,7 @@ const CheckoutPageUI: React.FC = () => {
                         {/* 2. Customer PO Number */}
                         <div className="bg-white border border-gray-200 shadow-sm rounded-sm overflow-hidden">
                             <SectionHeader title="Customer PO Number" step={2} />
-                            <div className="p-6 space-y-6">
+                            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                                 <div className="space-y-2">
                                     <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">PO Number</label>
                                     <input
@@ -1137,7 +1137,7 @@ const CheckoutPageUI: React.FC = () => {
                     <div className="lg:col-span-4 space-y-6">
                         <div className="bg-white border border-gray-200 shadow-sm rounded-sm sticky top-24 overflow-hidden">
                             {/* Header exactly as per image */}
-                            <div className="bg-gray-50 px-6 py-4 flex items-center gap-3 border-b border-[#ebebeb]">
+                            <div className="bg-gray-50 px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-2 sm:gap-3 border-b border-[#ebebeb]">
                                 <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center">
                                     <Check size={12} strokeWidth={4} className="text-white" />
                                 </div>
@@ -1166,10 +1166,10 @@ const CheckoutPageUI: React.FC = () => {
                                     className={`overflow-hidden transition-all duration-500 ease-in-out ${isItemsListOpen ? "max-height-none border-b border-gray-100" : "max-h-0"}`}
                                     style={{ maxHeight: isItemsListOpen ? "1000px" : "0" }}
                                 >
-                                    <div className="space-y-6 p-6">
+                                    <div className="space-y-3 sm:space-y-4 md:space-y-6 p-4 sm:p-6">
                                         {cart?.items?.map((item) => (
                                             <div key={item.item_id} className="flex gap-4 items-start pb-6 border-b border-gray-50 last:border-0 last:pb-0">
-                                                <div className="w-20 h-20 flex-shrink-0 border border-gray-100 rounded-sm overflow-hidden">
+                                                <div className="w-16 sm:w-20 h-16 sm:h-20 flex-shrink-0 border border-gray-100 rounded-sm overflow-hidden">
                                                     <img
                                                         src={item.image_url || "/images/tyre-sample.png"}
                                                         alt={item.name}
@@ -1204,7 +1204,7 @@ const CheckoutPageUI: React.FC = () => {
                                 </div>
 
                                 {/* Totals Section */}
-                                <div className="p-6 space-y-4">
+                                <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
                                     <div className="flex justify-between items-center text-[15px]">
                                         <span className="text-black font-medium">Subtotal</span>
                                         <span className="font-black text-black price currency-riyal">
@@ -1250,7 +1250,7 @@ const CheckoutPageUI: React.FC = () => {
                                     <button
                                         onClick={handlePlaceOrder}
                                         disabled={isPlacingOrder || isTotalsLoading}
-                                        className={`w-full py-5 text-sm font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3 rounded-md shadow-md border ${isPlacingOrder
+                                        className={`w-full py-3 sm:py-4 md:py-5 text-sm font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3 rounded-md shadow-md border ${isPlacingOrder
                                             ? "bg-gray-100 text-gray-400 cursor-not-allowed border-[#ebebeb]"
                                             : "bg-yellow-400 text-black hover:bg-yellow-500 border-yellow-500 active:scale-[0.98]"
                                             }`}

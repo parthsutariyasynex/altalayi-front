@@ -790,6 +790,90 @@ export function useCheckout(options: UseCheckoutOptions = {}) {
         }
     }, []);
 
+    // ─── Set Multi-Shipping Shipping Methods ───
+    const setMultiShippingMethods = useCallback(async (methodsObj: Record<string, string>) => {
+        try {
+            setIsLoading(true);
+            const token = await getAuthToken();
+            if (!token) throw new Error("Not authenticated");
+
+            // Format for Magento: { request: { methods: [ { quote_address_id: X, carrier_code: Y, method_code: Z } ] } }
+            const formattedMethods = Object.entries(methodsObj).map(([addrId, fullCode]) => {
+                // fullCode is usually "carrier_method" or similar
+                const parts = fullCode.split('_');
+                const carrier = parts[0];
+                const method = parts.slice(1).join('_');
+                return {
+                    quote_address_id: String(addrId),
+                    carrier_code: carrier,
+                    method_code: method
+                };
+            });
+
+            const res = await fetch("/api/kleverapi/multishipping/shipping-methods", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    request: {
+                        methods: formattedMethods
+                    }
+                }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                const errorMsg = formatMagentoError(data);
+                throw new Error(errorMsg);
+            }
+            return data;
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : "Failed to set multi-shipping shipping methods";
+            setError(msg);
+            throw new Error(msg);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    // ─── Set Multi-Shipping Billing Address ───
+    const setMultiShippingBillingAddress = useCallback(async (addressId: number | string, paymentMethodCode?: string) => {
+        try {
+            setIsLoading(true);
+            const token = await getAuthToken();
+            if (!token) throw new Error("Not authenticated");
+
+            const bodyData: any = { addressId: Number(addressId) };
+            if (paymentMethodCode) {
+                bodyData.paymentMethod = { method: paymentMethodCode };
+            }
+
+            const res = await fetch("/api/kleverapi/multishipping/billing-address", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(bodyData),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                const errorMsg = formatMagentoError(data);
+                throw new Error(errorMsg);
+            }
+            return data;
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : "Failed to set multi-shipping billing address";
+            setError(msg);
+            throw new Error(msg);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
     // ─── Fetch Checkout Success ───
     const fetchCheckoutSuccess = useCallback(async (orderId: string) => {
         try {
@@ -839,6 +923,33 @@ export function useCheckout(options: UseCheckoutOptions = {}) {
         setShippingAddress,
         addAddress,
         placeOrder,
+        placeMultiShippingOrder: async (orderData: any) => {
+            try {
+                setIsLoading(true);
+                const token = await getAuthToken();
+                if (!token) throw new Error("Not authenticated");
+
+                const res = await fetch("/api/kleverapi/checkout/place-order", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(orderData),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    const errorMsg = formatMagentoError(data);
+                    throw new Error(errorMsg);
+                }
+                return data;
+            } catch (err) {
+                setError(err instanceof Error ? err.message : "Failed to place multi-shipping order");
+                throw err;
+            } finally {
+                setIsLoading(false);
+            }
+        },
         savePoNumber,
         uploadPoFile,
         getPoUpload,
@@ -849,6 +960,8 @@ export function useCheckout(options: UseCheckoutOptions = {}) {
         startMultiShipping,
         assignMultiShipping,
         fetchMultiShippingMethods,
+        setMultiShippingMethods,
+        setMultiShippingBillingAddress,
         getOrderComment,
         saveOrderComment,
     };

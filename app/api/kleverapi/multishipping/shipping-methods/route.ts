@@ -26,3 +26,31 @@ export async function GET(req: Request) {
         return NextResponse.json({ message: "Internal server error" }, { status: 500 });
     }
 }
+
+export async function POST(req: Request) {
+    try {
+        const authHeader = req.headers.get("authorization");
+        if (!authHeader) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+        const body = await req.json();
+
+        const response = await fetch(`${BASE_URL}/multishipping/shipping-methods`, {
+            method: "POST",
+            headers: {
+                Authorization: authHeader,
+                "Content-Type": "application/json",
+                platform: "web",
+            },
+            body: JSON.stringify(body),
+            cache: "no-store",
+        });
+
+        const data = await response.json();
+        if (!response.ok) return NextResponse.json(data, { status: response.status });
+
+        return NextResponse.json(data);
+    } catch (error) {
+        console.error("Proxy Set Multishipping Shipping Methods Error:", error);
+        return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+    }
+}

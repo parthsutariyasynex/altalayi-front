@@ -39,10 +39,10 @@ export default function ChangePasswordPage() {
   return (
     <div className="min-h-screen bg-gray-100 font-['Rubik']">
       
-      <div className="max-w-md mx-auto p-6 mt-10">
-        <div className="bg-white p-8 rounded shadow-sm border border-gray-200">
-          <h1 className="text-xl font-bold mb-6 uppercase tracking-wider text-black">Change Password</h1>
-          <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="max-w-md mx-auto p-4 sm:p-6 mt-6 sm:mt-10">
+        <div className="bg-white p-4 sm:p-6 md:p-8 rounded shadow-sm border border-gray-200">
+          <h1 className="text-base sm:text-lg md:text-xl font-bold mb-4 sm:mb-6 uppercase tracking-wider text-black">Change Password</h1>
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-5">
             <div>
               <label className="block text-[11px] font-bold uppercase text-gray-700 tracking-tight mb-1">Current Password *</label>
               <input
