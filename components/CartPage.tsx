@@ -110,22 +110,21 @@ const CartPage: React.FC = () => {
         <div className="bg-white min-h-screen font-sans">
             <div className="max-w-7xl mx-auto py-6 md:py-10 px-3 md:px-6">
                 {/* Page Title */}
-                <div className="text-center mb-10">
-                    <h1 className="text-xl md:text-2xl font-bold text-gray-900 uppercase tracking-widest">
+                <div className="text-center mb-6 md:mb-10">
+                    <h1 className="text-lg md:text-2xl font-bold text-gray-900 uppercase tracking-widest">
                         Shopping Cart
                     </h1>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 md:gap-8 lg:gap-12">
+                <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-6 xl:gap-10">
                     {/* Left Side: Cart Items */}
-                    <div className="lg:col-span-3">
+                    <div className="lg:col-span-2 xl:col-span-3">
                         {/* Table Header */}
-                        <div className="hidden md:flex bg-[#f2f2f2] border-b border-gray-200 items-center py-3 md:py-5 px-3 md:px-6">
-                            <div className="w-1/6 text-[11px] font-black text-black uppercase tracking-[0.2em]">Item</div>
-                            <div className="w-2/6"></div>
-                            <div className="w-1/6 text-[11px] font-black text-black uppercase tracking-[0.2em] text-center ml-4">Price</div>
-                            <div className="w-1/6 text-[11px] font-black text-black uppercase tracking-[0.2em] text-center -ml-2">Qty</div>
-                            <div className="w-1/6 text-[11px] font-black text-black uppercase tracking-[0.2em] text-center -mr-4">Item(s) Total:</div>
+                        <div className="hidden lg:flex bg-[#f2f2f2] border-b border-gray-200 items-center py-3 lg:py-5 px-4 lg:px-6">
+                            <div className="w-[35%] text-[10px] lg:text-[11px] font-black text-black uppercase tracking-[0.15em]">Item</div>
+                            <div className="w-[20%] text-[10px] lg:text-[11px] font-black text-black uppercase tracking-[0.15em] text-center">Price</div>
+                            <div className="w-[20%] text-[10px] lg:text-[11px] font-black text-black uppercase tracking-[0.15em] text-center">Qty</div>
+                            <div className="w-[25%] text-[10px] lg:text-[11px] font-black text-black uppercase tracking-[0.15em] text-center">Total</div>
                         </div>
 
                         {/* Cart Rows */}

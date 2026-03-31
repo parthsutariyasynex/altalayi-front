@@ -7,8 +7,8 @@ import { RootState, AppDispatch } from "@/store/store";
 import { fetchCustomerInfo } from "@/store/actions/customerActions";
 import Sidebar from "@/components/Sidebar";
 import { useSession } from "next-auth/react";
-import { ChevronDown } from "lucide-react";
 import { redirectToLogin } from "@/utils/helpers";
+import PortalDropdown from "@/components/PortalDropdown";
 
 /**
  * Proper data structures for the Forecast API
@@ -234,7 +234,7 @@ export default function MyForecastPage() {
     if (!customer) return null;
 
     return (
-        <div className="flex flex-col md:flex-row min-h-screen">
+        <div className="flex flex-col lg:flex-row min-h-screen">
             <Sidebar />
 
             <main className="flex-1 p-4 md:p-8 bg-[#f9f9f9] min-h-screen">
@@ -300,83 +300,99 @@ export default function MyForecastPage() {
                     </div>
                 </div>
 
-                {/* Table Header Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 bg-[#fcfcfc] border border-gray-100 py-3 md:py-4 mb-2">
+                {/* Desktop Table Header */}
+                <div className="hidden sm:grid grid-cols-2 bg-[#fcfcfc] border border-gray-100 py-3 md:py-4 mb-2">
                     <span className="text-[12px] md:text-[13px] font-black text-black px-4 md:px-6">File Name</span>
-                    <span className="text-[12px] md:text-[13px] font-black text-black text-center border-l border-gray-100 hidden sm:block">Uploaded Date</span>
+                    <span className="text-[12px] md:text-[13px] font-black text-black text-center border-l border-gray-100">Uploaded Date</span>
                 </div>
 
-                {/* Files List - Mapping Data from Proxy API */}
+                {/* Mobile Header */}
+                <div className="sm:hidden bg-[#fcfcfc] border border-gray-100 py-3 mb-2 px-4">
+                    <span className="text-[12px] font-black text-black">Files</span>
+                </div>
+
+                {/* Files List */}
                 <div className="bg-white border border-gray-100 border-t-0 rounded-sm overflow-hidden">
                     {forecasts.length > 0 ? forecasts.map((file, idx) => {
                         const fileId = file.forecast_id || file.entity_id || file.id || file.file_id;
                         return (
-                            <div key={fileId || idx} className="grid grid-cols-1 sm:grid-cols-2 border-b border-gray-50 py-3 md:py-4 hover:bg-[#fff7e6] transition-colors group">
-                                <div className="flex items-center gap-3 px-4 md:px-6">
-                                    <button
-                                        onClick={() => handleDownload(file)}
-                                        disabled={downloadingId !== null && downloadingId === fileId}
-                                        className="text-[13px] text-gray-700 font-medium group-hover:text-[#f4b400] hover:underline text-left disabled:opacity-50"
-                                    >
-                                        {file.file_name || file.filename || file.name || "No name"}
-                                    </button>
-                                    {downloadingId !== null && downloadingId === fileId && (
-                                        <div className="animate-spin h-3 w-3 border-b-2 border-[#f4b400] rounded-full"></div>
-                                    )}
+                            <div key={fileId || idx} className="border-b border-gray-50 hover:bg-[#fff7e6] transition-colors group">
+                                {/* Mobile layout */}
+                                <div className="sm:hidden px-4 py-3">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <button
+                                            onClick={() => handleDownload(file)}
+                                            disabled={downloadingId !== null && downloadingId === fileId}
+                                            className="text-[13px] text-gray-700 font-medium group-hover:text-[#f4b400] hover:underline text-left disabled:opacity-50 break-all"
+                                        >
+                                            {file.file_name || file.filename || file.name || "No name"}
+                                        </button>
+                                        {downloadingId !== null && downloadingId === fileId && (
+                                            <div className="animate-spin h-3 w-3 border-b-2 border-[#f4b400] rounded-full flex-shrink-0 mt-1"></div>
+                                        )}
+                                    </div>
+                                    <span className="text-[11px] text-gray-400 font-medium mt-1 block">
+                                        {getProperDate(file)}
+                                    </span>
                                 </div>
-                                <span className="text-[12px] md:text-[13px] text-gray-700 font-medium text-center sm:border-l border-gray-50 px-4 md:px-0">
-                                    {getProperDate(file)}
-                                </span>
+                                {/* Desktop layout */}
+                                <div className="hidden sm:grid grid-cols-2 py-3 md:py-4">
+                                    <div className="flex items-center gap-3 px-4 md:px-6">
+                                        <button
+                                            onClick={() => handleDownload(file)}
+                                            disabled={downloadingId !== null && downloadingId === fileId}
+                                            className="text-[13px] text-gray-700 font-medium group-hover:text-[#f4b400] hover:underline text-left disabled:opacity-50"
+                                        >
+                                            {file.file_name || file.filename || file.name || "No name"}
+                                        </button>
+                                        {downloadingId !== null && downloadingId === fileId && (
+                                            <div className="animate-spin h-3 w-3 border-b-2 border-[#f4b400] rounded-full"></div>
+                                        )}
+                                    </div>
+                                    <span className="text-[13px] text-gray-700 font-medium text-center border-l border-gray-50">
+                                        {getProperDate(file)}
+                                    </span>
+                                </div>
                             </div>
                         );
                     }) : (
-                        <div className="py-20 text-center text-gray-400 text-[14px] bg-white">
+                        <div className="py-16 md:py-20 text-center text-gray-400 text-[13px] md:text-[14px] bg-white">
                             No records found.
                         </div>
                     )}
                 </div>
 
-                {/* Pagination / Info Row */}
-                <div className="bg-[#f2f2f2] mt-6 md:mt-10 py-3 md:py-3.5 px-4 md:px-6 flex flex-col md:flex-row justify-between items-center gap-3 md:gap-4 text-[#555] rounded-sm">
-                    <div className="flex items-center gap-6">
-                        <span className="text-[12px] font-medium">{totalItems} Item(s)</span>
+                {/* Pagination */}
+                <div className="bg-[#f2f2f2] mt-6 md:mt-10 py-3 md:py-3.5 px-3 md:px-6 flex flex-col sm:flex-row justify-between items-center gap-3 text-[#555] rounded-sm">
+                    <div className="flex items-center gap-4 sm:gap-6">
+                        <span className="text-[11px] md:text-[12px] font-medium">{totalItems} Item(s)</span>
                         <div className="flex items-center gap-2">
-                            <span className="text-[12px] font-medium">Show</span>
-                            <div className="relative inline-block">
-                                <select
-                                    className="bg-white border border-gray-300 rounded-sm pl-3 pr-8 py-1.5 text-[12px] font-medium appearance-none outline-none cursor-pointer"
-                                    value={pageSize}
-                                    onChange={(e) => {
-                                        setPageSize(Number(e.target.value));
-                                        setCurrentPage(1);
-                                    }}
-                                >
-                                    <option value="10">10</option>
-                                    <option value="20">20</option>
-                                    <option value="50">50</option>
-                                </select>
-                                <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-                            </div>
-                            <span className="text-[12px] font-medium">per page</span>
+                            <span className="text-[11px] md:text-[12px] font-medium">Show</span>
+                            <PortalDropdown
+                                value={String(pageSize)}
+                                onChange={(val) => { setPageSize(Number(val)); setCurrentPage(1); }}
+                                options={[{ label: "10", value: "10" }, { label: "20", value: "20" }, { label: "50", value: "50" }]}
+                                minWidth={55}
+                            />
+                            <span className="text-[11px] md:text-[12px] font-medium">per page</span>
                         </div>
                     </div>
 
-                    {/* Pagination Buttons */}
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 sm:gap-4">
                         <button
                             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                             disabled={currentPage === 1}
-                            className="px-4 py-1.5 bg-white border border-gray-300 text-[12px] font-black disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all rounded-sm shadow-sm"
+                            className="px-3 sm:px-4 py-1.5 bg-white border border-gray-300 text-[11px] md:text-[12px] font-black disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all rounded-sm shadow-sm"
                         >
                             PREV
                         </button>
-                        <span className="text-[12px] font-black text-black min-w-[80px] text-center uppercase tracking-tight">
+                        <span className="text-[11px] md:text-[12px] font-black text-black text-center uppercase tracking-tight">
                             PAGE {currentPage}
                         </span>
                         <button
                             onClick={() => setCurrentPage(prev => prev + 1)}
                             disabled={forecasts.length < pageSize}
-                            className="px-4 py-1.5 bg-white border border-gray-300 text-[12px] font-black disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all rounded-sm shadow-sm"
+                            className="px-3 sm:px-4 py-1.5 bg-white border border-gray-300 text-[11px] md:text-[12px] font-black disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-all rounded-sm shadow-sm"
                         >
                             NEXT
                         </button>

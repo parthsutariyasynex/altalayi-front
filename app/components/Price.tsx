@@ -18,7 +18,7 @@ export default function Price({ amount, className = "price", symbolClassName = "
     const riyalIcon = "\uE900";
 
     return (
-        <span className={className}>
+        <span className={`font-black ${className}`}>
             <span className={`currency-riyal ${symbolClassName}`}>{riyalIcon}</span> {value}
         </span>
     );

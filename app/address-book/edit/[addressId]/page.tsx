@@ -130,7 +130,7 @@ export default function EditAddressPage() {
         <div className="min-h-screen bg-white font-['Rubik'] text-[#333]">
 
 
-            <div className="flex flex-col md:flex-row max-w-[1440px] mx-auto mt-4 md:mt-8">
+            <div className="flex flex-col lg:flex-row max-w-[1440px] mx-auto mt-4 md:mt-8">
                 {/* Left Sidebar */}
                 <Sidebar />
 

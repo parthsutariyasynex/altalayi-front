@@ -62,9 +62,6 @@ const MultiShippingShippingPage: React.FC = () => {
                 hasFetched.current = true;
                 setIsLoading(true);
 
-                // Re-initialize multishipping session in case it expired
-                await startMultiShipping();
-
                 // 1. Process Assignments into Groups
                 const assignments: Assignments = JSON.parse(saved);
                 const groupedMap: Record<string, AddressGroup> = {};
@@ -193,7 +190,7 @@ const MultiShippingShippingPage: React.FC = () => {
                                         </div>
                                         <div className="p-5 md:p-10 text-[13px] md:text-[14px] text-black leading-[1.6] flex-grow">
                                             <p className="mb-0.5">{group.address.firstname} {group.address.lastname}</p>
-                                            <p className="mb-0.5">{group.address.company || "Company Name"}</p>
+                                            {/* <p className="mb-0.5">{group.address.company || "Company Name"}</p> */}
                                             <p className="mb-0.5">{group.address.street}</p>
                                             <p className="mb-0.5">{group.address.city}, {group.address.postcode}</p>
                                             <p className="mb-4">Saudi Arabia</p>

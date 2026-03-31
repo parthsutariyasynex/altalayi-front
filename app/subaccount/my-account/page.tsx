@@ -143,7 +143,7 @@ export default function SubAccountMyAccountPage() {
         <>
 
 
-            <div className="flex flex-col md:flex-row flex-1 min-h-0 w-full">
+            <div className="flex flex-col lg:flex-row flex-1 min-h-0 w-full">
                 <Sidebar />
 
                 {/* Right Content */}

@@ -10,6 +10,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import BusinessOverviewEditModal from "@/components/BusinessOverviewEditModal";
 import { redirectToLogin } from "@/utils/helpers";
+import PortalDropdown from "@/components/PortalDropdown";
 
 type CustomAttribute = {
     attribute_code: string;
@@ -165,7 +166,7 @@ export default function MyAccountPage() {
 
 
             <div className="min-h-screen flex flex-col w-full bg-[#fcfcfc] font-rubik">
-                <div className="flex flex-col md:flex-row flex-1 w-full">
+                <div className="flex flex-col lg:flex-row flex-1 w-full">
                     <Sidebar />
 
                     {/* Right Content */}
@@ -189,7 +190,7 @@ export default function MyAccountPage() {
                                 <h2 className="text-[14px] md:text-[16px] font-bold text-black uppercase mb-3">ACCOUNT INFORMATION</h2>
                                 <hr className="border-gray-200 mb-6" />
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                                     {/* Contact Information */}
                                     <div className={cardBase}>
                                         <div className={sectionHeader}>
@@ -219,7 +220,7 @@ export default function MyAccountPage() {
                             </div>
 
                             {/* BUSINESS OVERVIEW & SALES DATA */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                                 <div className={cardBase}>
                                     <div className={sectionHeader + " flex justify-between items-center"}>
                                         <span>BUSINESS OVERVIEW</span>
@@ -249,25 +250,16 @@ export default function MyAccountPage() {
                             </div>
 
                             {/* TARGETS & BEHAVIOR */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                                 <div className={cardBase}>
                                     <div className={sectionHeader + " flex justify-between items-center"}>
                                         <span>TARGETS AND ACHIEVEMENTS</span>
-                                        <select
+                                        <PortalDropdown
                                             value={selectedYear}
-                                            onChange={(e) => setSelectedYear(e.target.value)}
-                                            className="border border-gray-300 rounded-sm text-[12px] px-2 py-1 bg-white outline-none cursor-pointer hover:border-[#F5B21B]"
-                                        >
-                                            {availableYears.length > 0 ? (
-                                                availableYears.map(y => <option key={y} value={y}>{y}</option>)
-                                            ) : (
-                                                <>
-                                                    <option value="2023">2023</option>
-                                                    <option value="2024">2024</option>
-                                                    <option value="2025">2025</option>
-                                                </>
-                                            )}
-                                        </select>
+                                            onChange={setSelectedYear}
+                                            options={(availableYears.length > 0 ? availableYears : [2023, 2024, 2025]).map(y => ({ label: String(y), value: String(y) }))}
+                                            minWidth={70}
+                                        />
                                     </div>
                                     <div className="p-3 md:p-5 text-[13px] text-gray-700 space-y-2.5 font-medium leading-relaxed">
                                         {targets ? (
@@ -304,7 +296,7 @@ export default function MyAccountPage() {
                                 <h2 className="text-[14px] md:text-[16px] font-bold text-black uppercase mb-3">ADDRESS BOOK</h2>
                                 <hr className="border-gray-200 mb-6" />
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                                     {/* Default Billing Address Card */}
                                     <div className={cardBase + " flex flex-col"}>
                                         <div className={sectionHeader}>

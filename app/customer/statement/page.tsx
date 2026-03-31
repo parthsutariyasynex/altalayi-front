@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Sidebar from "@/components/Sidebar";
+import PortalDropdown from "@/components/PortalDropdown";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
@@ -126,7 +127,13 @@ export default function MyStatementPage() {
                 // Handle JSON fallback (if backend didn't follow the URL)
                 const data = await response.json();
                 if (data.pdf_url) {
-                    window.open(data.pdf_url, "_blank");
+                    const link = document.createElement("a");
+                    link.href = data.pdf_url;
+                    link.target = "_blank";
+                    link.rel = "noopener noreferrer";
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
                     toast.success("Download link opened in new tab.", { id: "statement-download" });
                 } else {
                     throw new Error("Invalid response format received from server.");
@@ -144,7 +151,7 @@ export default function MyStatementPage() {
         <div className="min-h-screen bg-white">
 
 
-            <div className="flex flex-col md:flex-row flex-1 min-h-0 w-full">
+            <div className="flex flex-col lg:flex-row flex-1 min-h-0 w-full">
                 {/* Left Sidebar */}
                 <Sidebar />
 
@@ -197,21 +204,13 @@ export default function MyStatementPage() {
                                 <label className="block text-[13px] font-bold text-gray-800 mb-2">
                                     Statement Type
                                 </label>
-                                <select
+                                <PortalDropdown
                                     value={statementType}
-                                    onChange={(e) => setStatementType(e.target.value)}
-                                    className="w-full h-[45px] px-4 border border-gray-300 text-[14px] text-gray-700 focus:outline-none focus:border-[#f5a623] transition-colors appearance-none bg-white font-medium shadow-sm"
-                                >
-                                    {statementTypes.length > 0 ? (
-                                        statementTypes.map((t) => (
-                                            <option key={t.value} value={t.value}>
-                                                {t.label}
-                                            </option>
-                                        ))
-                                    ) : (
-                                        <option value="" disabled>Loading statement types...</option>
-                                    )}
-                                </select>
+                                    onChange={(val) => setStatementType(val)}
+                                    options={statementTypes}
+                                    placeholder={statementTypes.length > 0 ? "Select" : "Loading statement types..."}
+                                    buttonClassName="w-full h-[45px] px-4 border border-gray-300 text-[14px] text-gray-700 focus:outline-none focus:border-[#f5a623] transition-colors bg-white font-medium shadow-sm flex items-center justify-between cursor-pointer"
+                                />
                             </div>
 
                             {/* Download Button */}

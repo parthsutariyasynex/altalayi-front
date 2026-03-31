@@ -96,32 +96,28 @@ export default function Navbar() {
   }, []);
 
   return (
-    <div className="w-full sticky top-0 z-50 flex flex-col">
+    <div className="w-full fixed top-0 left-0 right-0 z-[60] flex flex-col" style={{ paddingRight: "var(--scrollbar-width)" }}>
 
       {/* ── HEADER ── */}
       <header className="bg-white border-b border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-        <div className="relative flex items-center justify-between h-[64px] md:h-[72px] px-3 sm:px-5 md:px-8 lg:px-14">
+        <div className="relative flex items-center justify-between h-[56px] sm:h-[64px] lg:h-[72px] px-3 sm:px-5 lg:px-8 xl:px-14">
 
           {/* LEFT: BTIRE logo */}
           <Link href="/" className="flex items-center flex-shrink-0 z-10">
             <img
               src="/logo/btire-logo-horizontal.svg"
               alt="BTIRE Logo"
-              width={120}
-              height={40}
-              className="h-6 sm:h-8 md:h-10 w-auto object-contain"
+              className="h-6 sm:h-8 lg:h-10 w-auto"
             />
           </Link>
 
-          {/* CENTER: Bridgestone logo (absolute centered) */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-4">
-            <Link href="/" className="pointer-events-auto flex-shrink-0">
+          {/* CENTER: Bridgestone logo — flex center on mobile, absolute center on md+ */}
+          <div className="flex-1 flex items-center justify-center min-w-0 px-2 lg:px-0 lg:absolute lg:inset-0 lg:pointer-events-none">
+            <Link href="/" className="flex-shrink-0 lg:pointer-events-auto">
               <img
                 src="/logo/atcl-bridgestone-logo-v1.jpg"
                 alt="AL TALAYI KSA"
-                width={300}
-                height={57}
-                className="h-[28px] sm:h-[36px] md:h-[42px] lg:h-[50px] w-auto max-w-[100px] sm:max-w-[180px] md:max-w-[200px] lg:max-w-[280px] object-contain"
+                className="h-[24px] sm:h-[32px] lg:h-[42px] xl:h-[50px] w-auto object-contain"
               />
             </Link>
           </div>
@@ -136,7 +132,7 @@ export default function Navbar() {
 
             {/* Welcome badge & Account Dropdown — md+ */}
             {isAuthenticated && !isLoadingName && pathname !== "/login" && (
-              <div className="relative hidden md:block" ref={dropdownRef}>
+              <div className="relative hidden lg:block" ref={dropdownRef}>
                 <div
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className="flex items-center bg-white border border-gray-100 rounded-full pl-1 pr-2 lg:pr-4 py-1 shadow-[0_2px_8px_-3px_rgba(0,0,0,0.12)] hover:shadow-md transition-shadow group cursor-pointer"
@@ -222,7 +218,7 @@ export default function Navbar() {
             {/* Mobile hamburger */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden text-black hover:opacity-70 transition-opacity cursor-pointer"
+              className="lg:hidden text-black hover:opacity-70 transition-opacity cursor-pointer"
               aria-label="Toggle Menu"
             >
               {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -232,7 +228,7 @@ export default function Navbar() {
       </header>
 
       {/* ── YELLOW NAV BAR — desktop only ── */}
-      <nav className="bg-[#f5b21a] border-b border-yellow-600/10 w-full hidden md:block">
+      <nav className="bg-[#f5b21a] border-b border-yellow-600/10 w-full hidden lg:block">
         <div className="flex items-center justify-center h-9 max-w-[1280px] mx-auto px-2 lg:px-4">
           {NAV_LINKS.map((item) => (
             <Link
@@ -248,7 +244,7 @@ export default function Navbar() {
 
       {/* ── MOBILE DRAWER ── */}
       {isMenuOpen && (
-        <div className="md:hidden absolute top-[64px] left-0 w-full bg-white shadow-2xl z-40 border-t border-gray-100 animate-in slide-in-from-top duration-200">
+        <div className="lg:hidden absolute top-[56px] sm:top-[64px] left-0 w-full bg-white shadow-2xl z-40 border-t border-gray-100 animate-in slide-in-from-top duration-200">
           <div className="flex flex-col py-2">
 
             {/* User info */}

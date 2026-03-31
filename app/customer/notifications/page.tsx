@@ -8,6 +8,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { accountSidebarMenu } from "@/components/account-sidebar-menu";
 import { redirectToLogin } from "@/utils/helpers";
+import PortalDropdown from "@/components/PortalDropdown";
 
 export default function NotificationsPage() {
     const router = useRouter();
@@ -56,18 +57,18 @@ export default function NotificationsPage() {
 
 
             <div className="w-full px-3 md:px-8 lg:px-12 py-4 md:py-10">
-                <div className="flex flex-col md:flex-row gap-4 md:gap-6 lg:gap-10">
+                <div className="flex flex-col lg:flex-row gap-4 md:gap-6 lg:gap-10">
                     {/* SIDEBAR */}
-                    <aside className="w-full md:w-[280px] flex-shrink-0">
+                    <aside className="w-full lg:w-[280px] flex-shrink-0">
                         <nav className="bg-[#f0f0f0] border border-[#dddddd] rounded-sm">
-                            <ul className="flex flex-row md:flex-col text-[13px] md:text-[14px] text-[#333333] overflow-x-auto md:overflow-x-visible">
+                            <ul className="flex flex-row lg:flex-col text-[13px] lg:text-[14px] text-[#333333] overflow-x-auto lg:overflow-x-visible">
                                 {accountSidebarMenu.map((item, idx) => (
                                     <li key={idx} className="flex-shrink-0">
                                         <Link
                                             href={item.href}
-                                            className={`block px-4 md:px-6 py-3 md:py-4 transition-colors whitespace-nowrap ${item.href === "/customer/notifications"
-                                                ? "bg-white font-bold border-b-3 md:border-b-0 md:border-l-4 border-[#f5af02]"
-                                                : "hover:bg-[#e8e8e8] border-b-3 md:border-b-0 md:border-l-4 border-transparent"
+                                            className={`block px-4 lg:px-6 py-3 lg:py-4 transition-colors whitespace-nowrap ${item.href === "/customer/notifications"
+                                                ? "bg-white font-bold border-b-3 lg:border-b-0 lg:border-l-4 border-[#f5af02]"
+                                                : "hover:bg-[#e8e8e8] border-b-3 lg:border-b-0 lg:border-l-4 border-transparent"
                                                 }`}
                                         >
                                             {item.name}
@@ -77,7 +78,7 @@ export default function NotificationsPage() {
                                 <li className="flex-shrink-0">
                                     <button
                                         onClick={handleLogout}
-                                        className="w-full text-left px-4 md:px-6 py-3 md:py-4 text-[#333333] hover:bg-[#e8e8e8] transition-colors font-medium border-b-3 md:border-b-0 md:border-l-4 border-transparent whitespace-nowrap"
+                                        className="w-full text-left px-4 lg:px-6 py-3 lg:py-4 text-[#333333] hover:bg-[#e8e8e8] transition-colors font-medium border-b-3 lg:border-b-0 lg:border-l-4 border-transparent whitespace-nowrap"
                                     >
                                         Sign Out
                                     </button>
@@ -236,25 +237,11 @@ export default function NotificationsPage() {
 
                                 <div className="flex items-center gap-3 text-[13px] text-[#333333] font-medium order-3">
                                     <span>Show</span>
-                                    <div className="relative">
-                                        <select
-                                            value={pageSize}
-                                            onChange={(e) => {
-                                                setPageSize(Number(e.target.value));
-                                                setCurrentPage(1);
-                                            }}
-                                            className="appearance-none bg-white border border-[#cccccc] rounded-sm pl-4 pr-10 py-2 focus:outline-none focus:border-[#999999] hover:border-[#999999] transition-colors cursor-pointer"
-                                        >
-                                            <option value={15}>15</option>
-                                            <option value={30}>30</option>
-                                            <option value={50}>50</option>
-                                        </select>
-                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#666666]">
-                                            <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
-                                                <path d="M5 7.5L0 2.5H10L5 7.5Z" />
-                                            </svg>
-                                        </div>
-                                    </div>
+                                    <PortalDropdown
+                                        value={String(pageSize)}
+                                        onChange={(val) => { setPageSize(Number(val)); setCurrentPage(1); }}
+                                        options={[{ label: "15", value: "15" }, { label: "30", value: "30" }, { label: "50", value: "50" }]}
+                                    />
                                     <span>per page</span>
                                 </div>
                             </div>

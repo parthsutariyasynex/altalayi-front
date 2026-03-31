@@ -1,69 +1,24 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import useSWR from "swr";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
-import { Search, RotateCcw, ChevronDown } from "lucide-react";
+import PortalDropdown from "@/components/PortalDropdown";
+import { Search, RotateCcw } from "lucide-react";
 import Pagination from "@/components/Pagination";
 import toast from "react-hot-toast";
 import { redirectToLogin } from "@/utils/helpers";
 
-// Custom dropdown that positions correctly on all screens
-function CustomSelect({ value, onChange, options, label }: {
-    value: string;
-    onChange: (val: string) => void;
-    options: any[];
-    label: string;
-}) {
-    const [isOpen, setIsOpen] = useState(false);
-    const ref = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if (!isOpen) return;
-        const handler = (e: MouseEvent) => {
-            if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false);
-        };
-        document.addEventListener("mousedown", handler);
-        return () => document.removeEventListener("mousedown", handler);
-    }, [isOpen]);
-
-    const getLabel = (opt: any) => typeof opt === 'string' ? opt : (opt.label || opt.name || opt.status || "");
-    const getValue = (opt: any) => typeof opt === 'string' ? opt : (opt.value || opt.id || getLabel(opt));
-    const selectedLabel = options.find(o => getValue(o) === value);
-
-    return (
-        <div className="relative" ref={ref}>
-            <label className="block text-xs font-black text-black mb-2 uppercase tracking-wider">{label}</label>
-            <button
-                type="button"
-                onClick={() => setIsOpen(!isOpen)}
-                className="w-full h-[40px] bg-white text-black font-bold border border-gray-300 rounded-md px-4 text-xs text-left flex items-center justify-between cursor-pointer focus:outline-none focus:border-yellow-400"
-            >
-                <span>{selectedLabel ? getLabel(selectedLabel) : value}</span>
-                <ChevronDown size={14} className={`text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-            </button>
-            {isOpen && (
-                <div className="absolute z-50 top-full mt-1 left-0 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-[250px] overflow-y-auto">
-                    {options.map((opt, idx) => {
-                        const optLabel = getLabel(opt);
-                        const optValue = getValue(opt);
-                        return (
-                            <button
-                                key={`${optLabel}-${idx}`}
-                                type="button"
-                                onClick={() => { onChange(optValue); setIsOpen(false); }}
-                                className={`w-full text-left px-4 py-2.5 text-xs font-bold transition-colors cursor-pointer ${optValue === value ? "bg-yellow-400 text-black" : "text-gray-700 hover:bg-gray-50"}`}
-                            >
-                                {optLabel}
-                            </button>
-                        );
-                    })}
-                </div>
-            )}
-        </div>
-    );
+// Helper to normalize options (strings or objects) to {label, value} format
+function normalizeOptions(options: any[]): { label: string; value: string }[] {
+    return options.map((opt) => {
+        if (typeof opt === "string") return { label: opt, value: opt };
+        const label = opt.label || opt.name || opt.status || "";
+        const value = opt.value || opt.id || label;
+        return { label, value: String(value) };
+    });
 }
 
 // Fetcher with token
@@ -271,7 +226,7 @@ export default function OrderAttachmentsPage() {
 
 
             <div className="min-h-screen flex flex-col w-full bg-[#fcfcfc] font-rubik">
-                <div className="flex flex-col md:flex-row flex-1 w-full">
+                <div className="flex flex-col lg:flex-row flex-1 w-full">
                     {/* Left Sidebar */}
                     <Sidebar />
 
@@ -304,21 +259,23 @@ export default function OrderAttachmentsPage() {
                         <div className="flex flex-col sm:flex-row gap-4 items-end mb-6 md:mb-10 bg-white p-4 md:p-6 border border-[#ebebeb] rounded-md shadow-sm">
                             {/* Document Type */}
                             <div className="w-full sm:w-auto sm:min-w-[200px]">
-                                <CustomSelect
-                                    label="Document"
+                                <label className="block text-xs font-black text-black mb-2 uppercase tracking-wider">Document</label>
+                                <PortalDropdown
                                     value={documentType}
                                     onChange={(val) => { setDocumentType(val); setCurrentPage(1); }}
-                                    options={finalDocTypes}
+                                    options={normalizeOptions(finalDocTypes)}
+                                    buttonClassName="w-full h-[40px] bg-white text-black font-bold border border-gray-300 rounded-md px-4 text-xs text-left flex items-center justify-between cursor-pointer focus:outline-none focus:border-yellow-400"
                                 />
                             </div>
 
                             {/* Invoice Due */}
                             <div className="w-full sm:w-auto sm:min-w-[200px]">
-                                <CustomSelect
-                                    label="Invoice Due"
+                                <label className="block text-xs font-black text-black mb-2 uppercase tracking-wider">Invoice Due</label>
+                                <PortalDropdown
                                     value={invoiceDue}
                                     onChange={(val) => { setInvoiceDue(val); setCurrentPage(1); }}
-                                    options={finalInvoiceDues}
+                                    options={normalizeOptions(finalInvoiceDues)}
+                                    buttonClassName="w-full h-[40px] bg-white text-black font-bold border border-gray-300 rounded-md px-4 text-xs text-left flex items-center justify-between cursor-pointer focus:outline-none focus:border-yellow-400"
                                 />
                             </div>
 

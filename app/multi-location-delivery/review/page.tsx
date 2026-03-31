@@ -32,6 +32,9 @@ const MultiShippingReviewPage: React.FC = () => {
         placeOrder,
         placeMultiShippingOrder,
         startMultiShipping,
+        assignMultiShipping,
+        fetchMultiShippingMethods,
+        setMultiShippingMethods,
         setMultiShippingBillingAddress,
         refetchTotals,
         totals
@@ -156,26 +159,89 @@ const MultiShippingReviewPage: React.FC = () => {
         try {
             setIsPlacingOrder(true);
 
-            // Re-initialize multishipping session before placing order
+            // Re-initialize session, re-assign items, and set billing (session may have expired)
             await startMultiShipping();
+            const savedAssignments = localStorage.getItem('multi_shipping_assignments');
+            if (savedAssignments) {
+                const assignments = JSON.parse(savedAssignments);
+                const apiAssignments: Array<{ quote_item_id: number; customer_address_id: string; qty: number }> = [];
+                Object.entries(assignments).forEach(([itemId, addrMap]: [string, any]) => {
+                    Object.entries(addrMap).forEach(([addrId, qty]: [string, any]) => {
+                        if (qty > 0) apiAssignments.push({ quote_item_id: Number(itemId), customer_address_id: addrId, qty });
+                    });
+                });
+                if (apiAssignments.length > 0) await assignMultiShipping(apiAssignments);
+            }
 
-            // Re-set billing address and payment method on the backend session
-            await setMultiShippingBillingAddress(
-                billingAddress.id,
-                paymentMethod.code || "checkmo"
-            );
+            // Fetch shipping methods to get quote_address_ids
+            try {
+                const methodsData = await fetchMultiShippingMethods();
+                console.log(">>> fetchMultiShippingMethods RAW:", JSON.stringify(methodsData));
 
-            const savedMethodsJson = localStorage.getItem('multi_shipping_methods');
-            const savedMethods: Record<string, string> = savedMethodsJson ? JSON.parse(savedMethodsJson) : {};
+                // Deep-search for quote_address_id values in any response format
+                const methodsToSet: Record<string, string> = {};
+                const findAndSet = (obj: any) => {
+                    if (!obj) return;
+                    if (Array.isArray(obj)) {
+                        obj.forEach(item => findAndSet(item));
+                        return;
+                    }
+                    if (typeof obj === 'object') {
+                        // Check if this object itself has a quote address id
+                        const qid = obj.quote_address_id ?? obj.quoteAddressId ?? obj.address_id ?? obj.id;
+                        if (qid && typeof qid === 'number') {
+                            // Find a shipping method in this object
+                            const methods = obj.methods || obj.available_shipping_methods || obj.shipping_methods || obj.rates || [];
+                            if (Array.isArray(methods) && methods.length > 0) {
+                                const m = methods[0];
+                                methodsToSet[String(qid)] = m.code || `${m.carrier_code || m.carrierCode || "flatrate"}_${m.method_code || m.methodCode || "flatrate"}`;
+                            }
+                        }
+                        // Also check if keys are numeric (direct map format)
+                        Object.entries(obj).forEach(([key, val]) => {
+                            if (!isNaN(Number(key)) && Number(key) > 0 && Array.isArray(val) && (val as any[]).length > 0) {
+                                const m = (val as any[])[0];
+                                methodsToSet[key] = m.code || `${m.carrier_code || m.carrierCode || "flatrate"}_${m.method_code || m.methodCode || "flatrate"}`;
+                            } else if (typeof val === 'object') {
+                                findAndSet(val);
+                            }
+                        });
+                    }
+                };
+                findAndSet(methodsData);
+
+                console.log(">>> Extracted methodsToSet:", JSON.stringify(methodsToSet));
+
+                if (Object.keys(methodsToSet).length > 0) {
+                    await setMultiShippingMethods(methodsToSet);
+                } else {
+                    console.warn("Could not extract quote_address_ids from response — proceeding without setting shipping methods");
+                }
+            } catch (shippingErr) {
+                console.warn("Setting shipping methods failed, proceeding anyway:", shippingErr);
+            }
+
+            // Re-set billing address and payment method
+            if (billingAddress && paymentMethod) {
+                await setMultiShippingBillingAddress(billingAddress.id, paymentMethod.code || "checkmo");
+            }
+
+            const savedMethodsForPayload: Record<string, string> = JSON.parse(localStorage.getItem('multi_shipping_methods') || '{}');
+            const shippingInformation = groups.map(group => ({
+                address_id: String(group.address.id),
+                shipping_method: savedMethodsForPayload[group.address.id] || "flatrate_flatrate",
+                po_number: groupData[group.address.id]?.poNumber || "",
+                order_comment: groupData[group.address.id]?.comment || ""
+            }));
 
             const payload = {
-                billingAddressId: String(billingAddress.id),
-                paymentMethod: {
-                    method: paymentMethod.code || "checkmo"
-                }
+                billing_address_id: String(billingAddress.id),
+                payment_method: paymentMethod.code || "checkmo",
+                general_comment: generalComment || "",
+                shipping_information: shippingInformation
             };
 
-            console.log(">>> Checkout Place Order Payload:", JSON.stringify(payload, null, 2));
+            console.log(">>> Multi-Shipping Place Order Payload:", JSON.stringify(payload, null, 2));
 
             const result = await placeMultiShippingOrder(payload);
 

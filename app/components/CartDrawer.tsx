@@ -47,30 +47,29 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
             {/* Dropdown Panel */}
             <div
-                className={`absolute right-4 top-20 w-[350px] bg-white rounded-xl shadow-2xl flex flex-col transition-all duration-300 ease-in-out transform ${isOpen
-                    ? "translate-y-0 opacity-100 scale-100"
-                    : "-translate-y-4 opacity-0 scale-95 pointer-events-none"
-                    } overflow-hidden max-h-[calc(100vh-120px)]`}
+                className={`absolute right-0 sm:right-4 top-0 sm:top-20 w-full sm:w-[350px] h-full sm:h-auto bg-white sm:rounded-xl shadow-2xl flex flex-col transition-all duration-300 ease-in-out transform ${isOpen
+                    ? "translate-x-0 sm:translate-y-0 opacity-100 sm:scale-100"
+                    : "translate-x-full sm:translate-x-0 sm:-translate-y-4 opacity-0 sm:scale-95 pointer-events-none"
+                    } overflow-hidden sm:max-h-[calc(100vh-120px)]`}
             >
                 {/* Top Section */}
-                <div className="p-4 border-b border-gray-100 relative">
-                    <button
-                        onClick={onClose}
-                        className="absolute right-3 top-3 p-1 hover:bg-gray-100 rounded-full transition-colors"
-                        aria-label="Close cart"
-                    >
-                        <X size={20} className="text-gray-400 hover:text-gray-600" />
-                    </button>
-
+                <div className="p-4 border-b border-gray-100">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-[15px] sm:text-[17px] font-bold text-gray-900">
+                            {cart?.items_count || 0} Items in Cart
+                        </h2>
+                        <button
+                            onClick={onClose}
+                            className="p-2 hover:bg-gray-100 rounded-full transition-colors -mr-1"
+                            aria-label="Close cart"
+                        >
+                            <X size={22} className="text-gray-500" />
+                        </button>
+                    </div>
                     <div className="flex justify-between items-end mt-2">
-                        <div>
-                            <h2 className="text-[17px] font-bold text-gray-900">
-                                {cart?.items_count || 0} Items in Cart
-                            </h2>
-                        </div>
-                        <div className="text-right">
+                        <div className="text-right ml-auto">
                             <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Subtotal</p>
-                            <p className="text-[17px] font-black text-[#003d7e] price currency-riyal">
+                            <p className="text-[15px] sm:text-[17px] font-black text-[#003d7e] price currency-riyal">
 
                                 <Price amount={cart?.subtotal || 0} />
 
@@ -80,7 +79,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 </div>
 
                 {/* Cart Product List */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar min-h-[100px] max-h-[450px]">
+                <div className="flex-1 overflow-y-auto custom-scrollbar min-h-[100px] sm:max-h-[450px]">
                     {isLoading ? (
                         <div className="flex flex-col items-center justify-center py-12 space-y-3">
                             <div className="w-8 h-8 border-3 border-[#f5b21a] border-t-transparent rounded-full animate-spin"></div>
@@ -169,7 +168,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     <Link
                         href="/cart"
                         onClick={onClose}
-                        className="w-full h-[55px] bg-[#f5b21a] hover:bg-[#e0a218] text-black font-black rounded-lg transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl uppercase tracking-widest text-sm"
+                        className="w-full h-[48px] sm:h-[55px] bg-[#f5b21a] hover:bg-[#e0a218] text-black font-black rounded-lg transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl uppercase tracking-widest text-[12px] sm:text-sm"
                     >
                         VIEW AND EDIT CART
                     </Link>

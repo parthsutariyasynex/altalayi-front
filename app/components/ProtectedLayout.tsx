@@ -44,10 +44,11 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
   // Always render children in the DOM to preserve layout dimensions.
   return (
     <div className="flex flex-col min-h-screen bg-white">
-      {/* 🧭 Sticky Navbar */}
-      <div className="sticky top-0 z-[60] flex-shrink-0 bg-white shadow-sm">
-        <Navbar />
-      </div>
+      {/* 🧭 Sticky Navbar - Consolidated with internal Navbar sticky handling */}
+      <Navbar />
+
+      {/* 📏 Header Spacer - Fixed header means we need a spacer to prevent content overlap */}
+      <div className="h-[56px] sm:h-[64px] lg:h-[108px] flex-shrink-0" aria-hidden="true" />
 
       {/* 🚀 Main Content Wrapper */}
       <main className="flex-1 flex flex-col min-h-0 w-full relative">

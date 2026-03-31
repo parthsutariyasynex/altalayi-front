@@ -207,15 +207,6 @@ export default function OrderDetailsPage() {
             return;
         }
 
-        // Open blank tab immediately (synchronous) to avoid popup blocker
-        const newTab = window.open("about:blank", "_blank");
-        if (!newTab) {
-            toast.error("Popup blocked. Please allow popups for this site.");
-            return;
-        }
-        newTab.document.title = "Loading file...";
-        newTab.document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#666;"><p style="font-size:18px;">Loading file...</p></div>';
-
         const attachmentId = attachment.attachment_id || attachment.id;
         setOpeningAttachmentId(attachmentId);
 
@@ -240,10 +231,15 @@ export default function OrderDetailsPage() {
             }
 
             const blobUrl = URL.createObjectURL(new Blob([blob], { type: contentType }));
-            newTab.location.href = blobUrl;
+            const link = document.createElement("a");
+            link.href = blobUrl;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         } catch (err: any) {
             console.error("Attachment open error:", err);
-            newTab.close();
             toast.error(err.message || "Unable to open attachment");
         } finally {
             setOpeningAttachmentId(null);
@@ -274,7 +270,7 @@ export default function OrderDetailsPage() {
     if (authStatus === "loading" || (isLoading && !order)) {
         return (
             <div className="min-h-screen flex flex-col w-full bg-[#fcfcfc] font-rubik">
-                <div className="flex flex-col md:flex-row flex-1 w-full">
+                <div className="flex flex-col lg:flex-row flex-1 w-full">
                     <Sidebar />
                     <main className="flex-1 w-full flex items-center justify-center p-4 md:p-8">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-yellow-400"></div>
@@ -287,7 +283,7 @@ export default function OrderDetailsPage() {
     if (error) {
         return (
             <div className="min-h-screen flex flex-col w-full bg-[#fcfcfc] font-rubik">
-                <div className="flex flex-col md:flex-row flex-1 w-full">
+                <div className="flex flex-col lg:flex-row flex-1 w-full">
                     <Sidebar />
                     <main className="flex-1 w-full px-4 md:px-6 lg:px-8 py-10">
                         <div className="bg-red-50 border border-red-100 text-red-600 p-4 md:p-8 rounded-lg text-center shadow-sm">
@@ -314,7 +310,7 @@ export default function OrderDetailsPage() {
 
     return (
         <div className="min-h-screen flex flex-col w-full bg-[#fcfcfc] font-rubik">
-            <div className="flex flex-col md:flex-row flex-1 w-full">
+            <div className="flex flex-col lg:flex-row flex-1 w-full">
                 {/* Left Sidebar */}
                 <Sidebar />
 
@@ -373,7 +369,8 @@ export default function OrderDetailsPage() {
                                 Items Ordered
                             </h2>
                         </div>
-                        <div className="overflow-x-auto">
+                        {/* Desktop Table */}
+                        <div className="hidden md:block overflow-x-auto">
                             <table className="w-full text-left min-w-[500px]">
                                 <thead className="bg-gray-50/50 text-[11px] font-black text-black uppercase border-b border-[#ebebeb]">
                                     <tr>
@@ -406,6 +403,28 @@ export default function OrderDetailsPage() {
                                     ))}
                                 </tbody>
                             </table>
+                        </div>
+
+                        {/* Mobile Card View */}
+                        <div className="md:hidden divide-y divide-[#ebebeb]">
+                            {order.items?.map((item: any, idx: number) => (
+                                <div key={item.item_id || item.id} className={`p-4 text-xs ${idx % 2 !== 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                                    <p className="text-black font-black text-sm mb-2">{item.name}</p>
+                                    <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-3">SKU: {item.sku}</p>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="text-gray-500 font-bold uppercase tracking-widest">Price</span>
+                                        <span className="text-black font-bold">{formatCurrency(item.price)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="text-gray-500 font-bold uppercase tracking-widest">Qty</span>
+                                        <span className="text-gray-500 font-bold">{Math.round(item.qty_ordered)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                                        <span className="text-black font-black uppercase tracking-widest">Subtotal</span>
+                                        <span className="text-black font-black">{formatCurrency(item.row_total)}</span>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
 
                         {/* Order Summary */}

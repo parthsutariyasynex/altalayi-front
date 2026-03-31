@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import Navbar from "@/app/components/Navbar";
 import { useCart } from "@/modules/cart/hooks/useCart";
 import { useCheckout, Address } from "@/modules/checkout/hooks/useCheckout";
@@ -86,6 +87,7 @@ const CheckoutPageUI: React.FC = () => {
     const [selectedWarehouse, setSelectedWarehouse] = useState("");
     const [selectedWarehouseId, setSelectedWarehouseId] = useState("");
     const [selectedShippingMethodCode, setSelectedShippingMethodCode] = useState("");
+    const [isAddressSetOnBackend, setIsAddressSetOnBackend] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState("checkmo");
     const [comment, setComment] = useState("");
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
@@ -228,7 +230,9 @@ const CheckoutPageUI: React.FC = () => {
         if (addresses.length > 0 && !selectedAddressId) {
             const defaultAddr = addresses.find((a) => a.isDefault) || addresses[0];
             setSelectedAddressId(defaultAddr.id);
-            setShippingAddress(defaultAddr.id).catch(() => { });
+            setShippingAddress(defaultAddr.id)
+                .then(() => setIsAddressSetOnBackend(true))
+                .catch(() => { });
         }
     }, [addresses, selectedAddressId, setShippingAddress]);
 
@@ -272,20 +276,18 @@ const CheckoutPageUI: React.FC = () => {
                 false;
 
             if (method && (!selectedShippingMethodCode || !isCorrectType)) {
-                // Only sync if we have a valid cart with items and an address selected
-                if (selectedAddressId && !isTotalsLoading && cart && cart.items.length > 0) {
+                // Only sync if address is confirmed on backend, cart has items, and not loading
+                if (isAddressSetOnBackend && !isTotalsLoading && cart && cart.items.length > 0) {
                     console.log("DEBUG: Auto-selecting shipping method:", method.code, "for type:", shippingType);
-                    // Set the code locally
                     setSelectedShippingMethodCode(method.code);
 
-                    // Sync with backend
                     setShippingMethod(method.carrierCode, method.methodCode).catch(err => {
                         console.error("Auto-sync shipping method failed:", err);
                     });
                 }
             }
         }
-    }, [shippingMethods, shippingType, selectedShippingMethodCode, setShippingMethod, selectedAddressId, isTotalsLoading, cart]);
+    }, [shippingMethods, shippingType, selectedShippingMethodCode, setShippingMethod, isAddressSetOnBackend, isTotalsLoading, cart]);
 
     // Fetch existing Order Comment
     useEffect(() => {
@@ -356,7 +358,9 @@ const CheckoutPageUI: React.FC = () => {
         setSelectedAddressId(id);
         try {
             await setShippingAddress(id);
+            setIsAddressSetOnBackend(true);
         } catch {
+            setIsAddressSetOnBackend(false);
             toast.error("Failed to update shipping address");
         }
     };
@@ -1022,20 +1026,60 @@ const CheckoutPageUI: React.FC = () => {
                                                                             <span className="text-[12px] text-gray-400">Loading...</span>
                                                                         </div>
                                                                     ) : (
-                                                                        <select
-                                                                            value={pickupTime}
-                                                                            onChange={(e) => setPickupTime(e.target.value)}
-                                                                            className="w-full h-10 px-4 py-2 bg-white border border-gray-300 outline-none text-[13px] font-medium transition-all cursor-pointer hover:border-gray-400 focus:border-black appearance-none"
-                                                                            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
-                                                                            size={1}
-                                                                        >
-                                                                            <option value="">Select Time</option>
-                                                                            {availableTimeSlots.map((slot: any) => (
-                                                                                <option key={slot.time} value={slot.time} disabled={!slot.enabled}>
-                                                                                    {slot.label}
-                                                                                </option>
-                                                                            ))}
-                                                                        </select>
+                                                                        <div ref={timeRef} className="relative">
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => setIsTimeDropdownOpen((prev) => !prev)}
+                                                                                className={`w-full h-10 px-4 py-2 bg-white border outline-none text-[13px] font-medium transition-all cursor-pointer hover:border-gray-400 focus:border-black flex items-center justify-between ${isTimeDropdownOpen ? "border-[#f5a623]" : "border-gray-300"}`}
+                                                                            >
+                                                                                <span className={pickupTime ? "text-black" : "text-gray-400"}>
+                                                                                    {pickupTime
+                                                                                        ? availableTimeSlots.find((s) => s.time === pickupTime)?.label || pickupTime
+                                                                                        : "Select Time"}
+                                                                                </span>
+                                                                                <ChevronDown size={14} className={`text-gray-500 transition-transform ${isTimeDropdownOpen ? "rotate-180" : ""}`} />
+                                                                            </button>
+                                                                            {isTimeDropdownOpen && createPortal(
+                                                                                <>
+                                                                                    <div className="fixed inset-0" style={{ zIndex: 9998 }} onClick={() => setIsTimeDropdownOpen(false)} />
+                                                                                    <ul
+                                                                                        className="bg-white border border-gray-300 rounded-sm shadow-xl max-h-48 overflow-y-auto"
+                                                                                        style={{
+                                                                                            position: "fixed",
+                                                                                            zIndex: 9999,
+                                                                                            top: timeRef.current ? timeRef.current.getBoundingClientRect().bottom + 4 : 0,
+                                                                                            left: timeRef.current ? timeRef.current.getBoundingClientRect().left : 0,
+                                                                                            width: timeRef.current ? timeRef.current.getBoundingClientRect().width : "auto",
+                                                                                        }}
+                                                                                    >
+                                                                                        <li
+                                                                                            onClick={() => {
+                                                                                                setPickupTime("");
+                                                                                                setIsTimeDropdownOpen(false);
+                                                                                            }}
+                                                                                            className={`px-4 py-2 text-[13px] font-medium cursor-pointer transition-colors ${pickupTime === "" ? "bg-[#f5a623] text-white" : "hover:bg-gray-100 text-gray-400"}`}
+                                                                                        >
+                                                                                            Select Time
+                                                                                        </li>
+                                                                                        {availableTimeSlots.map((slot: any) => (
+                                                                                            <li
+                                                                                                key={slot.time}
+                                                                                                onClick={() => {
+                                                                                                    if (slot.enabled) {
+                                                                                                        setPickupTime(slot.time);
+                                                                                                        setIsTimeDropdownOpen(false);
+                                                                                                    }
+                                                                                                }}
+                                                                                                className={`px-4 py-2 text-[13px] font-medium transition-colors ${!slot.enabled ? "opacity-40 cursor-not-allowed text-gray-400" : "cursor-pointer"} ${pickupTime === slot.time ? "bg-[#f5a623] text-white" : slot.enabled ? "hover:bg-gray-100" : ""}`}
+                                                                                            >
+                                                                                                {slot.label}
+                                                                                            </li>
+                                                                                        ))}
+                                                                                    </ul>
+                                                                                </>,
+                                                                                document.body
+                                                                            )}
+                                                                        </div>
                                                                     )}
                                                                 </div>
                                                             </div>

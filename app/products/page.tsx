@@ -14,6 +14,7 @@ import Modal from "../components/Modal";
 import { api } from "@/lib/api/api-client";
 import { formatPrice, redirectToLogin, formatMagentoQueryParams, parseMagentoQueryParams } from "@/utils/helpers";
 import Price from "../components/Price";
+import PortalDropdown from "@/components/PortalDropdown";
 
 import { toast } from "react-hot-toast";
 
@@ -59,21 +60,21 @@ function MobileCardShimmer() {
   return (
     <>
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="bg-white rounded-xl border border-gray-200 p-3 animate-pulse">
-          <div className="flex gap-3">
-            <div className="flex-1 space-y-2">
-              <div className="h-2.5 bg-gray-100 rounded w-16"></div>
-              <div className="h-3.5 bg-gray-100 rounded w-32"></div>
-              <div className="h-2.5 bg-gray-100 rounded w-24"></div>
-              <div className="h-2.5 bg-gray-100 rounded w-20"></div>
+        <div key={i} className="bg-white rounded-lg border border-gray-100 p-3 animate-pulse">
+          <div className="flex gap-2.5">
+            <div className="flex-1 space-y-1.5">
+              <div className="h-2 bg-gray-200 rounded w-14"></div>
+              <div className="h-3 bg-gray-200 rounded w-full max-w-[140px]"></div>
+              <div className="h-2.5 bg-gray-200 rounded w-24"></div>
+              <div className="h-2 bg-gray-200 rounded w-16"></div>
             </div>
-            <div className="w-16 h-16 bg-gray-100 rounded-lg flex-shrink-0"></div>
+            <div className="w-12 h-12 bg-gray-200 rounded-lg flex-shrink-0"></div>
           </div>
-          <div className="flex justify-between items-center mt-3 pt-2 border-t border-gray-100">
-            <div className="h-4 bg-gray-100 rounded w-16"></div>
-            <div className="flex gap-1.5">
-              <div className="h-9 w-20 bg-gray-100 rounded-lg"></div>
-              <div className="h-9 w-9 bg-gray-100 rounded-lg"></div>
+          <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-100">
+            <div className="h-3.5 bg-gray-200 rounded w-20"></div>
+            <div className="flex gap-1">
+              <div className="h-8 w-16 bg-gray-200 rounded-lg"></div>
+              <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
             </div>
           </div>
         </div>
@@ -304,9 +305,9 @@ export default function ProductsPage() {
     const dotColor = stockColor === "green" ? "bg-green-500" : stockColor === "yellow" ? "bg-yellow-400" : "bg-red-500";
 
     return (
-      <div key={index} className="bg-white rounded-xl border border-gray-200 shadow-sm p-3 sm:p-4 flex flex-col gap-2">
+      <div key={index} className="bg-white rounded-lg border border-gray-100 shadow-sm p-2.5 sm:p-3 flex flex-col gap-1.5">
         {/* Top: content left + image right */}
-        <div className="flex gap-3">
+        <div className="flex gap-2.5">
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{brandName}</p>
             <p className="text-[12px] md:text-[13px] font-black text-gray-900 leading-tight mt-0.5 truncate">{product?.pattern || product?.name || "—"}</p>
@@ -323,14 +324,14 @@ export default function ProductsPage() {
             {product?.offer && <p className="text-[10px] font-bold text-red-600 uppercase mt-1">{product.offer}</p>}
           </div>
           <div
-            className="w-14 h-14 md:w-16 md:h-16 flex-shrink-0 rounded-lg border border-gray-100 overflow-hidden bg-gray-50 flex items-center justify-center cursor-pointer"
+            className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-lg border border-gray-100 overflow-hidden bg-gray-50 flex items-center justify-center cursor-pointer"
             onClick={() => { if (product?.image_url) { setSelectedImage(product.image_url); setPreviewProduct(product); setIsImageModalOpen(true); } }}
           >
             {product?.image_url ? <img src={product.image_url} alt={product.name} className="w-full h-full object-contain" /> : <span className="text-[8px] text-gray-300 font-bold uppercase">No Img</span>}
           </div>
         </div>
         {/* Bottom: price left + actions right */}
-        <div className="flex items-center justify-between border-t border-gray-100 pt-2.5 mt-1 gap-2">
+        <div className="flex items-center justify-between border-t border-gray-100 pt-2 gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-[13px] font-black text-black rubik-sans truncate">
               <Price amount={product?.final_price || 0} />
@@ -541,11 +542,13 @@ export default function ProductsPage() {
                   <button onClick={clearAllFilters} className="text-[10px] font-black text-red-500 uppercase flex items-center gap-1.5 bg-red-50 px-2.5 py-1 rounded-full flex-shrink-0"><X size={12} strokeWidth={3} /> Clear</button>
                 )}
               </div>
-              <select className="bg-gray-50 px-4 py-2 rounded-xl border border-gray-200 text-xs font-medium text-gray-800 outline-none cursor-pointer shadow-sm" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                <option value="none">Sort By</option>
-                <option value="price-asc">Price: Low-High</option>
-                <option value="price-desc">Price: High-Low</option>
-              </select>
+              <PortalDropdown
+                value={sortBy}
+                onChange={setSortBy}
+                options={[{ label: "Sort By", value: "none" }, { label: "Price: Low-High", value: "price-asc" }, { label: "Price: High-Low", value: "price-desc" }]}
+                buttonClassName="bg-gray-50 px-4 py-2 rounded-xl border border-gray-200 text-xs font-medium text-gray-800 cursor-pointer shadow-sm hover:border-gray-300 whitespace-nowrap"
+                minWidth={150}
+              />
             </div>
 
             {/* Desktop table area */}
@@ -625,7 +628,7 @@ export default function ProductsPage() {
         </div>
 
         {/* Desktop bottom search bar */}
-        <div className="hidden xl:flex fixed bottom-0 left-0 right-0 z-[40] bg-white border-t-[4px] border-[#f5a623] shadow-[0_-10px_30px_rgba(0,0,0,0.12)] h-[90px] items-center">
+        <div className="hidden xl:flex fixed bottom-0 left-0 right-0 z-[40] bg-white border-t-[4px] border-[#f5a623] shadow-[0_-10px_30px_rgba(0,0,0,0.12)] h-[90px] items-center" style={{ paddingRight: "var(--scrollbar-width)" }}>
           <div className={`w-full transition-all duration-300 ${isSidebarCollapsed ? "pl-[50px]" : "pl-[300px]"}`}>
             <div className="w-full max-w-[1400px] mx-auto px-4">
               <HorizontalFilter onSearch={handleHorizontalSearch} initialValues={{ width: debouncedFilters["width"]?.[0] || "", height: debouncedFilters["height"]?.[0] || "", rim: debouncedFilters["rim"]?.[0] || "" }} />

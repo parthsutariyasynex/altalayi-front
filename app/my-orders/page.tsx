@@ -324,12 +324,12 @@ function MyOrdersPageContent() {
 
     return (
         <div className="min-h-screen flex flex-col w-full bg-[#fcfcfc] font-rubik">
-            <div className="flex flex-col md:flex-row flex-1 w-full">
+            <div className="flex flex-col lg:flex-row flex-1 w-full">
                 <Sidebar />
 
                 <main className="flex-1 w-full px-4 md:px-6 lg:px-8 py-4 md:py-8 lg:py-10">
-                    <div className="flex flex-col md:flex-row gap-4 md:gap-0 md:items-center mb-6 md:mb-8">
-                        <h1 className="text-[20px] sm:text-[22px] md:text-[26px] font-black text-black mb-4 md:mb-10 uppercase tracking-wide">
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6 md:mb-10">
+                        <h1 className="text-[20px] sm:text-[22px] md:text-[26px] font-black text-black uppercase tracking-wide">
                             MY ORDERS
                         </h1>
                         <button

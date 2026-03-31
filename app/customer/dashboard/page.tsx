@@ -6,6 +6,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
 import { fetchCustomerInfo } from "@/store/actions/customerActions";
 import Sidebar from "@/components/Sidebar";
+import PortalDropdown from "@/components/PortalDropdown";
 import { useSession } from "next-auth/react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { redirectToLogin } from "@/utils/helpers";
@@ -133,7 +134,7 @@ export default function DashboardPage() {
     const value = dashboardData?.total_order_value || { year: '0.00', quarter: '0.00', months: '0.00' };
 
     return (
-        <div className="flex-1 flex flex-col md:flex-row min-h-0">
+        <div className="flex-1 flex flex-col lg:flex-row min-h-0">
             <Sidebar />
 
             {/* Right Content Area */}
@@ -175,23 +176,16 @@ export default function DashboardPage() {
                         <div className="p-4 md:p-10 px-4 md:px-12 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10">
                             {/* First Selector */}
                             <div className="flex-1 w-full bg-[#f4b400] h-11 px-5 relative flex items-center shadow-sm rounded-sm group hover:brightness-105 transition-all">
-                                <select
+                                <PortalDropdown
                                     value={searchYear}
-                                    onChange={(e) => {
-                                        setSearchYear(Number(e.target.value));
+                                    onChange={(val) => {
+                                        setSearchYear(Number(val));
                                         setIsCompare(true);
                                     }}
-                                    className="w-full bg-transparent text-black font-black text-[12px] md:text-[14px] outline-none cursor-pointer appearance-none z-10"
-                                >
-                                    {availableYears.map(y => (
-                                        <option key={y} value={y} className="bg-white">{y}</option>
-                                    ))}
-                                </select>
-                                <div className="absolute right-5 pointer-events-none text-black">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="m6 9 6 6 6-6" />
-                                    </svg>
-                                </div>
+                                    options={availableYears.map(y => ({ label: String(y), value: String(y) }))}
+                                    buttonClassName="w-full h-full flex items-center justify-between gap-2 cursor-pointer bg-transparent outline-none text-left font-black text-[12px] md:text-[14px] uppercase tracking-wide text-black"
+                                    className="w-full h-full"
+                                />
                             </div>
 
                             {/* Constant "vs." label */}
@@ -199,24 +193,16 @@ export default function DashboardPage() {
 
                             {/* Second Selector - Now always active and identical to the first */}
                             <div className="flex-1 w-full bg-[#f4b400] h-11 px-5 relative flex items-center shadow-sm rounded-sm group hover:brightness-105 transition-all">
-                                <select
+                                <PortalDropdown
                                     value={compareYear}
-                                    onChange={(e) => {
-                                        setCompareYear(Number(e.target.value));
+                                    onChange={(val) => {
+                                        setCompareYear(Number(val));
                                         setIsCompare(true);
                                     }}
-                                    className="w-full bg-transparent text-black font-black text-[12px] md:text-[14px] outline-none cursor-pointer appearance-none z-10"
-                                >
-                                    {/* Filter common years if preferred, but usually keep all options active */}
-                                    {availableYears.map(y => (
-                                        <option key={y} value={y} className="bg-white">{y}</option>
-                                    ))}
-                                </select>
-                                <div className="absolute right-5 pointer-events-none text-black">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="m6 9 6 6 6-6" />
-                                    </svg>
-                                </div>
+                                    options={availableYears.map(y => ({ label: String(y), value: String(y) }))}
+                                    buttonClassName="w-full h-full flex items-center justify-between gap-2 cursor-pointer bg-transparent outline-none text-left font-black text-[12px] md:text-[14px] uppercase tracking-wide text-black"
+                                    className="w-full h-full"
+                                />
                             </div>
                         </div>
                     </section>
@@ -277,18 +263,19 @@ export default function DashboardPage() {
                             <div className="flex-1">
                                 <h3 className="text-[13px] md:text-[15px] font-black text-black mb-3 md:mb-5 uppercase tracking-tight">Product Group</h3>
                                 <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-                                    <div className="bg-[#f4b400] h-12 px-5 flex justify-between items-center text-black relative">
-                                        <select
+                                    <div className="bg-[#f4b400] h-12 px-5 flex items-center text-black relative">
+                                        <PortalDropdown
                                             value={selectedProductGroup}
-                                            onChange={(e) => setSelectedProductGroup(e.target.value)}
-                                            className="bg-transparent border-none text-[13px] font-black uppercase tracking-wide outline-none cursor-pointer appearance-none w-full z-10"
-                                        >
-                                            {(!dashboardData?.product_groups || dashboardData.product_groups.length === 0) && <option key="none">No Groups</option>}
-                                            {dashboardData?.product_groups?.map((pg: any, i: number) => (
-                                                <option key={`pg-${pg.product_group}-${i}`} value={pg.product_group} className="bg-white">{pg.product_group}</option>
-                                            ))}
-                                        </select>
-                                        <span className="text-[10px] pointer-events-none absolute right-5">▼</span>
+                                            onChange={(val) => setSelectedProductGroup(val)}
+                                            options={
+                                                (!dashboardData?.product_groups || dashboardData.product_groups.length === 0)
+                                                    ? [{ label: "No Groups", value: "" }]
+                                                    : dashboardData.product_groups.map((pg: any) => ({ label: pg.product_group, value: pg.product_group }))
+                                            }
+                                            placeholder="Select Group"
+                                            buttonClassName="w-full h-full flex items-center justify-between gap-2 cursor-pointer bg-transparent outline-none text-left font-black text-[12px] md:text-[14px] uppercase tracking-wide text-black"
+                                            className="w-full h-full"
+                                        />
                                     </div>
                                     <div className="py-6 px-4 text-center">
                                         <p className="text-[18px] md:text-[22px] font-bold text-black font-['Rubik']">
@@ -302,18 +289,19 @@ export default function DashboardPage() {
                             <div className="flex-1">
                                 <h3 className="text-[13px] md:text-[15px] font-black text-black mb-3 md:mb-5 uppercase tracking-tight">Tyre Size</h3>
                                 <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-                                    <div className="bg-[#f4b400] h-12 px-5 flex justify-between items-center text-black relative">
-                                        <select
+                                    <div className="bg-[#f4b400] h-12 px-5 flex items-center text-black relative">
+                                        <PortalDropdown
                                             value={selectedTyreSize}
-                                            onChange={(e) => setSelectedTyreSize(e.target.value)}
-                                            className="bg-transparent border-none text-[13px] font-black uppercase tracking-wide outline-none cursor-pointer appearance-none w-full z-10"
-                                        >
-                                            {(!dashboardData?.tyre_sizes || dashboardData.tyre_sizes.length === 0) && <option key="none">No Sizes</option>}
-                                            {dashboardData?.tyre_sizes?.map((ts: any, i: number) => (
-                                                <option key={`ts-${ts.size_pattern}-${i}`} value={ts.size_pattern} className="bg-white">{ts.size_pattern}</option>
-                                            ))}
-                                        </select>
-                                        <span className="text-[10px] pointer-events-none absolute right-5">▼</span>
+                                            onChange={(val) => setSelectedTyreSize(val)}
+                                            options={
+                                                (!dashboardData?.tyre_sizes || dashboardData.tyre_sizes.length === 0)
+                                                    ? [{ label: "No Sizes", value: "" }]
+                                                    : dashboardData.tyre_sizes.map((ts: any) => ({ label: ts.size_pattern, value: ts.size_pattern }))
+                                            }
+                                            placeholder="Select Size"
+                                            buttonClassName="w-full h-full flex items-center justify-between gap-2 cursor-pointer bg-transparent outline-none text-left font-black text-[12px] md:text-[14px] uppercase tracking-wide text-black"
+                                            className="w-full h-full"
+                                        />
                                     </div>
                                     <div className="py-6 px-4 text-center">
                                         <p className="text-[18px] md:text-[22px] font-bold text-black font-['Rubik']">

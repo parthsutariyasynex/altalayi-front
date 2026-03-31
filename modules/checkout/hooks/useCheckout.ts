@@ -797,18 +797,26 @@ export function useCheckout(options: UseCheckoutOptions = {}) {
             const token = await getAuthToken();
             if (!token) throw new Error("Not authenticated");
 
-            // Format for Magento: { request: { methods: [ { quote_address_id: X, carrier_code: Y, method_code: Z } ] } }
+            console.log(">>> setMultiShippingMethods input:", JSON.stringify(methodsObj, null, 2));
+
             const formattedMethods = Object.entries(methodsObj).map(([addrId, fullCode]) => {
-                // fullCode is usually "carrier_method" or similar
                 const parts = fullCode.split('_');
                 const carrier = parts[0];
-                const method = parts.slice(1).join('_');
+                const method = parts.slice(1).join('_') || parts[0];
+                const numId = Number(addrId);
                 return {
-                    quote_address_id: String(addrId),
-                    carrier_code: carrier,
-                    method_code: method
+                    quoteAddressId: isNaN(numId) ? 0 : numId,
+                    carrierCode: carrier,
+                    methodCode: method
                 };
-            });
+            }).filter(m => m.quoteAddressId > 0);
+
+            console.log(">>> setMultiShippingMethods formatted:", JSON.stringify(formattedMethods, null, 2));
+
+            if (formattedMethods.length === 0) {
+                console.warn("No valid shipping methods to set — skipping");
+                return null;
+            }
 
             const res = await fetch("/api/kleverapi/multishipping/shipping-methods", {
                 method: "POST",

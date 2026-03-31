@@ -7,6 +7,7 @@ import { fetchAddresses, deleteAddress, setDefaultAddress } from "@/store/action
 import { RootState } from "@/store/store";
 import toast from "react-hot-toast";
 import Pagination from "@/components/Pagination";
+import PortalDropdown from "@/components/PortalDropdown";
 
 type Address = {
   id: number | string;
@@ -72,6 +73,7 @@ function AddressCard({ title, address, onEdit, buttonLabel }: AddressCardProps) 
     </div>
   );
 }
+
 
 export default function Addresses() {
   const router = useRouter();
@@ -256,15 +258,7 @@ export default function Addresses() {
               {/* Right side: Show per page */}
               <div className="flex items-center gap-2 text-[11px] text-gray-400 font-bold uppercase tracking-wider">
                 <span>Show</span>
-                <select
-                  value={pageSize}
-                  onChange={() => { }} // Placeholder or implement if needed
-                  className="h-8 border border-gray-200 bg-white text-center rounded-md px-2 text-black focus:outline-none focus:border-yellow-400"
-                >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                </select>
+                <PortalDropdown value={String(pageSize)} onChange={() => {}} options={[{label:"10",value:"10"},{label:"20",value:"20"},{label:"50",value:"50"}]} minWidth={60} />
                 <span>per page</span>
               </div>
             </div>

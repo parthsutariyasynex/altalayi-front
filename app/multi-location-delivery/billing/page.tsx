@@ -14,6 +14,9 @@ const MultiShippingBillingPage: React.FC = () => {
         isLoading: isCheckoutLoading,
         setMultiShippingBillingAddress,
         startMultiShipping,
+        assignMultiShipping,
+        fetchMultiShippingMethods,
+        setMultiShippingMethods,
         refetchPaymentMethods
     } = useCheckout();
 
@@ -51,8 +54,49 @@ const MultiShippingBillingPage: React.FC = () => {
         try {
             setIsSubmitting(true);
 
-            // Re-initialize multishipping session in case it expired
+            // Re-initialize session and re-assign items (session may have expired)
             await startMultiShipping();
+            const savedAssignments = localStorage.getItem('multi_shipping_assignments');
+            if (savedAssignments) {
+                const assignments = JSON.parse(savedAssignments);
+                const apiAssignments: Array<{ quote_item_id: number; customer_address_id: string; qty: number }> = [];
+                Object.entries(assignments).forEach(([itemId, addrMap]: [string, any]) => {
+                    Object.entries(addrMap).forEach(([addrId, qty]: [string, any]) => {
+                        if (qty > 0) apiAssignments.push({ quote_item_id: Number(itemId), customer_address_id: addrId, qty });
+                    });
+                });
+                if (apiAssignments.length > 0) await assignMultiShipping(apiAssignments);
+            }
+
+            // Set shipping methods — try to extract quote_address_ids from response
+            try {
+                const methodsData = await fetchMultiShippingMethods();
+                const methodsToSet: Record<string, string> = {};
+                const findAndSet = (obj: any) => {
+                    if (!obj) return;
+                    if (Array.isArray(obj)) { obj.forEach((item: any) => findAndSet(item)); return; }
+                    if (typeof obj === 'object') {
+                        const qid = obj.quote_address_id ?? obj.quoteAddressId ?? obj.address_id ?? obj.id;
+                        if (qid && typeof qid === 'number') {
+                            const methods = obj.methods || obj.available_shipping_methods || obj.shipping_methods || obj.rates || [];
+                            if (Array.isArray(methods) && methods.length > 0) {
+                                const m = methods[0];
+                                methodsToSet[String(qid)] = m.code || `${m.carrier_code || m.carrierCode || "flatrate"}_${m.method_code || m.methodCode || "flatrate"}`;
+                            }
+                        }
+                        Object.entries(obj).forEach(([key, val]) => {
+                            if (!isNaN(Number(key)) && Number(key) > 0 && Array.isArray(val) && (val as any[]).length > 0) {
+                                const m = (val as any[])[0];
+                                methodsToSet[key] = m.code || `${m.carrier_code || m.carrierCode || "flatrate"}_${m.method_code || m.methodCode || "flatrate"}`;
+                            } else if (typeof val === 'object') { findAndSet(val); }
+                        });
+                    }
+                };
+                findAndSet(methodsData);
+                if (Object.keys(methodsToSet).length > 0) await setMultiShippingMethods(methodsToSet);
+            } catch (shippingErr) {
+                console.warn("Setting shipping methods failed, proceeding:", shippingErr);
+            }
 
             // Set billing address and payment method on the backend
             await setMultiShippingBillingAddress(selectedAddressId, selectedPaymentCode);

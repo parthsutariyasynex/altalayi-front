@@ -26,9 +26,9 @@ const Sidebar = () => {
         (session as any)?.user?.is_sub_account;
 
     return (
-        <aside className="w-full md:w-64 flex-shrink-0 bg-[#f8f8f8] p-0 md:p-4 border-b md:border-b-0 md:border-r border-[#ebebeb] z-30 h-full self-stretch min-h-full">
-            <nav className="sticky top-0 md:top-[80px] overflow-x-auto md:overflow-x-visible custom-scrollbar">
-                <ul className="flex flex-row md:flex-col space-y-0 md:space-y-1">
+        <aside className="w-full lg:w-64 flex-shrink-0 bg-[#f8f8f8] p-0 lg:p-4 border-b lg:border-b-0 lg:border-r border-[#ebebeb] z-30 h-full self-stretch min-h-full">
+            <nav className="sticky top-0 lg:top-[80px] overflow-x-auto lg:overflow-x-visible custom-scrollbar">
+                <ul className="flex flex-row lg:flex-col space-y-0 lg:space-y-1">
                     {accountSidebarMenu
                         .filter(item => {
                             // Hide "Manage Accounts" for sub-account users
@@ -47,9 +47,9 @@ const Sidebar = () => {
                                 <li key={idx} className="flex-shrink-0">
                                     <Link
                                         href={href}
-                                        className={`block py-3 px-6 md:px-4 transition-all duration-200 whitespace-nowrap ${isActive
-                                            ? "font-bold text-black border-b-[3px] md:border-b-0 md:border-l-4 border-[#f5a623] bg-white shadow-sm"
-                                            : "text-gray-600 hover:text-black hover:bg-gray-100 border-b-[3px] md:border-b-0 md:border-l-4 border-transparent"
+                                        className={`block py-3 px-6 lg:px-4 transition-all duration-200 whitespace-nowrap ${isActive
+                                            ? "font-bold text-black border-b-[3px] lg:border-b-0 lg:border-l-4 border-[#f5a623] bg-white shadow-sm"
+                                            : "text-gray-600 hover:text-black hover:bg-gray-100 border-b-[3px] lg:border-b-0 lg:border-l-4 border-transparent"
                                             }`}
                                     >
                                         {item.name}
@@ -60,7 +60,7 @@ const Sidebar = () => {
                     <li className="flex-shrink-0">
                         <button
                             onClick={() => signOut({ callbackUrl: "/login" })}
-                            className="block w-full text-left py-3 px-6 md:px-4 text-gray-600 hover:text-black hover:bg-gray-100 transition-all duration-200 border-b-[3px] md:border-b-0 md:border-l-4 border-transparent whitespace-nowrap"
+                            className="block w-full text-left py-3 px-6 lg:px-4 text-gray-600 hover:text-black hover:bg-gray-100 transition-all duration-200 border-b-[3px] lg:border-b-0 lg:border-l-4 border-transparent whitespace-nowrap"
                         >
                             Sign Out
                         </button>

@@ -158,7 +158,7 @@ function EditAddressPageContent() {
         <div className="min-h-screen bg-white font-['Rubik'] text-[#333]">
 
 
-            <div className="flex flex-col md:flex-row flex-1 min-h-0 w-full min-w-full">
+            <div className="flex flex-col lg:flex-row flex-1 min-h-0 w-full min-w-full">
                 <Sidebar />
 
                 <main className="flex-1 w-full min-w-0 p-4 md:p-10 bg-[#fdfdfd]">

@@ -21,12 +21,28 @@ const MultiLocationDeliveryPage: React.FC = () => {
         addresses,
         refetchAddresses,
         isLoading: isCheckoutLoading,
-        assignMultiShipping
+        assignMultiShipping,
+        startMultiShipping
     } = useCheckout({ skipInitialFetch: true });
 
     const [isAssigning, setIsAssigning] = useState(false);
 
     const [assignments, setAssignments] = useState<Assignments>({});
+
+    const [isInitialized, setIsInitialized] = useState(false);
+
+    useEffect(() => {
+        // Initialize backend multishipping session — must be called ONLY here (step 1)
+        startMultiShipping().catch(err => {
+            console.error("Failed to start multishipping session:", err);
+            const msg = err?.message || "";
+            if (msg.includes("invalid")) {
+                toast.error("Cart must have at least 2 items or qty > 1 for multi-shipping.");
+            } else {
+                toast.error("Checkout initialization failed. Please reload.");
+            }
+        });
+    }, [startMultiShipping]);
 
     useEffect(() => {
         refetchCart();
@@ -34,7 +50,7 @@ const MultiLocationDeliveryPage: React.FC = () => {
     }, [refetchCart, refetchAddresses]);
 
     useEffect(() => {
-        if (cart?.items && addresses.length > 0 && Object.keys(assignments).length === 0) {
+        if (cart?.items && addresses.length > 0 && !isInitialized) {
             const initial: Assignments = {};
             cart.items.forEach(item => {
                 initial[item.item_id] = {};
@@ -43,8 +59,9 @@ const MultiLocationDeliveryPage: React.FC = () => {
                 });
             });
             setAssignments(initial);
+            setIsInitialized(true);
         }
-    }, [cart, addresses, assignments]);
+    }, [cart, addresses, isInitialized]);
 
     const handleQtyChange = (itemId: number, addressId: string, value: string) => {
         const cleanedValue = value.replace(/[^0-9]/g, "");
@@ -179,9 +196,9 @@ const MultiLocationDeliveryPage: React.FC = () => {
                     <h1 className="text-[18px] sm:text-[22px] md:text-[26px] font-black text-black uppercase tracking-normal mb-1">
                         SHIP TO MULTIPLE ADDRESSES
                     </h1>
-                    <p className="text-[12px] sm:text-[13px] md:text-[14px] text-gray-800 font-medium italic">
+                    {/* <p className="text-[12px] sm:text-[13px] md:text-[14px] text-gray-800 font-medium italic">
                         Please assign Qty against shipping address for applicable items.
-                    </p>
+                    </p> */}
                 </div>
 
                 {/* Main Table Structure */}

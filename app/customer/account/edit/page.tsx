@@ -108,7 +108,7 @@ function EditAccountPageContent() {
     const sectionHeader = "bg-white px-4 md:px-6 py-2.5 md:py-3 border-b border-gray-100 text-black font-black uppercase text-[13px] md:text-[15px] tracking-tight";
 
     return (
-        <div className="flex flex-col md:flex-row flex-1 min-h-0 min-w-full">
+        <div className="flex flex-col lg:flex-row flex-1 min-h-0 min-w-full">
             <Sidebar />
 
             <main className="flex-1 p-6 md:p-12 min-h-0 bg-[#FDFDFD]">
