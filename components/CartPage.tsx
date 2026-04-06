@@ -45,13 +45,22 @@ const CartPage: React.FC = () => {
     };
 
     const handleClearCart = async () => {
-        if (confirm("Clear all items from your cart?")) {
-            try {
-                await clearCart();
-                toast.success("Cart cleared successfully");
-            } catch (err) {
-                toast.error("Failed to clear cart");
-            }
+        try {
+            await clearCart();
+            toast.success("Cart Items Cleared", {
+                icon: '🗑️',
+                style: {
+                    borderRadius: '16px',
+                    background: '#000',
+                    color: '#fff',
+                    fontSize: '10px',
+                    fontWeight: 'black',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em'
+                },
+            });
+        } catch (err) {
+            toast.error("Failed to clear cart");
         }
     };
 
@@ -109,70 +118,78 @@ const CartPage: React.FC = () => {
     }
 
     return (
-        <div className="bg-white min-h-screen font-sans">
-            <div className="max-w-7xl mx-auto py-6 md:py-10 px-3 md:px-6">
-                {/* Page Title */}
-                <div className="text-center mb-6 md:mb-10">
-                    <h1 className="text-lg md:text-2xl font-bold text-gray-900 uppercase tracking-widest">
+        <div className="min-h-screen bg-[#FDFDFD] pb-40 lg:pb-20">
+            {/* Main Content Container */}
+            <div className="max-w-[1440px] mx-auto px-4 md:px-12 pt-8 md:pt-14">
+
+                {/* Breadcrumbs & Title Section */}
+                <div className="mb-10 md:mb-14 text-center">
+                    <h1 className="text-xl md:text-2xl font-black text-gray-900 uppercase tracking-tight mb-2">
                         Shopping Cart
                     </h1>
+                    <div className="h-1 w-12 bg-yellow-400 mx-auto"></div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-6 xl:gap-10">
-                    {/* Left Side: Cart Items */}
-                    <div className="lg:col-span-2 xl:col-span-3">
-                        {/* Table Header */}
-                        <div className="hidden lg:flex bg-[#f2f2f2] border-b border-gray-200 items-center py-3 lg:py-5 px-4 lg:px-6">
-                            <div className="w-[35%] text-[10px] lg:text-[11px] font-black text-black uppercase tracking-[0.15em]">Item</div>
-                            <div className="w-[20%] text-[10px] lg:text-[11px] font-black text-black uppercase tracking-[0.15em] text-center">Price</div>
-                            <div className="w-[20%] text-[10px] lg:text-[11px] font-black text-black uppercase tracking-[0.15em] text-center">Qty</div>
-                            <div className="w-[25%] text-[10px] lg:text-[11px] font-black text-black uppercase tracking-[0.15em] text-center">Total</div>
-                        </div>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 xl:gap-16 items-start">
 
-                        {/* Cart Rows */}
-                        <div className="flex flex-col">
-                            {cart.items.map((item) => (
-                                <CartItem
-                                    key={item.item_id}
-                                    item={item}
-                                    currencyCode={cart.currency_code}
-                                    onUpdateQty={handleUpdateQty}
-                                    onRemove={handleRemove}
-                                />
-                            ))}
-                        </div>
+                    {/* Left Column (Items & Actions) */}
+                    <div className="lg:col-span-8 xl:col-span-9 flex flex-col min-w-0">
 
-                        {/* Cart Actions Toolbar */}
-                        <CartActions
-                            itemsCount={cart.items_count}
-                            onClearCart={handleClearCart}
-                            onUpdateCart={handleUpdateCart}
-                        />
-
-                        {/* Multiple Address Section Bar */}
-                        <div className="mt-6 md:mt-12 flex flex-col md:flex-row items-center justify-between border-2 border-[#f4b400]/20 bg-[#f4b400]/5 overflow-hidden group">
-                            <div className="py-4 px-4 md:py-6 md:px-8 text-[12px] font-black text-black uppercase tracking-tight">
-                                Do you want to ship the order to Multiple Addresses?
+                        <div className="flex flex-col h-full">
+                            {/* Table Header (Sticky Top) */}
+                            <div className="hidden lg:flex sticky top-0 z-20 bg-white border border-gray-100 rounded-xl items-center py-3.5 px-6 mb-4 shadow-sm">
+                                <div className="w-[45%] text-[9px] font-black text-gray-400 uppercase tracking-widest">Item Description</div>
+                                <div className="w-[15%] text-[9px] font-black text-gray-400 uppercase tracking-widest text-center">Price</div>
+                                <div className="w-[20%] text-[9px] font-black text-gray-400 uppercase tracking-widest text-center">Qty</div>
+                                <div className="w-[20%] text-[9px] font-black text-gray-400 uppercase tracking-widest text-right">Total</div>
                             </div>
-                            <button
-                                onClick={handleStartMultiShipping}
-                                disabled={isStartingMultiShipping}
-                                className="bg-[#f4b400] text-black font-black py-4 px-6 md:py-6 md:px-12 uppercase tracking-[0.15em] text-[12px] hover:bg-black hover:text-white transition-all duration-300 whitespace-nowrap cursor-pointer flex items-center justify-center h-full disabled:opacity-70 disabled:cursor-not-allowed w-full md:w-auto min-w-0 md:min-w-[280px]"
-                            >
-                                {isStartingMultiShipping ? (
-                                    <>
-                                        <Loader2 className="animate-spin mr-2" size={18} />
-                                        Processing...
-                                    </>
-                                ) : (
-                                    "Ship to Multiple Addresses"
-                                )}
-                            </button>
+
+                            {/* Scrollable Items Container */}
+                            <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-4 pb-32">
+                                {cart.items.map((item) => (
+                                    <CartItem
+                                        key={item.item_id}
+                                        item={item}
+                                        currencyCode={cart.currency_code}
+                                        onUpdateQty={handleUpdateQty}
+                                        onRemove={handleRemove}
+                                    />
+                                ))}
+                            </div>
+
+                            {/* Actions Bar (Sticky Bottom) */}
+                            <div className="lg:sticky lg:bottom-0 z-20 -mt-24 pt-12 pb-2 bg-gradient-to-t from-white via-white/100 to-transparent">
+                                <div className="space-y-4">
+                                    <CartActions
+                                        itemsCount={cart.items_count}
+                                        onClearCart={handleClearCart}
+                                        onUpdateCart={handleUpdateCart}
+                                    />
+
+                                    {/* Multiple Address Section Bar */}
+                                    <div className="border border-[#FFC107] bg-white rounded-xl flex flex-col md:flex-row items-stretch justify-between overflow-hidden shadow-xl shadow-yellow-400/5">
+                                        <div className="px-6 py-4 flex items-center bg-gray-50/50 flex-1">
+                                            <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-wider">Do you want to ship the order to Multiple Addresses?</h4>
+                                        </div>
+                                        <button
+                                            onClick={handleStartMultiShipping}
+                                            disabled={isStartingMultiShipping}
+                                            className="bg-[#FFC107] text-black font-black py-4 px-10 uppercase tracking-widest text-[10px] hover:bg-black hover:text-white transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed w-full md:w-auto shadow-none"
+                                        >
+                                            {isStartingMultiShipping ? (
+                                                <Loader2 className="animate-spin" size={14} />
+                                            ) : (
+                                                "Ship to Multiple Addresses"
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Right Side: Summary */}
-                    <div className="lg:col-span-1">
+                    {/* Right Column (Summary): lg:col-span-4 or 3 */}
+                    <div className="lg:col-span-4 xl:col-span-3 sticky top-[140px] z-10 w-full">
                         <CartSummary
                             subtotal={cart.subtotal}
                             taxAmount={cart.tax_amount}
@@ -183,6 +200,42 @@ const CartPage: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Mobile Fixed Checkout Button Overlay */}
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-5 z-[60] shadow-[0_-20px_40px_rgba(0,0,0,0.08)]">
+                <div className="flex items-center justify-between mb-4 px-2">
+                    <div className="flex flex-col">
+                        <span className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Total to Pay</span>
+                    </div>
+                    <span className="text-2xl font-black text-gray-900 tracking-tighter">
+                        {cart.currency_code} {cart.grand_total.toLocaleString()}
+                    </span>
+                </div>
+                <button
+                    onClick={() => router.push("/checkout")}
+                    className="w-full bg-yellow-400 text-black py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-yellow-400/30 active:scale-95 transition-all"
+                >
+                    Checkout Now
+                </button>
+            </div>
+
+            <style jsx global>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 6px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: #f9fafb;
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: #e5e7eb;
+                    border-radius: 10px;
+                    border: 2px solid #f9fafb;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: #d1d5db;
+                }
+            `}</style>
         </div>
     );
 };

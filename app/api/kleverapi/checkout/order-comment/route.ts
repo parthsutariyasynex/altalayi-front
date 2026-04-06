@@ -15,21 +15,28 @@ export async function GET(req: Request) {
                 Authorization: authHeader,
                 "Content-Type": "application/json",
                 platform: "web",
+                accept: "application/json",
             },
             cache: "no-store",
         });
 
-        const data = await response.json();
+        const responseText = await response.text();
 
         if (!response.ok) {
-            console.error("Order Comment GET error:", response.status, data);
-            return NextResponse.json(data, { status: response.status });
+            console.error("Order Comment GET error:", response.status, responseText);
+            return NextResponse.json({ error: "Failed to get order comment", details: responseText }, { status: response.status });
         }
 
-        return NextResponse.json(data);
-    } catch (error) {
+        try {
+            const data = JSON.parse(responseText);
+            return NextResponse.json(data);
+        } catch (e) {
+            // If it's a string from Magento but not valid JSON (standard for some endpoints)
+            return NextResponse.json({ comment: responseText });
+        }
+    } catch (error: any) {
         console.error("Proxy GET Order Comment Error:", error);
-        return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+        return NextResponse.json({ message: "Internal server error", details: error.message }, { status: 500 });
     }
 }
 

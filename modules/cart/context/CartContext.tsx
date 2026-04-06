@@ -48,8 +48,17 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 async function getAuthToken(): Promise<string | null> {
+  // Try NextAuth session first
   const session: any = await getSession();
-  return session?.accessToken ?? null;
+  if (session?.accessToken) return session.accessToken;
+
+  // Fallback: localStorage (may be set before session syncs)
+  if (typeof window !== "undefined") {
+    const localToken = localStorage.getItem("token");
+    if (localToken) return localToken;
+  }
+
+  return null;
 }
 
 function isAuthError(status: number): boolean {
@@ -63,10 +72,10 @@ function handleAuthError() {
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<Cart | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchCart = useCallback(async (showLoader = true) => {
+  const fetchCart = useCallback(async (showLoader = true, _retry = 0) => {
     try {
       if (showLoader) setIsLoading(true);
       setError(null);
@@ -88,11 +97,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       if (!res.ok) {
         if (isAuthError(res.status)) {
+          // Retry once after delay (handles post-login race condition)
+          if (_retry < 2) {
+            await new Promise(r => setTimeout(r, 1000));
+            return fetchCart(showLoader, _retry + 1);
+          }
           setCart(null);
           handleAuthError();
           return;
         }
-        throw new Error(data.message || "Failed to fetch cart");
+        // Backend down or server error — fail silently
+        setCart(null);
+        return;
       }
 
       // Normalize Magento kleverapi/cart response
@@ -126,9 +142,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const cart_id = data.cart_id ?? data.cart?.cart_id ?? null;
 
       setCart({ items, subtotal, tax_amount, tax_label, grand_total, currency_code, items_count, cart_id });
-    } catch (err) {
-      console.error("Fetch Cart Error:", err);
-      setError(err instanceof Error ? err.message : "Something went wrong");
+    } catch {
+      // Network error or backend unreachable — fail silently
+      setCart(null);
     } finally {
       if (showLoader) setIsLoading(false);
     }

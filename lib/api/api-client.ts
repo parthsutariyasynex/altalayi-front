@@ -1,24 +1,44 @@
 import { getSession } from "next-auth/react";
 
 const BASE_URL = "/api";
+const MAX_AUTH_RETRIES = 3;
+const AUTH_RETRY_DELAY = 800;
 
-async function apiClient(
-    endpoint: string,
-    { method = "GET", body, headers = {}, ...customConfig }: any = {}
-) {
-    // Get token from NextAuth session first, then fall back to localStorage
-    let token: string | null = null;
+/**
+ * Get auth token — tries NextAuth session first, falls back to localStorage.
+ * If no token found, waits briefly and retries (handles post-login race condition).
+ */
+async function getAuthToken(attempt = 0): Promise<string | null> {
+    // Try NextAuth session first
     try {
         const session: any = await getSession();
-        token = session?.accessToken || null;
+        if (session?.accessToken) {
+            return session.accessToken;
+        }
     } catch {
         // getSession() can fail in non-browser contexts
     }
 
-    // Fallback: read from localStorage (set by Redux login)
-    if (!token && typeof window !== "undefined") {
-        token = localStorage.getItem("token");
+    // Fallback: read from localStorage
+    if (typeof window !== "undefined") {
+        const localToken = localStorage.getItem("token");
+        if (localToken) return localToken;
     }
+
+    // No token found — wait and retry (session may still be initializing after login)
+    if (attempt < 2) {
+        await new Promise(r => setTimeout(r, 500));
+        return getAuthToken(attempt + 1);
+    }
+
+    return null;
+}
+
+async function apiClient(
+    endpoint: string,
+    { method = "GET", body, headers = {}, _retryCount = 0, ...customConfig }: any = {}
+) {
+    const token = await getAuthToken();
 
     const isFormData = body instanceof FormData;
 
@@ -47,7 +67,19 @@ async function apiClient(
             return data;
         }
 
-        // Handle expired/invalid token — redirect to login
+        // Handle 401 — retry with fresh token before giving up
+        if (response.status === 401 && _retryCount < MAX_AUTH_RETRIES) {
+            await new Promise(r => setTimeout(r, AUTH_RETRY_DELAY));
+            return apiClient(endpoint, {
+                method,
+                body,
+                headers,
+                ...customConfig,
+                _retryCount: _retryCount + 1,
+            });
+        }
+
+        // Final 401 after retries — redirect to login
         if (response.status === 401) {
             if (typeof window !== "undefined") {
                 localStorage.removeItem("token");

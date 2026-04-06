@@ -359,7 +359,7 @@ import "intl-tel-input/build/css/intlTelInput.css";
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { signIn, useSession } from "next-auth/react";
+import { signIn, useSession, getSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { sendOtp } from "@/store/actions/authActions";
@@ -486,6 +486,13 @@ function LoginPageContent() {
         });
 
         if (res?.ok) {
+          // Wait for NextAuth JWT cookie to be set before navigating
+          // Prevents race condition where token isn't ready on next page
+          for (let i = 0; i < 15; i++) {
+            const session: any = await getSession();
+            if (session?.accessToken) break;
+            await new Promise(r => setTimeout(r, 200));
+          }
           toast.success("Login Successful");
           const callbackUrl = searchParams.get("callbackUrl") || "/products";
           window.location.href = callbackUrl;
@@ -520,6 +527,11 @@ function LoginPageContent() {
         });
 
         if (res?.ok) {
+          for (let i = 0; i < 15; i++) {
+            const session: any = await getSession();
+            if (session?.accessToken) break;
+            await new Promise(r => setTimeout(r, 200));
+          }
           toast.success("Login Successful");
           const callbackUrl = searchParams.get("callbackUrl") || "/products";
           window.location.href = callbackUrl;

@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
             headers: {
                 "Content-Type": "application/json",
                 platform: "web",
+                accept: "application/json",
             },
             cache: "no-store",
         };
@@ -41,17 +42,22 @@ export async function GET(request: NextRequest) {
         }
 
         const res = await fetch(url, fetchOptions);
+        const responseText = await res.text();
 
         if (!res.ok) {
-            const errBody = await res.text();
-            console.error("[tyre-size/height] Magento error:", res.status, errBody);
-            return NextResponse.json({ error: "Magento API error", details: errBody }, { status: res.status });
+            console.error("[tyre-size/height] Magento error:", res.status, responseText);
+            return NextResponse.json({ error: "Magento error", details: responseText }, { status: res.status });
         }
 
-        const data = await res.json();
-        return NextResponse.json(data);
+        try {
+            const data = JSON.parse(responseText);
+            return NextResponse.json(data);
+        } catch (e) {
+            console.error("[tyre-size/height] JSON Parse Error. Raw:", responseText);
+            return NextResponse.json({ error: "Invalid JSON from Magento", raw: responseText }, { status: 500 });
+        }
     } catch (err: any) {
         console.error("[tyre-size/height] Fetch error:", err.message);
-        return NextResponse.json({ error: "Failed to fetch heights", message: err.message }, { status: 500 });
+        return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
     }
 }

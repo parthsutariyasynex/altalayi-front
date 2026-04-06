@@ -6,7 +6,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-montserrat)", "sans-serif"],
+        sans: ["var(--font-rubik)", "sans-serif"],
+        rubik: ["var(--font-rubik)", "sans-serif"],
       },
       colors: {
         brandYellow: "#F5B21B",

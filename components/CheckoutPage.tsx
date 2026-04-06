@@ -373,24 +373,41 @@ const CheckoutPageUI: React.FC = () => {
             return;
         }
 
-        // 1. Validations
+        // 1. Validations with Auto-Repair
         if (!selectedAddressId) {
-            toast.error("Please select a shipping address");
-            const element = document.getElementById('step-1');
-            element?.scrollIntoView({ behavior: 'smooth' });
-            return;
+            if (addresses.length > 0) {
+                const defaultAddr = addresses.find((a) => a.isDefault) || addresses[0];
+                setSelectedAddressId(defaultAddr.id);
+                setShippingAddress(defaultAddr.id)
+                    .then(() => setIsAddressSetOnBackend(true))
+                    .catch(() => { });
+                toast.success("Selected your default address");
+            } else {
+                toast.error("Please select a shipping address or add a new one.");
+                document.getElementById('step-1')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
         }
 
         if (!selectedShippingMethodCode) {
-            toast.error("Please select a shipping method");
-            const element = document.getElementById('step-3');
-            element?.scrollIntoView({ behavior: 'smooth' });
-            return;
+            if (shippingMethods.length > 0) {
+                const method = shippingMethods.find(m =>
+                    shippingType === "pickup" ? m.code.includes("pickup") : !m.code.includes("pickup")
+                ) || shippingMethods[0];
+                setSelectedShippingMethodCode(method.code);
+                setShippingMethod(method.carrierCode, method.methodCode).catch(() => { });
+                toast.success(`Selected shipping: ${method.title}`);
+            } else {
+                toast.error("Please select a shipping method");
+                document.getElementById('step-3')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
         }
 
         if (shippingType === "pickup") {
             if (!selectedWarehouseId) {
-                toast.error("Please select a warehouse");
+                toast.error("Please select a warehouse for pickup");
+                document.getElementById('step-pickup')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
             if (!pickupName || !pickupId || !pickupMobile || !pickupDate || !pickupTime) {
@@ -1293,7 +1310,7 @@ const CheckoutPageUI: React.FC = () => {
                                 <div className="px-6 pb-6">
                                     <button
                                         onClick={handlePlaceOrder}
-                                        disabled={isPlacingOrder || isTotalsLoading}
+                                        // disabled={isPlacingOrder || isTotalsLoading}
                                         className={`w-full py-3 sm:py-4 md:py-5 text-sm font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3 rounded-md shadow-md border ${isPlacingOrder
                                             ? "bg-gray-100 text-gray-400 cursor-not-allowed border-[#ebebeb]"
                                             : "bg-yellow-400 text-black hover:bg-yellow-500 border-yellow-500 active:scale-[0.98]"

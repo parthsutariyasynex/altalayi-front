@@ -36,17 +36,15 @@ export function useNotifications() {
             }
 
             if (!response.ok) {
-                throw new Error("Failed to fetch notifications");
+                // Backend down or server error — fail silently
+                return;
             }
 
             const data: any = await response.json();
-            console.log("[useNotifications] Raw API response:", JSON.stringify(data).substring(0, 500));
 
             // Robustly check for the list of notifications
             const items = Array.isArray(data) ? data
                 : data.items || data.notifications || data.data || [];
-            console.log("[useNotifications] Parsed items count:", items.length);
-
             // Normalize items to ensure notification_id and is_read are always present
             const normalizedItems = items.map((item: any) => ({
                 ...item,
@@ -57,9 +55,8 @@ export function useNotifications() {
             setNotifications(normalizedItems);
             setUnreadCount(data.unread_count ?? data.unreadCount ?? 0);
             setTotalCount(data.total_count ?? data.totalCount ?? normalizedItems.length);
-        } catch (err: any) {
-            setError(err.message);
-            console.error("Error fetching notifications:", err);
+        } catch {
+            // Network error or backend unreachable — fail silently
         } finally {
             setIsLoading(false);
         }

@@ -9,8 +9,8 @@ export const fetchCustomerInfo = (cb?: (err: any, data?: any) => void) => async 
             dispatch({ type: Types.FETCH_CUSTOMER_SUCCESS, payload: response.data });
             if (cb) cb(null, response.data);
         } else {
-            console.error("fetchCustomerInfo Error:", response.data?.message || "Unknown error", response.status);
-            if (cb) cb(response.data.message);
+            // Backend down or server error — fail silently
+            if (cb) cb(response.data?.message);
         }
     });
 };

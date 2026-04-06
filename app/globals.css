@@ -21,6 +21,17 @@
   body {
     min-width: 320px;
   }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  .cursor-pointer {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  .cursor-not-allowed {
+    cursor: not-allowed !important;
+  }
 }
 
 @layer utilities {

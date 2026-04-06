@@ -22,23 +22,30 @@ export async function GET(
         const response = await fetch(`${BASE_URL}/checkout/success/${orderId}`, {
             method: "GET",
             headers: {
-                Authorization: authHeader,
+                Authorization: authHeader as string,
                 "Content-Type": "application/json",
                 platform: "web",
+                accept: "application/json",
             },
             cache: "no-store",
         });
 
-        const data = await response.json();
+        const responseText = await response.text();
 
         if (!response.ok) {
-            console.error("Checkout Success API error:", response.status, data);
-            return NextResponse.json(data, { status: response.status });
+            console.error("Checkout Success API error:", response.status, responseText);
+            return NextResponse.json({ error: "Failed to get success data", details: responseText }, { status: response.status });
         }
 
-        return NextResponse.json(data);
-    } catch (error) {
+        try {
+            const data = JSON.parse(responseText);
+            return NextResponse.json(data);
+        } catch (e) {
+            console.error("Checkout Success JSON Parse Error. Raw:", responseText);
+            return NextResponse.json({ error: "Invalid JSON from Magento", raw: responseText }, { status: 500 });
+        }
+    } catch (error: any) {
         console.error("Proxy GET Checkout Success Error:", error);
-        return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+        return NextResponse.json({ message: "Internal server error", details: error.message }, { status: 500 });
     }
 }

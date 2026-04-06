@@ -2,14 +2,13 @@ import { NextResponse } from "next/server";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
-export async function DELETE(req: Request, { params }: { params: { itemId: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ itemId: string }> }) {
     try {
+        const { itemId } = await params;
         const authHeader = req.headers.get("authorization");
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
-
-        const { itemId } = params;
 
         const response = await fetch(`${BASE_URL}/cart/remove/${itemId}`, {
             method: "DELETE",

@@ -31,32 +31,29 @@ export async function GET(request: Request) {
             cache: 'no-store',
         });
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ message: 'Failed to fetch statement' }));
-            return NextResponse.json(
-                { message: errorData.message || `Backend returned error ${response.status}` },
-                { status: response.status }
-            );
-        }
-
         const contentType = response.headers.get('content-type');
+
+        if (!response.ok) {
+            const responseText = await response.text();
+            let errorData;
+            try {
+                errorData = responseText ? JSON.parse(responseText) : {};
+            } catch (err) {
+                console.error(`<<< My Statement GET ERROR: ${response.status}`, responseText);
+                return NextResponse.json({ message: "Backend error" }, { status: response.status });
+            }
+            return NextResponse.json(errorData, { status: response.status });
+        }
 
         // Check if the response is JSON (potentially containing pdf_url)
         if (contentType && contentType.includes('application/json')) {
             const data = await response.json();
-
             if (data.pdf_url) {
-                console.log(`[my-statement] Found PDF URL in JSON: ${data.pdf_url}. Fetching binary data...`);
-
-                // Fetch the actual PDF content to avoid CORS and force binary delivery
+                console.log(`>>> Found PDF URL: ${data.pdf_url}`);
                 const pdfResponse = await fetch(data.pdf_url, {
                     method: 'GET',
-                    headers: {
-                        'Authorization': authHeader,
-                    },
-                    cache: 'no-store',
+                    headers: { 'Authorization': authHeader },
                 });
-
                 if (pdfResponse.ok) {
                     const buffer = await pdfResponse.arrayBuffer();
                     return new Response(buffer, {
@@ -65,20 +62,14 @@ export async function GET(request: Request) {
                             'Content-Disposition': `attachment; filename="statement_${fromDate}_${toDate}.pdf"`,
                         },
                     });
-                } else {
-                    console.error(`[my-statement] Failed to fetch PDF binary from URL. Status: ${pdfResponse.status}`);
-                    // Return the original JSON if binary fetch fails
-                    return NextResponse.json(data);
                 }
+                return NextResponse.json(data);
             }
-
-            // If it's just normal JSON without a URL, return it
             return NextResponse.json(data);
         }
 
         // Check if the response is already a PDF
         if (contentType && contentType.includes('application/pdf')) {
-            console.log(`[my-statement] Server returned PDF binary directly.`);
             const buffer = await response.arrayBuffer();
             return new Response(buffer, {
                 headers: {
@@ -88,17 +79,13 @@ export async function GET(request: Request) {
             });
         }
 
-        // Default: return whatever we got
+        // Default: return as text
         const fallbackData = await response.text();
         return new Response(fallbackData, {
             headers: { 'Content-Type': contentType || 'text/plain' },
         });
-
     } catch (error: any) {
         console.error('[my-statement] Server error:', error);
-        return NextResponse.json(
-            { message: error.message || 'Server error proxying request' },
-            { status: 500 }
-        );
+        return NextResponse.json({ message: error.message || 'Server error' }, { status: 500 });
     }
 }

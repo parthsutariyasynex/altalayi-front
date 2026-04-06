@@ -12,8 +12,9 @@ import { NextAuthProvider } from "@/components/providers/NextAuthProvider";
 
 const rubik = Rubik({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
   display: "swap",
+  variable: "--font-rubik",
   fallback: ["system-ui", "Arial", "sans-serif"],
   adjustFontFallback: true,
 });
@@ -30,7 +31,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={rubik.className}>
+      <body className={`${rubik.variable} font-sans`}>
         <ReduxProvider>
           <NextAuthProvider>
             <CartProvider>

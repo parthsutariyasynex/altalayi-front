@@ -1,7 +1,7 @@
 'use client';
 
 import React, { ReactNode, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import Navbar from './Navbar';
@@ -24,19 +24,33 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
 
   // Sync NextAuth session with Redux & LocalStorage
   useEffect(() => {
-    if (status === 'authenticated' && (session as any)?.accessToken) {
-      const token = (session as any).accessToken;
-      dispatch({ type: 'LOGIN_SUCCESS', payload: token });
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('token', token);
+    if (status === 'authenticated') {
+      // Check if Magento token has expired (set by auth-options.ts JWT callback)
+      if ((session as any)?.error === 'MagentoTokenExpired') {
+        // Magento token expired — force re-login
+        localStorage.removeItem('token');
+        dispatch({ type: 'LOGOUT' });
+        signOut({ callbackUrl: '/login' });
+        return;
+      }
+
+      if ((session as any)?.accessToken) {
+        const token = (session as any).accessToken;
+        dispatch({ type: 'LOGIN_SUCCESS', payload: token });
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('token', token);
+        }
       }
     } else if (status === 'unauthenticated') {
-      dispatch({ type: 'LOGOUT' });
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
+      // Only clear if not on a public page (prevents race condition after login)
+      if (!isPublicPage) {
+        dispatch({ type: 'LOGOUT' });
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('token');
+        }
       }
     }
-  }, [session, status, dispatch]);
+  }, [session, status, dispatch, isPublicPage]);
 
   const hideFooter = ['/login', '/register', '/forgot-password'].includes(pathname);
   const showContent = isPublicPage || isAuthenticated;

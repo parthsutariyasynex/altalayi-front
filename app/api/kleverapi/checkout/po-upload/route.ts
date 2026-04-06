@@ -10,27 +10,33 @@ export async function GET(req: Request) {
             return NextResponse.json({ message: "Unauthorized: Invalid token format" }, { status: 401 });
         }
 
-        console.log(">>> PO Upload GET REQUEST");
-
         const response = await fetch(`${BASE_URL}/checkout/po-upload`, {
             method: "GET",
             headers: {
                 Authorization: authHeader,
                 platform: "web",
+                accept: "application/json",
             },
+            cache: "no-store",
         });
 
-        const data = await response.json();
-        console.log("<<< PO Upload GET RESPONSE:", response.status);
+        const responseText = await response.text();
 
         if (!response.ok) {
-            return NextResponse.json(data, { status: response.status });
+            console.error("PO Upload GET error:", response.status, responseText);
+            return NextResponse.json({ error: "Failed to get PO upload", details: responseText }, { status: response.status });
         }
 
-        return NextResponse.json(data);
-    } catch (error) {
+        try {
+            const data = JSON.parse(responseText);
+            return NextResponse.json(data);
+        } catch (e) {
+            // Return empty data if not valid JSON
+            return NextResponse.json([]);
+        }
+    } catch (error: any) {
         console.error("Proxy PO Upload GET Error:", error);
-        return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+        return NextResponse.json({ message: "Internal server error", details: error.message }, { status: 500 });
     }
 }
 

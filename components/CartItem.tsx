@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Minus, Plus } from "lucide-react";
+import { X, Minus, Plus, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { CartItem as CartItemType } from "@/modules/cart/hooks/useCart";
 import Price from "@/app/components/Price";
 
+
+import toast from "react-hot-toast";
 
 interface CartItemProps {
     item: CartItemType;
@@ -28,84 +30,146 @@ const CartItem: React.FC<CartItemProps> = ({ item, currencyCode, onUpdateQty, on
     };
 
     return (
-        <div className="relative bg-white border-x border-b border-gray-200 hover:bg-gray-50/50 transition-all duration-300 group/item hover:shadow-inner">
-            {/* Remove Button - always visible on mobile, hover on desktop */}
+        <div className="relative bg-white border border-gray-100 rounded-3xl p-4 lg:p-6 hover:shadow-xl hover:shadow-gray-100/50 transition-all duration-500 group/item">
+            {/* Remove Button */}
             <button
                 onClick={() => {
-                    if (window.confirm("Are you sure you want to remove this product?")) {
-                        onRemove(item.item_id);
-                    }
+                    onRemove(item.item_id);
+                    toast.success("Tyre Removed", {
+                        style: {
+                            borderRadius: '12px',
+                            background: '#fffafaff',
+                            color: '#000',
+                            fontSize: '9px',
+                            fontWeight: 'black',
+                            textTransform: 'uppercase',
+                        },
+                    });
                 }}
-                className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-red-500 text-gray-500 hover:text-white rounded-full transition-all z-10 cursor-pointer shadow-sm hover:scale-110 active:scale-95"
+                className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-gray-50 text-gray-400 rounded-full transition-all z-10 cursor-pointer hover:bg-[#FF4444] hover:text-white hover:scale-110 active:scale-95 opacity-0 group-hover/item:opacity-100 shadow-sm border border-gray-100"
                 title="Remove item"
             >
-                <X size={14} />
+                <X size={10} strokeWidth={4} />
             </button>
 
-            {/* Mobile/Tablet Layout */}
-            <div className="lg:hidden p-4 pr-10">
-                <div className="flex gap-3">
-                    <div className="w-16 h-16 bg-white border border-gray-100 p-1 flex items-center justify-center rounded-sm flex-shrink-0">
+            {/* Mobile Layout */}
+            <div className="lg:hidden">
+                <div className="flex gap-4">
+                    <div className="w-20 h-20 bg-white border border-gray-100 p-2 flex items-center justify-center rounded-xl shadow-sm">
                         <img src={item.image_url || "/images/tyre-sample.png"} alt={item.name} className="max-w-full max-h-full object-contain" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                        <h3 className="text-[13px] font-black text-black leading-tight uppercase tracking-wide line-clamp-2">{item.name}</h3>
-                        <div className="flex flex-wrap gap-1.5 mt-1.5">
-                            {item.size_display && <span className="text-[9px] font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded uppercase">Size: {item.size_display}</span>}
-                            {item.pattern_display && <span className="text-[9px] font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded uppercase">Pattern: {item.pattern_display}</span>}
+                    <div className="flex-1 min-w-0 pt-1">
+                        <span className="text-[10px] font-black text-yellow-600 uppercase tracking-widest mb-1 block">Quick Order</span>
+                        <h3 className="text-sm font-black text-gray-900 leading-tight uppercase tracking-tight line-clamp-2">{item.name}</h3>
+                        <div className="flex flex-wrap gap-2 mt-3">
+                            {item.size_display && (
+                                <div className="text-[10px] font-bold text-gray-500 bg-gray-50 border border-gray-100 px-2 py-1 rounded-lg">
+                                    {item.size_display}
+                                </div>
+                            )}
+                        </div>
+                        <div className="mt-4 flex items-center justify-between">
+                            <span className="text-base font-black text-black">
+                                <Price amount={item.price} />
+                            </span>
                         </div>
                     </div>
                 </div>
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                    <div>
-                        <span className="text-[10px] text-gray-400 font-bold uppercase block">Price</span>
-                        <span className="text-[13px] font-black text-gray-900 price currency-riyal"><Price amount={item.price} /></span>
-                    </div>
-                    <div className="flex items-center border-2 border-gray-100 p-0.5 bg-white">
-                        <button onClick={() => handleQtyChange(item.qty - 1)} disabled={item.qty <= 1 || updating} className="w-7 h-7 flex items-center justify-center hover:bg-yellow-400 text-black transition-all disabled:opacity-20 cursor-pointer active:scale-90"><Minus size={12} strokeWidth={3} /></button>
-                        <span className="w-8 h-7 flex items-center justify-center text-[12px] font-black text-black">{updating ? <span className="w-3 h-3 border-2 border-gray-200 border-t-yellow-400 rounded-full animate-spin" /> : item.qty}</span>
-                        <button onClick={() => handleQtyChange(item.qty + 1)} disabled={updating} className="w-7 h-7 flex items-center justify-center hover:bg-yellow-400 text-black transition-all disabled:opacity-20 cursor-pointer active:scale-90"><Plus size={12} strokeWidth={3} /></button>
+                <div className="flex items-center justify-between mt-4 bg-gray-50/50 p-2 rounded-xl border border-gray-100">
+                    <div className="flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                        <button
+                            onClick={() => handleQtyChange(item.qty - 1)}
+                            disabled={item.qty <= 1 || updating}
+                            className="w-8 h-8 flex items-center justify-center hover:bg-yellow-400 font-bold transition-all disabled:opacity-20"
+                        >
+                            <Minus size={12} strokeWidth={3} />
+                        </button>
+                        <span className="w-10 h-8 flex items-center justify-center text-xs font-black text-black">
+                            {updating ? <Loader2 className="w-3 h-3 animate-spin text-yellow-500" /> : item.qty}
+                        </span>
+                        <button
+                            onClick={() => handleQtyChange(item.qty + 1)}
+                            disabled={updating}
+                            className="w-8 h-8 flex items-center justify-center hover:bg-yellow-400 font-bold transition-all disabled:opacity-20"
+                        >
+                            <Plus size={12} strokeWidth={3} />
+                        </button>
                     </div>
                     <div className="text-right">
-                        <span className="text-[10px] text-gray-400 font-bold uppercase block">Total</span>
-                        <span className="text-[14px] font-black text-black price currency-riyal"><Price amount={item.row_total} /></span>
+                        <span className="text-sm font-black text-black">
+                            <Price amount={item.row_total} />
+                        </span>
                     </div>
                 </div>
             </div>
 
             {/* Desktop Layout */}
-            <div className="hidden lg:flex items-center py-6 xl:py-8 px-4 lg:px-6">
-                {/* Product: Image + Name (35%) */}
-                <div className="w-[35%] flex items-center gap-4">
-                    <div className="w-20 xl:w-28 h-20 xl:h-28 bg-white border border-gray-100 p-1.5 flex items-center justify-center shadow-sm group-hover/item:shadow-md transition-all rounded-sm flex-shrink-0">
-                        <img src={item.image_url || "/images/tyre-sample.png"} alt={item.name} className="max-w-full max-h-full object-contain transition-transform duration-500 group-hover/item:scale-110" />
+            <div className="hidden lg:flex items-center">
+                {/* Product: Image + Name (45%) */}
+                <div className="w-[45%] flex items-center gap-4">
+                    <div className="w-16 xl:w-20 h-16 xl:h-20 bg-white border border-gray-100 p-1.5 flex items-center justify-center rounded-xl shadow-sm group-hover/item:shadow-md transition-all flex-shrink-0">
+                        <img
+                            src={item.image_url || "/images/tyre-sample.png"}
+                            alt={item.name}
+                            className="max-w-full max-h-full object-contain transition-transform duration-700 group-hover/item:scale-110"
+                        />
                     </div>
                     <div className="min-w-0">
-                        <h3 className="text-[13px] xl:text-[15px] font-black text-black leading-tight mb-2 uppercase tracking-wide">{item.name}</h3>
-                        <div className="flex flex-wrap gap-1.5">
-                            {item.size_display && <span className="text-[9px] xl:text-[10px] font-bold text-gray-500 bg-gray-100 px-1.5 xl:px-2 py-0.5 xl:py-1 rounded uppercase">Size: {item.size_display}</span>}
-                            {item.pattern_display && <span className="text-[9px] xl:text-[10px] font-bold text-gray-500 bg-gray-100 px-1.5 xl:px-2 py-0.5 xl:py-1 rounded uppercase">Pattern: {item.pattern_display}</span>}
+                        <h3 className="text-xs xl:text-sm font-black text-gray-900 leading-tight uppercase tracking-tight mb-2 transition-colors group-hover/item:text-black line-clamp-1">{item.name}</h3>
+                        <div className="flex flex-wrap gap-1.5 single-line-attributes">
+                            {item.size_display && (
+                                <span className="text-[9px] font-black text-gray-400 bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded-md uppercase">
+                                    Size: {item.size_display}
+                                </span>
+                            )}
+                            {item.pattern_display && (
+                                <span className="text-[9px] font-black text-gray-400 bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded-md uppercase">
+                                    Pattern: {item.pattern_display}
+                                </span>
+                            )}
                         </div>
                     </div>
                 </div>
 
-                {/* Price (20%) */}
-                <div className="w-[20%] text-center">
-                    <span className="text-[13px] xl:text-[15px] font-black text-gray-900 tracking-tight price currency-riyal"><Price amount={item.price} /></span>
+                {/* Price (15%) */}
+                <div className="w-[15%] text-center">
+                    <span className="text-xs xl:text-sm font-black text-gray-900">
+                        <Price amount={item.price} />
+                    </span>
                 </div>
 
                 {/* Qty (20%) */}
                 <div className="w-[20%] flex justify-center items-center">
-                    <div className="flex items-center border-2 border-gray-100 p-0.5 xl:p-1 bg-white focus-within:border-yellow-400 transition-all">
-                        <button onClick={() => handleQtyChange(item.qty - 1)} disabled={item.qty <= 1 || updating} className="w-7 xl:w-8 h-7 xl:h-8 flex items-center justify-center hover:bg-yellow-400 text-black transition-all disabled:opacity-20 cursor-pointer active:scale-90"><Minus size={13} strokeWidth={3} /></button>
-                        <span className="w-8 xl:w-10 h-7 xl:h-8 flex items-center justify-center text-[12px] xl:text-[13px] font-black text-black">{updating ? <span className="w-3 h-3 border-2 border-gray-200 border-t-yellow-400 rounded-full animate-spin" /> : item.qty}</span>
-                        <button onClick={() => handleQtyChange(item.qty + 1)} disabled={updating} className="w-7 xl:w-8 h-7 xl:h-8 flex items-center justify-center hover:bg-yellow-400 text-black transition-all disabled:opacity-20 cursor-pointer active:scale-90"><Plus size={13} strokeWidth={3} /></button>
+                    <div className="flex items-center border border-gray-100 bg-white rounded-lg shadow-sm overflow-hidden focus-within:ring-2 focus-within:ring-yellow-400 transition-all">
+                        <button
+                            onClick={() => handleQtyChange(item.qty - 1)}
+                            disabled={item.qty <= 1 || updating}
+                            className="w-7 h-7 flex items-center justify-center hover:bg-yellow-400 text-black transition-all disabled:opacity-20 active:scale-95"
+                        >
+                            <Minus size={11} strokeWidth={3} />
+                        </button>
+                        <div className="w-8 h-7 flex items-center justify-center border-x border-gray-50">
+                            {updating ? (
+                                <Loader2 className="w-3 h-3 animate-spin text-yellow-500" />
+                            ) : (
+                                <span className="text-xs font-black text-gray-900">{item.qty}</span>
+                            )}
+                        </div>
+                        <button
+                            onClick={() => handleQtyChange(item.qty + 1)}
+                            disabled={updating}
+                            className="w-7 h-7 flex items-center justify-center hover:bg-yellow-400 text-black transition-all disabled:opacity-20 active:scale-95"
+                        >
+                            <Plus size={11} strokeWidth={3} />
+                        </button>
                     </div>
                 </div>
 
-                {/* Total (25%) */}
-                <div className="w-[25%] text-center">
-                    <span className="text-[14px] xl:text-[16px] font-black text-black tracking-tight price currency-riyal"><Price amount={item.row_total} /></span>
+                {/* Total (20%) */}
+                <div className="w-[20%] text-right pr-4">
+                    <span className="text-sm xl:text-base font-black text-black">
+                        <Price amount={item.row_total} />
+                    </span>
                 </div>
             </div>
         </div>

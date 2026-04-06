@@ -6,15 +6,7 @@ export const baseUrl = "/api/kleverapi";
 
 function getResponse(response: any) {
     if (response && response.data) {
-        if (response.status === 401 || response.status === 403) {
-            if (
-                ["login", "verify-email", "register", "verify-mobile"]?.some((p) =>
-                    window.location.pathname.indexOf(p) !== -1
-                ) === false
-            ) {
-                window.location.href = "/login";
-            }
-        }
+        // Don't immediately redirect on 401 — let the caller handle retry
         return {
             status: response.status,
             data: response.data,

@@ -5,16 +5,13 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 export async function GET(request: Request) {
     try {
         const authHeader = request.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json(
-                { message: 'Unauthorized' },
-                { status: 401 }
-            );
+        if (!authHeader || !authHeader.startsWith('Bearer ') || authHeader.includes("null") || authHeader.includes("undefined")) {
+            console.error("[my-statement-types] Invalid token:", authHeader);
+            return NextResponse.json({ message: 'Unauthorized: Invalid token format' }, { status: 401 });
         }
 
         const magentoUrl = `${BASE_URL}/my-statement/types`;
-
-        console.log(`[my-statement-types] Requesting: ${magentoUrl}`);
+        console.log(`>>> My Statement Types GET REQUEST: ${magentoUrl}`);
 
         const response = await fetch(magentoUrl, {
             method: 'GET',
@@ -26,17 +23,26 @@ export async function GET(request: Request) {
             cache: 'no-store',
         });
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ message: 'Failed to fetch statement types' }));
+        // Safe response parsing
+        const responseText = await response.text();
+        let data;
+        try {
+            data = responseText ? JSON.parse(responseText) : {};
+        } catch (err) {
+            console.error(`<<< My Statement Types GET RESPONSE: ${response.status} (FAILED TO PARSE JSON)`, responseText);
             return NextResponse.json(
-                { message: errorData.message || `Magento returned ${response.status}` },
-                { status: response.status }
+                { message: "Invalid backend response format", details: responseText.substring(0, 200) },
+                { status: 502 }
             );
         }
 
-        const data = await response.json();
-        return NextResponse.json(data);
+        console.log(`<<< My Statement Types GET RESPONSE: ${response.status}`, data);
 
+        if (!response.ok) {
+            return NextResponse.json(data, { status: response.status });
+        }
+
+        return NextResponse.json(data);
     } catch (error: any) {
         console.error('[my-statement-types] Catch error:', error);
         return NextResponse.json(

@@ -1,6 +1,23 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
+/**
+ * Decode a Magento JWT token to read its expiry time.
+ * Returns the `exp` timestamp (seconds) or null if unreadable.
+ */
+function getMagentoTokenExpiry(token: string): number | null {
+    try {
+        const parts = token.split(".");
+        if (parts.length !== 3) return null;
+        const payload = JSON.parse(
+            Buffer.from(parts[1], "base64").toString("utf-8")
+        );
+        return payload.exp || null;
+    } catch {
+        return null;
+    }
+}
+
 export const authOptions: NextAuthOptions = {
     providers: [
         CredentialsProvider({
@@ -23,16 +40,12 @@ export const authOptions: NextAuthOptions = {
                         otp: (credentials as any).otp,
                         countryCode: (credentials as any).countryCode
                     };
-                    console.log("Calling Magento OTP Auth:", url);
                 } else {
                     url = process.env.MAGENTO_AUTH_TOKEN_URL || "";
                     body = {
                         username: (credentials as any).email,
                         password: (credentials as any).password,
                     };
-                    console.log("Calling Magento Password Auth:", url);
-                    console.log("Credentials keys:", Object.keys(credentials as any));
-                    console.log("Attempting login for username:", (body as any).username);
                 }
 
                 if (!url) {
@@ -55,7 +68,6 @@ export const authOptions: NextAuthOptions = {
                     });
 
                     const data = await res.json();
-                    console.log("Magento Auth Response:", data);
 
                     if (res.ok && data) {
                         const token = isOtp
@@ -63,7 +75,7 @@ export const authOptions: NextAuthOptions = {
                             : (typeof data === 'string' ? data : data.token);
 
                         if (!token) {
-                            console.error("No token found in successful response. Data:", data);
+                            console.error("No token found in successful response.");
                             return null;
                         }
 
@@ -86,17 +98,33 @@ export const authOptions: NextAuthOptions = {
     ],
     callbacks: {
         async jwt({ token, user }) {
-            console.log("JWT callback - user:", user);
+            // First login — save the Magento token
             if (user) {
                 token.accessToken = (user as any).token;
+                // Store the Magento token expiry so we can detect when it expires
+                const exp = getMagentoTokenExpiry((user as any).token);
+                if (exp) {
+                    token.magentoTokenExp = exp;
+                }
             }
-            console.log("JWT callback - final token:", token);
+
+            // Check if the Magento token has expired
+            if (token.magentoTokenExp) {
+                const now = Math.floor(Date.now() / 1000);
+                if (now >= (token.magentoTokenExp as number)) {
+                    // Magento token expired — force user to re-login
+                    // Clear the token so the session becomes invalid
+                    console.warn("Magento token expired, forcing re-login");
+                    token.accessToken = undefined;
+                    token.error = "MagentoTokenExpired";
+                }
+            }
+
             return token;
         },
         async session({ session, token }) {
-            console.log("Session callback - token:", token);
             (session as any).accessToken = token.accessToken;
-            console.log("Session callback - final session:", session);
+            (session as any).error = token.error;
             return session;
         },
     },

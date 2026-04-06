@@ -4,23 +4,25 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 export async function GET(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id: orderId } = await params;
         const authHeader = req.headers.get("authorization");
+
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        const orderId = params.id;
         console.log(`>>> Multi-Shipping Success GET REQUEST for Order: ${orderId}`);
 
         const response = await fetch(`${BASE_URL}/multishipping/success/${orderId}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: authHeader,
+                Authorization: authHeader as string,
                 platform: "web",
+                accept: "application/json",
             },
             cache: "no-store",
         });

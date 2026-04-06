@@ -12,8 +12,10 @@ export default function MyStatementPage() {
     const { data: session, status: authStatus } = useSession();
     const router = useRouter();
 
-    const [startDate, setStartDate] = useState("2026-01-01"); // Start of year
-    const [endDate, setEndDate] = useState("2026-03-18");     // Today
+    const today = new Date().toISOString().split('T')[0];
+    const currentYear = new Date().getFullYear();
+    const [startDate, setStartDate] = useState(`${currentYear}-01-01`);
+    const [endDate, setEndDate] = useState(today);
     const [statementType, setStatementType] = useState("account_statement");
     const [statementTypes, setStatementTypes] = useState<{ value: string; label: string }[]>([]);
 
@@ -56,7 +58,7 @@ export default function MyStatementPage() {
         if (authStatus === "authenticated") {
             fetchTypes();
         }
-    }, [authStatus, session, statementType]);
+    }, [authStatus, session]);
 
     // Auth Guard
     if (authStatus === "unauthenticated") {

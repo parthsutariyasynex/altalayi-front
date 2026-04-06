@@ -2,16 +2,17 @@ import { NextResponse } from 'next/server';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
+        const { id } = await params;
         const authHeader = request.headers.get('Authorization');
 
         if (!authHeader) {
             return NextResponse.json({ message: 'Authorization required' }, { status: 401 });
         }
 
-        const magentoUrl = `${BASE_URL}/addresses/${params.id}`;
-        console.log(`[API ROUTE] Fetching Customer Address ${params.id} from: ${magentoUrl}`);
+        const magentoUrl = `${BASE_URL}/addresses/${id}`;
+        console.log(`[API ROUTE] Accessing Customer Address ${id} from: ${magentoUrl}`);
 
         const response = await fetch(magentoUrl, {
             method: 'GET',
@@ -35,8 +36,9 @@ export async function GET(request: Request, { params }: { params: { id: string }
     }
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
+        const { id } = await params;
         const authHeader = request.headers.get('Authorization');
         const body = await request.json();
 
@@ -44,8 +46,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
             return NextResponse.json({ message: 'Authorization required' }, { status: 401 });
         }
 
-        const magentoUrl = `${BASE_URL}/addresses/${params.id}`;
-        console.log(`[API ROUTE] Updating Customer Address ${params.id} at: ${magentoUrl}`);
+        const magentoUrl = `${BASE_URL}/addresses/${id}`;
+        console.log(`[API ROUTE] Updating Customer Address ${id} at: ${magentoUrl}`);
 
         const response = await fetch(magentoUrl, {
             method: 'PUT',
@@ -69,16 +71,17 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
+        const { id } = await params;
         const authHeader = request.headers.get('Authorization');
 
         if (!authHeader) {
             return NextResponse.json({ message: 'Authorization required' }, { status: 401 });
         }
 
-        const magentoUrl = `${BASE_URL}/addresses/${params.id}`;
-        console.log(`[API ROUTE] Deleting Customer Address ${params.id} at: ${magentoUrl}`);
+        const magentoUrl = `${BASE_URL}/addresses/${id}`;
+        console.log(`[API ROUTE] Deleting Customer Address ${id} at: ${magentoUrl}`);
 
         const response = await fetch(magentoUrl, {
             method: 'DELETE',
